@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/jsoup-1.6.1.jar" sourcepath="lib/jsoup-1.6.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://jsoup.org/apidocs/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="lib/gson-2.1.jar" sourcepath="lib/gson-2.1-sources.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
