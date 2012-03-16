@@ -5,16 +5,15 @@
 
 var express = require('express');
 var sio = require('socket.io');
-//var routes = require('./routes');
+var routes = require('./routes');
 
 var app = module.exports = express.createServer();
 
 // Configuration
 
-app.configure(function(){
+app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
-  app.register('.html', require('jade'));
   app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(app.router);
@@ -30,15 +29,11 @@ app.configure('production', function(){
 });
 
 // Routes
-app.get('/', function(req, res) {
-    res.render('index', { title: 'CalChat' });
-});
-
-app.get('/chat', function(req, res) {
-    res.render('chat', { title: 'CalChat', layout: false });
-});
+app.get('/', routes.index);
+app.get('/chat', routes.chat); 
 
 app.listen(3000);
+
 /**
  * Socket.IO server (single process only)
  */
