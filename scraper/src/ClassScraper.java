@@ -16,8 +16,6 @@ import com.google.gson.Gson;
 
 public class ClassScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?p_term=%s&p_list_all=Y";
-	private static final String[] TERMS = { "SP", "SU", "FL" };
-	private static final String[] TERMS_STRINGS = { "spring", "summer", "fall" };
 
 	public static void main(String args[]) {
 		System.out.println(getTerms());
@@ -31,11 +29,11 @@ public class ClassScraper {
 
 	private static TermModel[] parseTerms() {
 		try {
-			TermModel[] terms = new TermModel[TERMS.length];
+			TermModel[] terms = new TermModel[Utils.TERMS.length];
 
-			for (int i = 0; i < TERMS.length; i++) {
+			for (int i = 0; i < Utils.TERMS.length; i++) {
 				String url = String.format(URL,
-						URLEncoder.encode(TERMS[i], "UTF-8"));
+						URLEncoder.encode(Utils.TERMS[i], "UTF-8"));
 
 				Document doc = Jsoup.connect(url).get();
 
@@ -49,20 +47,20 @@ public class ClassScraper {
 				Elements classRows = doc
 						.select("label[class=buttonlink b listbtn]");
 
-				ClassModel[] classModels = new ClassModel[classRows.size() / 3];
+//				ClassModel[] classModels = new ClassModel[classRows.size() / 3];
 
 				for (int j = 0; j < classRows.size(); j += 3) {
 					String department = Utils.trim(classRows.get(j + 0).text());
 					String number = Utils.trim(classRows.get(j + 1).text());
 					String title = Utils.trim(classRows.get(j + 2).text());
-					ClassModel classModel = new ClassModel(department, number,
-							title);
-					classModels[j / 3] = classModel;
+					ClassModel[] classModels = DetailsScraper.getClassModel(
+							Utils.TERMS[i], department, number);
+//					classModels[j / 3] = classModel;
 				}
-
-				TermModel term = new TermModel(TERMS_STRINGS[i], year, updated,
-						classModels);
-				terms[i] = term;
+//
+//				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
+//						updated, classModels);
+//				terms[i] = term;
 			}
 			return terms;
 		} catch (UnsupportedEncodingException e) {
