@@ -18,7 +18,8 @@ div.navbar.navbar-fixed-top
             a(href='/chat') Chat
         ul.nav.pull-right
           li
-            img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='40', width='40')
+            if loggedIn
+              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='40', width='40')
 
 div.container
   div.hero-unit
