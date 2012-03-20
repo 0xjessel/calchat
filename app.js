@@ -65,7 +65,8 @@ app.configure('production', function(){
 
 // Routes
 app.get('/', routes.index);
-app.get('/chat', routes.chat); 
+app.get('/chat', routes.chat);
+app.get('/chat/:room', routes.chatroom); 
 
 app.listen(3000);
 
@@ -77,19 +78,33 @@ var io = sio.listen(app)
   , nicknames = {};
 
 io.sockets.on('connection', function (socket) {
-  socket.on('user message', function (msg) {
-      socket.broadcast.emit('user message', socket.nickname, msg);
+  socket.on('join room', function(room) {
+    console.log('incoming request to join '+room);
+    if (!nicknames[room]) {
+      nicknames[room] = {};
+    }
+    socket.set('room', room);
+    socket.join(room);
+  });
+
+  socket.on('message', function (msg) {
+      socket.get('room', function(err, room) {
+        console.log(msg + ' to room ' + room);  
+        socket.broadcast.to(room).emit('message', socket.nickname, msg);
+      });
   });
 
   socket.on('nickname', function (nick, fn) {
-    if (nicknames[nick]) {
-      fn(true);
-    } else {
-      fn(false);
-      nicknames[nick] = socket.nickname = nick;
-      socket.broadcast.emit('announcement', nick + ' connected');
-      io.sockets.emit('nicknames', nicknames);
-    }
+    socket.get('room', function(err, room) {
+      if (nicknames[room] && nicknames[room][nick]) {
+        fn(true);
+      } else {
+        fn(false);
+        nicknames[room][nick] = socket.nickname = nick;
+        io.sockets.in(room).emit('announcement', nick + ' connected');
+        io.sockets.in(room).emit('nicknames', nicknames[room]);
+      }
+    });
   });
 
   socket.on('disconnect', function () {
