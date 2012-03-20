@@ -5,10 +5,20 @@
 var express = require('express')
     , sio = require('socket.io')
     , everyauth = require('everyauth')
+    , redis = require('redis')
     , util = require('util')
     , routes = require('./routes');
 
 var app = module.exports = express.createServer();
+var client = redis.createClient();
+
+client.set('jesse chen', 'awesome guy');
+
+client.get('jesse chen', function(err, reply) {
+  console.log(reply.toString());
+});
+
+client.end();
 
 /**
  * Facebook Connect
