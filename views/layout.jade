@@ -27,8 +27,11 @@ head
 
   body!= body
   
-script(src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js');
+script(src='//ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js')
 script
-  window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js"><\/script>')
+  window.jQuery || document.write('<script src="js/libs/jquery-1.7.1.min.js">')
+script
+  if (window.location.hash == '#_=_')
+    window.location.hash = '';
 script(src='/js/libs/bootstrap/transition.js')
 script(src='/js/libs/bootstrap/collapse.js')

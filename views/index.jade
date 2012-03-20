@@ -16,13 +16,19 @@ div.navbar.navbar-fixed-top
             a(href='#contact') Contact
           li
             a(href='/chat') Chat
-        
+        ul.nav.pull-right
+          li
+            img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='40', width='40')
+
 div.container
   div.hero-unit
-    h1 Hello, world!
+    if loggedIn
+      h1 Hello, #{everyauth.facebook.user.name}
+    else 
+      h1 Hello, world!
     p This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.
     p 
-      a.btn.btn-primary.btn-large Learn more &raquo;
+      a(href='/auth/facebook').btn.btn-primary.btn-large Login with Facebook
    
   div.row
     div.span4

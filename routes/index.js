@@ -5,7 +5,8 @@ var util = require('util')
  */
 exports.index = function(req, res) {
   res.render('index', { 
-    title: 'CalChat' 
+    title: 'CalChat', 
+    loggedIn: req.loggedIn
   });
 };
 
