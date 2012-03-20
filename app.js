@@ -10,7 +10,11 @@ var express = require('express')
     , routes = require('./routes');
 
 var app = module.exports = express.createServer();
-var client = redis.createClient();
+
+/**
+ * Redis
+ */
+/*var client = redis.createClient();
 
 client.set('jesse chen', 'awesome guy');
 
@@ -19,11 +23,12 @@ client.get('jesse chen', function(err, reply) {
 });
 
 client.end();
+*/
 
 /**
  * Facebook Connect
 */
-var usersByFbId = {};
+var usersByFbId = {}; // temp use instead of redis
 
 everyauth.facebook
   .appId('297402036983700')
@@ -34,7 +39,7 @@ everyauth.facebook
   })
   .redirectPath('/');
 
-// Configuration
+// App Configuration
 app.configure(function() {
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
