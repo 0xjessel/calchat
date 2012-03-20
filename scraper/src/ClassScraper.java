@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.net.URLEncoder;
 
 import model.ClassModel;
@@ -11,9 +10,9 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.google.gson.Gson;
-
 import util.Utils;
+
+import com.google.gson.Gson;
 
 public class ClassScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?p_term=%s&p_list_all=Y";
@@ -21,9 +20,13 @@ public class ClassScraper {
 	private static final String[] TERMS_STRINGS = { "spring", "summer", "fall" };
 
 	public static void main(String args[]) {
+		System.out.println(getTerms());
+	}
+
+	public static String getTerms() {
 		TermModel[] terms = parseTerms();
 		Gson gson = new Gson();
-		System.out.println(gson.toJson(terms));
+		return gson.toJson(terms);
 	}
 
 	private static TermModel[] parseTerms() {
