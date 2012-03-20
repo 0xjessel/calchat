@@ -95,11 +95,13 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('nickname', function (nick, fn) {
+    console.log('incoming '+nick);
     socket.get('room', function(err, room) {
       if (nicknames[room] && nicknames[room][nick]) {
         fn(true);
       } else {
         fn(false);
+        console.log(nicknames[room]);
         nicknames[room][nick] = socket.nickname = nick;
         io.sockets.in(room).emit('announcement', nick + ' connected');
         io.sockets.in(room).emit('nicknames', nicknames[room]);
