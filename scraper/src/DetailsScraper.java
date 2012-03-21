@@ -16,7 +16,8 @@ public class DetailsScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?y=0&p_term=%s&p_deptname=--+Choose+a+Department+Name+--&p_classif=--+Choose+a+Course+Classification+--&p_course=%s&p_dept=%s&x=0";
 
 	public static ArrayList<ClassModel> getClassModel(String term,
-			String department, String course) {
+			String department, String course)
+			throws IOException {
 		try {
 
 			String url = String.format(URL, URLEncoder.encode(term, "UTF-8"),
@@ -55,11 +56,9 @@ public class DetailsScraper {
 
 			return classModels;
 		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return null;
+			throw e;
 		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
+			throw e;
 		}
 	}
 }

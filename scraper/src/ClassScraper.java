@@ -17,6 +17,7 @@ import com.google.gson.Gson;
 
 public class ClassScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?p_term=%s&p_list_all=Y";
+	private static final int RETRY_LIMIT = 3;
 
 	public static void main(String args[]) {
 		System.out.println(getTerms());
@@ -30,10 +31,10 @@ public class ClassScraper {
 	}
 
 	private static TermModel[] parseTerms() {
-		try {
-			TermModel[] terms = new TermModel[Utils.TERMS.length];
+		TermModel[] terms = new TermModel[Utils.TERMS.length];
 
-			for (int i = 0; i < Utils.TERMS.length; i++) {
+		for (int i = 0; i < Utils.TERMS.length; i++) {
+			try {
 				String url = String.format(URL,
 						URLEncoder.encode(Utils.TERMS[i], "UTF-8"));
 
@@ -52,6 +53,7 @@ public class ClassScraper {
 				ArrayList<ClassModel> classModels = new ArrayList<ClassModel>();
 
 				String previousPercentString = null;
+				int retry = 0;
 
 				int numRows = classRows.size();
 				for (int j = 0; j < numRows; j += 3) {
@@ -67,22 +69,38 @@ public class ClassScraper {
 						previousPercentString = percentString;
 					}
 
-					ArrayList<ClassModel> newClassModels = DetailsScraper
-							.getClassModel(Utils.TERMS[i], department, number);
+					try {
+						ArrayList<ClassModel> newClassModels = DetailsScraper
+								.getClassModel(Utils.TERMS[i], department,
+										number);
 
-					classModels.addAll(newClassModels);
+						retry = 0;
+						classModels.addAll(newClassModels);
+					} catch (IOException e) {
+						if (retry < RETRY_LIMIT) {
+							j--; // retry
+							retry++;
+							System.err
+									.println("Encountered a problem with your internet. Retrying...");
+							continue;
+						} else {
+							throw e;
+						}
+					}
 				}
 				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
 						updated, classModels.toArray(new ClassModel[] {}));
 				terms[i] = term;
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+				return null;
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.err
+						.println("Encountered unrecoverable error. Check your internet connection.");
+				return null;
 			}
-			return terms;
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-			return null;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
 		}
+		return terms;
 	}
 }
