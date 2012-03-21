@@ -20,19 +20,19 @@ div.navbar.navbar-fixed-top
           if loggedIn
             li
               img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')
+            li
+              a(href='/logout') Logout
 
 div.container
   div.hero-unit
     if loggedIn
-      h1 Hello, #{everyauth.facebook.user.name}
+      h1 Welcome back, #{everyauth.facebook.user.name}
     else 
       h1 Hello, world!
     p This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.
     p 
       if !loggedIn
-        a(href='/auth/facebook').btn.btn-primary.btn-large Login with Facebook
-      else 
-        a(href='/logout').btn.btn-primary.btn-large Logout
+        a(href='/auth/facebook')#login
           
   div.row
     div.span4
