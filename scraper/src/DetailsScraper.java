@@ -60,9 +60,14 @@ public class DetailsScraper {
 				String time = daysTimeSplit[1];
 
 				String[] locationSplit = location.split(" ", 2);
-				String buildingNumber = locationSplit[0];
 
-				String building = locationSplit[1];
+				String buildingNumber = "";
+				String building = locationSplit[0];
+
+				if (locationSplit.length > 1) {
+					buildingNumber = locationSplit[0];
+					building = locationSplit[1];
+				}
 
 				ClassModel classModel = new ClassModel(term, department,
 						course, title, days, time, building, buildingNumber);
