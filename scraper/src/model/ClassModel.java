@@ -7,11 +7,14 @@ public class ClassModel {
 	private String time;
 	private String location;
 
-	public ClassModel(String department, String number, String title) {
+	public ClassModel(String department, String number, String title,
+			String time, String location) {
 		super();
 		this.department = department;
 		this.number = number;
 		this.title = title;
+		this.time = time;
+		this.location = location;
 	}
 
 	@Override

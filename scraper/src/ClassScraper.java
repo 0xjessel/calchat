@@ -1,6 +1,7 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import model.ClassModel;
 import model.TermModel;
@@ -22,6 +23,7 @@ public class ClassScraper {
 	}
 
 	public static String getTerms() {
+		System.err.println("Starting parse...");
 		TermModel[] terms = parseTerms();
 		Gson gson = new Gson();
 		return gson.toJson(terms);
@@ -47,20 +49,32 @@ public class ClassScraper {
 				Elements classRows = doc
 						.select("label[class=buttonlink b listbtn]");
 
-//				ClassModel[] classModels = new ClassModel[classRows.size() / 3];
+				ArrayList<ClassModel> classModels = new ArrayList<ClassModel>();
 
-				for (int j = 0; j < classRows.size(); j += 3) {
+				String previousPercentString = null;
+
+				int numRows = classRows.size();
+				for (int j = 0; j < numRows; j += 3) {
 					String department = Utils.trim(classRows.get(j + 0).text());
 					String number = Utils.trim(classRows.get(j + 1).text());
-					String title = Utils.trim(classRows.get(j + 2).text());
-					ClassModel[] classModels = DetailsScraper.getClassModel(
-							Utils.TERMS[i], department, number);
-//					classModels[j / 3] = classModel;
+
+					float percent = (float) (i * numRows + j)
+							/ (Utils.TERMS.length * numRows) * 100;
+					String percentString = String.format("%.1f%%", percent);
+
+					if (!percentString.equals(previousPercentString)) {
+						System.err.println(percentString);
+						previousPercentString = percentString;
+					}
+
+					ArrayList<ClassModel> newClassModels = DetailsScraper
+							.getClassModel(Utils.TERMS[i], department, number);
+
+					classModels.addAll(newClassModels);
 				}
-//
-//				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
-//						updated, classModels);
-//				terms[i] = term;
+				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
+						updated, classModels.toArray(new ClassModel[] {}));
+				terms[i] = term;
 			}
 			return terms;
 		} catch (UnsupportedEncodingException e) {
