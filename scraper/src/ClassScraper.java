@@ -1,7 +1,7 @@
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.net.URLEncoder;
+import java.util.ArrayList;
 
 import model.ClassModel;
 import model.TermModel;
@@ -11,28 +11,31 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.google.gson.Gson;
-
 import util.Utils;
+
+import com.google.gson.Gson;
 
 public class ClassScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?p_term=%s&p_list_all=Y";
-	private static final String[] TERMS = { "SP", "SU", "FL" };
-	private static final String[] TERMS_STRINGS = { "spring", "summer", "fall" };
 
 	public static void main(String args[]) {
+		System.out.println(getTerms());
+	}
+
+	public static String getTerms() {
+		System.err.println("Starting parse...");
 		TermModel[] terms = parseTerms();
 		Gson gson = new Gson();
-		System.out.println(gson.toJson(terms));
+		return gson.toJson(terms);
 	}
 
 	private static TermModel[] parseTerms() {
 		try {
-			TermModel[] terms = new TermModel[TERMS.length];
+			TermModel[] terms = new TermModel[Utils.TERMS.length];
 
-			for (int i = 0; i < TERMS.length; i++) {
+			for (int i = 0; i < Utils.TERMS.length; i++) {
 				String url = String.format(URL,
-						URLEncoder.encode(TERMS[i], "UTF-8"));
+						URLEncoder.encode(Utils.TERMS[i], "UTF-8"));
 
 				Document doc = Jsoup.connect(url).get();
 
@@ -46,19 +49,31 @@ public class ClassScraper {
 				Elements classRows = doc
 						.select("label[class=buttonlink b listbtn]");
 
-				ClassModel[] classModels = new ClassModel[classRows.size() / 3];
+				ArrayList<ClassModel> classModels = new ArrayList<ClassModel>();
 
-				for (int j = 0; j < classRows.size(); j += 3) {
+				String previousPercentString = null;
+
+				int numRows = classRows.size();
+				for (int j = 0; j < numRows; j += 3) {
 					String department = Utils.trim(classRows.get(j + 0).text());
 					String number = Utils.trim(classRows.get(j + 1).text());
-					String title = Utils.trim(classRows.get(j + 2).text());
-					ClassModel classModel = new ClassModel(department, number,
-							title);
-					classModels[j / 3] = classModel;
-				}
 
-				TermModel term = new TermModel(TERMS_STRINGS[i], year, updated,
-						classModels);
+					float percent = (float) (i * numRows + j)
+							/ (Utils.TERMS.length * numRows) * 100;
+					String percentString = String.format("%.1f%%", percent);
+
+					if (!percentString.equals(previousPercentString)) {
+						System.err.println(percentString);
+						previousPercentString = percentString;
+					}
+
+					ArrayList<ClassModel> newClassModels = DetailsScraper
+							.getClassModel(Utils.TERMS[i], department, number);
+
+					classModels.addAll(newClassModels);
+				}
+				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
+						updated, classModels.toArray(new ClassModel[] {}));
 				terms[i] = term;
 			}
 			return terms;

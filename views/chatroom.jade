@@ -11,6 +11,14 @@ html
       socket.on('connect', function () {
         socket.emit('join room', '#{room}');
         $('#chat').addClass('connected');
+        var name = '#{everyauth.facebook.user.first_name} '+'#{everyauth.facebook.user.last_name}'.charAt(0);
+        socket.emit('nickname', name, function(set) {
+          if(!set) {
+            clear();
+            return $('#chat').addClass('nickname-set');
+          }
+          $('#nickname-err').css('visibility', 'visible');
+        });
       });
 
       socket.on('announcement', function (msg) {
@@ -43,19 +51,12 @@ html
         $('#lines').append($('<p>').append($('<b>').text(from), msg));
       }
 
+      function clear () {
+        $('#message').val('').focus();
+      };
+
       // dom manipulation
       $(function () {
-        $('#set-nickname').submit(function (ev) {
-          socket.emit('nickname', $('#nick').val(), function (set) {
-            if (!set) {
-              clear();
-              return $('#chat').addClass('nickname-set');
-            }
-            $('#nickname-err').css('visibility', 'visible');
-          });
-          return false;
-        });
-
         $('#send-message').submit(function () {
           message('me', $('#message').val());
           socket.emit('message', $('#message').val());
@@ -71,11 +72,6 @@ html
   body
     h1 /#{room} chat
     #chat
-      #nickname
-        form.wrap#set-nickname
-          p Please type in your nickname and press enter.
-          input#nick
-          p#nickname-err Nickname already in use
       #connecting
         .wrap Connecting to socket.io server
       #messages
