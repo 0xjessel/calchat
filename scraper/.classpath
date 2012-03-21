@@ -12,5 +12,6 @@
 			<attribute name="javadoc_location" value="http://google-gson.googlecode.com/svn/trunk/gson/docs/javadocs/"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="lib/jedis-2.0.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

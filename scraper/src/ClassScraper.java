@@ -11,6 +11,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import redis.clients.jedis.Jedis;
+
 import util.Utils;
 
 import com.google.gson.Gson;
@@ -20,6 +22,7 @@ public class ClassScraper {
 	private static final int RETRY_LIMIT = 3;
 
 	public static void main(String args[]) {
+		Jedis jedis = new Jedis("localhost");
 		System.out.println(getTerms());
 	}
 
