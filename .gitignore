@@ -15,3 +15,6 @@ Desktop.ini
 .*.sw[a-z]
 *.un~
 Session.vim
+
+# no redis
+redis
