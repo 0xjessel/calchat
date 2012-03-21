@@ -15,7 +15,7 @@
 ### github.com/h5bp/server-configs
 ###
 
-
+RewriteRule ^ http://127.0.0.1:3000%{REQUEST_URI} [P,QSA,L]
 
 # ----------------------------------------------------------------------
 # Better website experience for IE users
