@@ -2,13 +2,17 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import model.ClassModel;
 
 import org.jsoup.Jsoup;
+import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+
+import com.sun.xml.internal.ws.util.StringUtils;
 
 import util.Utils;
 
@@ -16,8 +20,7 @@ public class DetailsScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?y=0&p_term=%s&p_deptname=--+Choose+a+Department+Name+--&p_classif=--+Choose+a+Course+Classification+--&p_course=%s&p_dept=%s&x=0";
 
 	public static ArrayList<ClassModel> getClassModel(String term,
-			String department, String course)
-			throws IOException {
+			String department, String course) throws IOException {
 		try {
 
 			String url = String.format(URL, URLEncoder.encode(term, "UTF-8"),
@@ -37,20 +40,33 @@ public class DetailsScraper {
 				Elements data = element.select("tt");
 
 				String title = Utils.trim(data.get(0).text());
-				String[] timeAndLocation = Utils.trim(data.get(1).text())
+				String[] daysTimeAndLocation = Utils.trim(data.get(1).text())
 						.split("[,(]");
 
-				String time = Utils.trim(timeAndLocation[0]);
+				String daysTime = Utils.trim(daysTimeAndLocation[0]);
 
-				if (time.equals("CANCELLED") || time.equals("TBA")
-						|| time.equals("UNSCHED OFF CAMPUS")
-						|| timeAndLocation.length < 2)
+				if (daysTime.equals("CANCELLED") || daysTime.equals("TBA")
+						|| daysTime.equals("UNSCHED OFF CAMPUS")
+						|| daysTimeAndLocation.length < 2)
 					continue;
 
-				String location = Utils.trim(timeAndLocation[1]);
+				String location = Utils.trim(daysTimeAndLocation[1]);
 
-				ClassModel classModel = new ClassModel(department, course,
-						title, time, location);
+				if (location.equals(""))
+					continue;
+
+				String[] daysTimeSplit = daysTime.split(" ");
+				String days = daysTimeSplit[0];
+				String time = daysTimeSplit[1];
+
+				String[] locationSplit = location.split(" ", 2);
+				String buildingNumber = locationSplit[0];
+
+				String building = locationSplit[1];
+
+				ClassModel classModel = new ClassModel(term, department,
+						course, title, days, time, building, buildingNumber);
+				Utils.save(classModel);
 				classModels.add(classModel);
 			}
 

@@ -22,7 +22,6 @@ public class ClassScraper {
 	private static final int RETRY_LIMIT = 3;
 
 	public static void main(String args[]) {
-		Jedis jedis = new Jedis("localhost");
 		System.out.println(getTerms());
 	}
 
