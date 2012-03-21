@@ -45,7 +45,6 @@ app.configure(function() {
   app.set('view engine', 'jade');
   app.use(express.bodyParser());
   app.use(express.methodOverride());
-  app.use(express.favicon());
   app.use(express.static(__dirname + '/public'));
   app.use(express.cookieParser());
   app.use(express.session({ secret: 'nelarkonesse' }));
@@ -95,17 +94,16 @@ io.sockets.on('connection', function (socket) {
   });
 
   socket.on('nickname', function (nick, fn) {
-    console.log('incoming '+nick);
+    socket.nickname = nick;
     socket.get('room', function(err, room) {
       if (nicknames[room] && nicknames[room][nick]) {
         fn(true);
       } else {
         fn(false);
-        console.log(nicknames[room]);
-        nicknames[room][nick] = socket.nickname = nick;
-        io.sockets.in(room).emit('announcement', nick + ' connected');
-        io.sockets.in(room).emit('nicknames', nicknames[room]);
+        nicknames[room][nick] = socket.nickname;
       }
+      io.sockets.in(room).emit('announcement', nick + ' connected');
+      io.sockets.in(room).emit('nicknames', nicknames[room]);
     });
   });
 

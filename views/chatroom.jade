@@ -9,10 +9,14 @@ html
       var socket = io.connect();
 
       socket.on('connect', function () {
+        // join this room
         socket.emit('join room', '#{room}');
         $('#chat').addClass('connected');
+             
+        // send fb name
         var name = '#{everyauth.facebook.user.first_name} '+'#{everyauth.facebook.user.last_name}'.charAt(0);
         socket.emit('nickname', name, function(set) {
+          console.log(set);
           if(!set) {
             clear();
             return $('#chat').addClass('nickname-set');
