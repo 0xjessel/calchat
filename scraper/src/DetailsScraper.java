@@ -2,17 +2,13 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import model.ClassModel;
 
 import org.jsoup.Jsoup;
-import org.jsoup.helper.StringUtil;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
-import com.sun.xml.internal.ws.util.StringUtils;
 
 import util.Utils;
 
@@ -48,12 +44,12 @@ public class DetailsScraper {
 				if (daysTime.equals("CANCELLED") || daysTime.equals("TBA")
 						|| daysTime.equals("UNSCHED OFF CAMPUS")
 						|| daysTimeAndLocation.length < 2)
-					continue;
+					continue; // don't put this class in the db
 
 				String location = Utils.trim(daysTimeAndLocation[1]);
 
 				if (location.equals(""))
-					continue;
+					continue; // don't put this class in the db
 
 				String[] daysTimeSplit = daysTime.split(" ");
 				String days = daysTimeSplit[0];

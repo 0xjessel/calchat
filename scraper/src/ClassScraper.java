@@ -11,8 +11,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import redis.clients.jedis.Jedis;
-
 import util.Utils;
 
 import com.google.gson.Gson;
@@ -26,17 +24,19 @@ public class ClassScraper {
 	}
 
 	public static String getTerms() {
-		try {
-			Utils.connect();
-		} catch (Exception e) {
+		boolean connected = Utils.connect();
+
+		if (!connected) {
 			System.err.println("Unable to connect to Redis server.");
 			return null;
 		}
 
-		System.err.println("Starting parse...");
+		System.err.println("Connected to Redis server. Starting parse...");
 		TermModel[] terms = parseTerms();
 		Gson gson = new Gson();
-		return gson.toJson(terms);
+		String result = gson.toJson(terms);
+
+		return result;
 	}
 
 	private static TermModel[] parseTerms() {
