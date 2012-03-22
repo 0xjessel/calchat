@@ -1,8 +1,6 @@
 package util;
 
 import java.lang.reflect.Field;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import model.ClassModel;
 import redis.clients.jedis.Jedis;
@@ -38,7 +36,6 @@ public class Utils {
 	}
 
 	private static final String REDIS_URL = "calchat.net";
-	private static final long REDIS_SYNC_PERIOD = 5000;
 
 	private static Jedis jedis = new Jedis(REDIS_URL);
 	private static Pipeline pipeline;
@@ -84,24 +81,6 @@ public class Utils {
 		try {
 			jedis.connect();
 			pipeline = jedis.pipelined();
-
-			Timer timer = new Timer();
-			timer.schedule(new TimerTask() {
-
-				@Override
-				public void run() {
-					Pipeline oldPipeline;
-
-					synchronized (pipeline) {
-						oldPipeline = pipeline;
-						pipeline = jedis.pipelined();
-					}
-
-					if (oldPipeline != null) {
-						oldPipeline.sync();
-					}
-				}
-			}, REDIS_SYNC_PERIOD, REDIS_SYNC_PERIOD);
 			return true;
 		} catch (Exception exception) {
 			return false;
