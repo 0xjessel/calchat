@@ -42,39 +42,43 @@ public class Utils {
 
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
-		for (String day : m.days.split("(?=\\p{Upper})")) {
 
-			{ // classtimes
-				String key = String.format("room:%s%s:%s:%s", m.buildingNumber,
-						m.building, day, m.term).replace(" ", "");
-				String field = m.time.replace(" ", "");
-
-				synchronized (pipeline) {
-					pipeline.hset(key, field, id);
-				}
+		// classtimes
+		String[] days = m.days.split("(?=\\p{Upper})");
+		for (String day : days) {
+			if (day.equals("")) {
+				continue;
 			}
+			String key = String.format("room:%s%s:%s:%s", m.buildingNumber,
+					m.building, day, m.term).replace(" ", "");
+			String field = m.time.replace(" ", "");
 
-			{ // classes
-				try {
-					for (Field field : ClassModel.class.getFields()) {
-						String key = String.format("class:%s", id);
-						String value = (String) field.get(m);
-
-						synchronized (pipeline) {
-							pipeline.hset(key, field.getName(), value);
-						}
-					}
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-				} catch (IllegalAccessException e) {
-					e.printStackTrace();
-				}
+			synchronized (pipeline) {
+				pipeline.hset(key, field, id);
 			}
 		}
+
+		// classes
+		try {
+			for (Field field : ClassModel.class.getFields()) {
+				String key = String.format("class:%s", id);
+				String value = (String) field.get(m);
+
+				synchronized (pipeline) {
+					pipeline.hset(key, field.getName(), value);
+				}
+			}
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public static String getClassId(ClassModel m) {
-		return String.format("%s:%s:%s", m.department, m.number, m.term);
+		return String.format("%s:%s:%s", m.department, m.number, m.term)
+				.replace(" ", "");
 	}
 
 	public static boolean connect() {
