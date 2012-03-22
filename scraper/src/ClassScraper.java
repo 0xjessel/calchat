@@ -20,10 +20,52 @@ public class ClassScraper {
 	private static final int RETRY_LIMIT = 3;
 
 	public static void main(String args[]) {
-		System.out.println(getTerms());
+		boolean error = false;
+
+		String terms = null;
+		if (args.length == 1) {
+			String term = args[0];
+			boolean found = false;
+			for (int i = 0; i < Utils.TERMS.length; i++) {
+				if (term.toUpperCase().equals(Utils.TERMS[i].toUpperCase())
+						|| term.toUpperCase().equals(
+								Utils.TERMS_STRINGS[i].toUpperCase())) {
+					terms = getTerms(i);
+					found = true;
+					break;
+				}
+			}
+			if (!found) {
+				error = true;
+			}
+		} else if (args.length == 0) {
+			terms = getTerms(-1);
+		} else {
+			error = true;
+		}
+
+		if (error) {
+			StringBuilder msg = new StringBuilder();
+			msg.append("Error. This program expects 0 or 1 arguments. Provide an argument if you want a particular semester. The argument can be:");
+			for (String s : Utils.TERMS_STRINGS) {
+				msg.append(" ");
+				msg.append(s);
+				msg.append(",");
+			}
+			msg.deleteCharAt(msg.length() - 1);
+			System.err.println(msg.toString());
+			System.exit(1);
+		}
+
+		if (terms == null) {
+			System.err.println("An error has occurred.");
+			System.exit(1);
+		}
+
+		System.out.println(terms);
 	}
 
-	public static String getTerms() {
+	public static String getTerms(int termIndex) {
 		boolean connected = Utils.connect();
 
 		if (!connected) {
@@ -31,18 +73,32 @@ public class ClassScraper {
 			return null;
 		}
 
-		System.err.println("Connected to Redis server. Starting parse...");
-		TermModel[] terms = parseTerms();
+		if (termIndex == -1)
+			System.err.println("Connected to Redis server. Parsing...");
+		else
+			System.err.println(String.format(
+					"Connected to Redis server. Parsing term %s...",
+					Utils.TERMS_STRINGS[termIndex]));
+
+		TermModel[] terms = parseTerms(termIndex);
 		Gson gson = new Gson();
-		String result = gson.toJson(terms);
+
+		String result = null;
+		if (termIndex == -1)
+			result = gson.toJson(terms);
+		else
+			result = gson.toJson(terms[termIndex]);
 
 		return result;
 	}
 
-	private static TermModel[] parseTerms() {
+	private static TermModel[] parseTerms(int termIndex) {
 		TermModel[] terms = new TermModel[Utils.TERMS.length];
 
 		for (int i = 0; i < Utils.TERMS.length; i++) {
+			if (termIndex != -1 && termIndex != i)
+				continue; // skip this term if we specified another term
+
 			try {
 				String url = String.format(URL,
 						URLEncoder.encode(Utils.TERMS[i], "UTF-8"));
@@ -69,8 +125,13 @@ public class ClassScraper {
 					String department = Utils.trim(classRows.get(j + 0).text());
 					String number = Utils.trim(classRows.get(j + 1).text());
 
-					float percent = (float) (i * numRows + j)
-							/ (Utils.TERMS.length * numRows) * 100;
+					float percent = 0;
+					if (termIndex == -1) {
+						percent = (float) (i * numRows + j)
+								/ (Utils.TERMS.length * numRows) * 100;
+					} else {
+						percent = (float) j / numRows * 100;
+					}
 					String percentString = String.format("%.1f%%", percent);
 
 					if (!percentString.equals(previousPercentString)) {
