@@ -72,4 +72,8 @@ public class Utils {
 		Long id = jedis.incr("next.class.id");
 		return id.toString();
 	}
+	
+	public static void connect() {
+		jedis.connect();
+	}
 }

@@ -26,6 +26,13 @@ public class ClassScraper {
 	}
 
 	public static String getTerms() {
+		try {
+			Utils.connect();
+		} catch (Exception e) {
+			System.err.println("Unable to connect to Redis server.");
+			return null;
+		}
+
 		System.err.println("Starting parse...");
 		TermModel[] terms = parseTerms();
 		Gson gson = new Gson();
