@@ -53,9 +53,7 @@ public class Utils {
 					m.building, day, m.term).replace(" ", "");
 			String field = m.time.replace(" ", "");
 
-			synchronized (pipeline) {
-				pipeline.hset(key, field, id);
-			}
+			pipeline.hset(key, field, id);
 		}
 
 		// classes
@@ -64,9 +62,7 @@ public class Utils {
 				String key = String.format("class:%s", id);
 				String value = (String) field.get(m);
 
-				synchronized (pipeline) {
-					pipeline.hset(key, field.getName(), value);
-				}
+				pipeline.hset(key, field.getName(), value);
 			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
