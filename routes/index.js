@@ -11,22 +11,30 @@ exports.index = function(req, res) {
 };
 
 exports.dashboard = function(req, res) {
-  res.render('dashboard', {
-    title: 'Dashboard',
-  });
-}
-
-exports.chat = function(req, res) {
-  var room = req.params.room;
-  // redirect chat/cs188 to chat/ with var room='cs188'
-  if (isValid(room)) {
-    res.render('chat', { 
-      title: 'CalChat', 
-      room: room,
+  if (req.loggedIn) {
+    res.render('dashboard', {
+      title: 'Dashboard',
     });
   } else {
-    // open up previous chat windows?
-  }  
+    res.redirect('home');
+  }
+};
+  
+exports.chat = function(req, res) {
+  if (req.loggedIn) {
+    var room = req.params.room;
+    // redirect chat/cs188 to chat/ with var room='cs188'
+    if (isValid(room)) {
+      res.render('chat', { 
+        title: 'CalChat', 
+        room: room,
+      });
+    } else {
+      // open up previous chat windows?
+    }   
+  } else {
+    res.redirect('home');
+  }
 };
 
 function isValid(room) {

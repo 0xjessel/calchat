@@ -10,17 +10,14 @@ div.navbar.navbar-fixed-top
         ul.nav
           li.active
             a(href='#') Home
-          li
-            a(href='#about') About
-          li
-            a(href='#contact') Contact
-          li
-            a(href='/dashboard') Dashboard
-          li
-            a(href='/chat') Chat
-        ul.nav.pull-right
           if loggedIn
             li
+              a(href='/dashboard') Dashboard
+            li
+              a(href='/chat') Chat
+        ul.nav.pull-right
+          if loggedIn
+            liw
               img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')
             li
               a(href='/logout') Logout

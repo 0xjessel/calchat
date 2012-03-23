@@ -12,10 +12,6 @@ div.navbar.navbar-fixed-top
         ul.nav  
           li
             a(href='/') Home
-          li
-            a(href='#about') About
-          li
-            a(href='#contact') Contact
           li.active
             a(href='#') Dashboard
           li
@@ -26,33 +22,14 @@ div.navbar.navbar-fixed-top
           li
             a(href='/logout') Logout
 
-div.container-fluid
-  div.row-fluid
-    div.span2
-      // sidebar content
-      div.well.sidebar-nav
-        h4 classes
-        ul#classes
-          li
-            a(href='#') CS188
-          li
-            a(href='#') EE40
-          li
-            a(href='#') CS162
-
-    div.span8
-      // body content 
-      div.hero-unit
-        #chat
-          #messages
-            #lines
-          hr
-          form#send-message
-            div.input-append
-              input(type='text', size='16').span10#message< 
-              button(type='button').btn Send
-    div.span2
-      // online
-      div.well.sidebar-nav
-        h4 Online
-        ul#online
+div.container
+  div.hero-unit
+    h1 Dashboard
+      p Usually this is where you'll see a list of your favorites, recents, and maybe suggested or whatever dude.  Lorem ipsum ip man never let you down.
+  div.row
+    div.span4
+      h2 Sup mah man
+    div.span4
+      h2 Heading
+    div.span4
+      h2 Bored and sleepy
