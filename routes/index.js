@@ -31,7 +31,7 @@ exports.chat = function(req, res) {
 	
 /*	if (rooms.length === 0) {
 	  // redirect to dashboard to add some classes to favorites or select a class
-      res.redirect('/dashboard');
+      res.redirect('/dashboard'); // add some query param to indicate error
 	}
 */	
     // redirect chat/cs188 to chat/ with var room='cs188'
