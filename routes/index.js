@@ -6,6 +6,7 @@ var util = require('util')
 exports.index = function(req, res) {
   res.render('index', { 
     title: 'CalChat', 
+    layout: 'layout-index', 
     loggedIn: req.loggedIn
   });
 };
@@ -14,6 +15,7 @@ exports.dashboard = function(req, res) {
   if (req.loggedIn) {
     res.render('dashboard', {
       title: 'Dashboard',
+      layout: 'layout-dashboard'
     });
   } else {
     res.redirect('home');
@@ -38,6 +40,7 @@ exports.chat = function(req, res) {
     if (isValid(room)) {
       res.render('chat', { 
         title: 'CalChat', 
+        layout: 'layout-chat',
         rooms: JSON.stringify(rooms)
       });
     } else {

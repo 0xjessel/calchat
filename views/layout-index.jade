@@ -1,0 +1,27 @@
+!!! 5
+html(lang='en')
+  head
+    include head.jade
+
+    style(type='text/css')
+      body {
+         padding-top: 60px;
+         padding-bottom: 40px;
+      }
+      #login {
+         display: block;
+         width: 280px;
+         height: 47px;
+         background: url('img/fb-connect.png') bottom;
+       }
+       #login:hover {
+         background-position: 0 0;
+       }
+
+  body!= body
+  
+  script
+    if (window.location.hash == '#_=_')
+      window.location.hash = '';
+  script(src='/js/libs/bootstrap/transition.js')
+  script(src='/js/libs/bootstrap/collapse.js')
