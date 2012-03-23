@@ -36,8 +36,9 @@ public class Utils {
 	}
 
 	private static final String REDIS_URL = "calchat.net";
+	private static final String REDIS_DEBUG_URL = "localhost";
 
-	private static Jedis jedis = new Jedis(REDIS_URL);
+	private static Jedis jedis;
 	private static Pipeline pipeline;
 
 	public static void save(ClassModel m) {
@@ -49,8 +50,8 @@ public class Utils {
 			if (day.equals("")) {
 				continue;
 			}
-			String key = String.format("room:%s%s:%s:%s", m.buildingNumber,
-					m.building, day, m.term).replace(" ", "");
+			String key = String.format("room:%s:%s:%s:%s", m.building,
+					m.buildingNumber, day, m.term).replace(" ", "");
 			String field = m.time.replace(" ", "");
 
 			pipeline.hset(key, field, id);
@@ -79,6 +80,7 @@ public class Utils {
 
 	public static boolean connect() {
 		try {
+			jedis = new Jedis(REDIS_DEBUG_URL);
 			jedis.connect();
 			pipeline = jedis.pipelined();
 			return true;
