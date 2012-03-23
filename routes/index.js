@@ -22,12 +22,23 @@ exports.dashboard = function(req, res) {
   
 exports.chat = function(req, res) {
   if (req.loggedIn) {
+    var rooms = new Array(); // get favorites from redis
     var room = req.params.room;
+	// prepend room to rooms, client-side will connect to first room in rooms
+	if (typeof(room) !== undefined) {
+      rooms.unshift(room);
+    }
+	
+/*	if (rooms.length === 0) {
+	  // redirect to dashboard to add some classes to favorites or select a class
+      res.redirect('/dashboard');
+	}
+*/	
     // redirect chat/cs188 to chat/ with var room='cs188'
     if (isValid(room)) {
       res.render('chat', { 
         title: 'CalChat', 
-        room: room,
+        rooms: JSON.stringify(rooms)
       });
     } else {
       // open up previous chat windows?

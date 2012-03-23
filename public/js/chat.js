@@ -3,8 +3,10 @@ var socket = io.connect();
 
 socket.on('connect', function () {
   // join this room
-  socket.emit('join room', room);
-             
+  if (room != '') {
+    socket.emit('join room', room);
+  }
+  
   // send fb name
   socket.emit('nickname', name, function(set) {
     if(!set) {

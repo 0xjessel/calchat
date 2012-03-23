@@ -2,7 +2,8 @@
 
 script
   var name = '#{name}';
-  var room = '#{room}';
+  var rooms = !{rooms};
+  var room = rooms[0];
 script(src='/socket.io/socket.io.js')
 script(src='js/chat.js')
 
