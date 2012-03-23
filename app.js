@@ -64,8 +64,9 @@ app.configure('production', function(){
 
 // Routes
 app.get('/', routes.index);
+app.get('/dashboard', routes.dashboard);
 app.get('/chat', routes.chat);
-app.get('/chat/:room', routes.chatroom); 
+app.get('/chat/:room', routes.chat); 
 
 app.listen(3000);
 

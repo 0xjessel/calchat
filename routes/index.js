@@ -10,20 +10,22 @@ exports.index = function(req, res) {
   });
 };
 
-exports.chat = function(req, res) {
-  res.send('list of chat rooms available');
-};
+exports.dashboard = function(req, res) {
+  res.render('dashboard', {
+    title: 'Dashboard',
+  });
+}
 
-exports.chatroom = function(req, res) {
+exports.chat = function(req, res) {
   var room = req.params.room;
+  // redirect chat/cs188 to chat/ with var room='cs188'
   if (isValid(room)) {
-    res.render('chatroom', { 
-      title: 'CalChat Chat', 
-      room: req.params.room, 
-      layout: false 
+    res.render('chat', { 
+      title: 'CalChat', 
+      room: room,
     });
   } else {
-    res.send(room + ' is an invalid room');
+    // open up previous chat windows?
   }  
 };
 

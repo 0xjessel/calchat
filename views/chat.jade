@@ -1,0 +1,61 @@
+- var name = everyauth.facebook.user.first_name + ' ' + everyauth.facebook.user.last_name.charAt(0);
+
+script
+  var name = '#{name}';
+script(src='/socket.io/socket.io.js')
+script(src='js/chat.js')
+
+div.navbar.navbar-fixed-top
+  div.navbar-inner
+    div.container
+      a(data-toggle='collapse', data-target='.nav-collapse').btn.btn-navbar
+        span.icon-bar
+        span.icon-bar
+        span.icon-bar
+      a(href='/').brand #{title}
+      div.nav-collapse
+        ul.nav  
+          li
+            a(href='/') Home
+          li
+            a(href='#about') About
+          li
+            a(href='#contact') Contact
+          li.active
+            a(href='/chat') Chat
+        ul.nav.pull-right
+          li
+            img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')
+          li
+            a(href='/logout') Logout
+
+div.container-fluid
+  div.row-fluid
+    div.span2
+      // sidebar content
+      div.well.sidebar-nav
+        h4 classes
+        ul#classes
+          li
+            a(href='#') CS188
+          li
+            a(href='#') EE40
+          li
+            a(href='#') CS162
+
+    div.span8
+      // body content 
+      div.hero-unit
+        #chat
+          #messages
+            #lines
+          hr
+          form#send-message
+            div.input-append
+              input(type='text', size='16').span10#message< 
+              button(type='button').btn Send
+    div.span2
+      // online
+      div.well.sidebar-nav
+        h4 Online
+        ul#online
