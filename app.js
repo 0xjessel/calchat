@@ -14,28 +14,57 @@ var app = module.exports = express.createServer();
 /**
  * Redis
  */
-/*var client = redis.createClient();
-
-client.set('jesse chen', 'awesome guy');
-
-client.get('jesse chen', function(err, reply) {
-  console.log(reply.toString());
-});
-
-client.end();
-*/
+var client = redis.createClient();
+redis.debug_mode = false;
 
 /**
  * Facebook Connect
-*/
-var usersByFbId = {}; // temp use instead of redis
+ */
+everyauth.debug = true;
+
+everyauth.everymodule.findUserById(function (userId, callback) {
+	// callback has the signature, function (err, user) {...}
+	client.hgetall('user:'+userId, callback);
+});
+
+//everyauth.everymodule.userPkey('uid');
 
 everyauth.facebook
   .appId('297402036983700')
   .appSecret('aad4c11b1b2ccbad5ea5d3632cc5d920')
   .scope('email, user_about_me, read_friendlists')
   .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
-    return usersByFbId[fbUserMetadata.id] || (usersByFbId[fbUserMetadata.id] = fbUserMetadata);
+	var promise = this.Promise();
+	client.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+		if (err == null) { // no errors
+			if (Object.keys(reply).length == 0) { 
+				// no user found, create new user
+				client.hmset('user:'+fbUserMetadata.id, {
+					'id': fbUserMetadata.id, 
+					'firstname': fbUserMetadata.first_name,
+					'lastname': fbUserMetadata.last_name,
+					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
+					'oauth': accessToken
+				}, function() {
+					client.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+						if (err == null) {
+							promise.fulfill(reply);
+						}
+					})
+				});
+				
+			} else { 
+				promise.fulfill(reply);
+			}			
+		/*	Object.keys(reply).forEach(function(val) {
+				console.log(val+ ' '+reply[val]);
+			})*/
+		} else {
+			promise.fail(err);
+			console.log('Error: '+err);
+		}
+	});
+	return promise;
   })
   .redirectPath('/');
 
@@ -49,7 +78,7 @@ app.configure(function() {
   app.use(express.cookieParser());
   app.use(express.session({ secret: 'nelarkonesse' }));
   app.use(everyauth.middleware());
-  app.use(app.router);
+ // app.use(app.router);
 });
 
 everyauth.helpExpress(app);
