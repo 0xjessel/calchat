@@ -165,6 +165,14 @@ public class Utils {
 
 			json = new JSONObject(sb.toString());
 
+			// check for failure
+			if ("Berkeley, CA, USA".equals(json.getJSONArray("results")
+					.getJSONObject(0).getString("formatted_address"))) {
+				System.err.println(String.format(
+						"Error: %s could not be located", building));
+				return;
+			}
+
 			JSONObject locationJson = json.getJSONArray("results")
 					.getJSONObject(0).getJSONObject("geometry")
 					.getJSONObject("location");
@@ -181,6 +189,7 @@ public class Utils {
 				connection.disconnect();
 
 			try {
+				// avoid Google Maps rate-limit
 				Thread.sleep(500);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
@@ -191,18 +200,7 @@ public class Utils {
 	public static void main(String[] args) {
 		connect();
 
-		buildings.add("soda");
-		buildings.add("etcheverry");
-		buildings.add("li ka shing");
-		buildings.add("cory");
-		buildings.add("dwinelle");
-		buildings.add("barrows");
-		buildings.add("valley lsb");
-		buildings.add("evans");
-		buildings.add("le conte");
-		buildings.add("stanley");
-		buildings.add("pimentel");
-		buildings.add("moffit");
+		buildings.add("tan");
 
 		saveLocations();
 
