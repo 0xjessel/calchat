@@ -1,5 +1,6 @@
 var util = require('util')
-
+    , everyauth = require('everyauth')
+    , redis = require('redis');
 /*
  * GET home page.
  */
@@ -21,9 +22,12 @@ exports.dashboard = function(req, res) {
     res.redirect('home');
   }
 };
-  
+
 exports.chat = function(req, res) {
   if (req.loggedIn) {
+	var client = redis.createClient();
+	console.log('user: ' +req.user.id);
+	//client.hget('') get the rooms var
     var rooms = new Array(); // get favorites from redis
     var room = req.params.room;
 	// prepend room to rooms, client-side will connect to first room in rooms
