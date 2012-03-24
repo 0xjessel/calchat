@@ -30,6 +30,7 @@ public class ClassScraper {
 				if (term.toUpperCase().equals(Utils.TERMS[i].toUpperCase())
 						|| term.toUpperCase().equals(
 								Utils.TERMS_STRINGS[i].toUpperCase())) {
+					// Get terms
 					terms = getTerms(i);
 					found = true;
 					break;
@@ -39,6 +40,7 @@ public class ClassScraper {
 				error = true;
 			}
 		} else if (args.length == 0) {
+			// Get terms
 			terms = getTerms(-1);
 		} else {
 			error = true;
@@ -88,6 +90,10 @@ public class ClassScraper {
 			result = gson.toJson(terms);
 		else
 			result = gson.toJson(terms[termIndex]);
+
+		Utils.saveLocations();
+
+		Utils.disconnect();
 
 		return result;
 	}
