@@ -26,7 +26,7 @@ exports.dashboard = function(req, res) {
 exports.chat = function(req, res) {
   if (req.loggedIn) {
 	var client = redis.createClient();
-	console.log('user: ' +req.user.id);
+	console.log('user: ' +req.user.recent);
 	//client.hget('') get the rooms var
     var rooms = new Array(); // get favorites from redis
     var room = req.params.room;
@@ -49,7 +49,7 @@ exports.chat = function(req, res) {
       });
     } else {
       // open up previous chat windows?
-    }   
+    }
   } else {
     res.redirect('home');
   }

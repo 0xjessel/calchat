@@ -15,12 +15,13 @@ html(lang='en')
        #login:hover {
          background-position: 0 0;
        }
-    script(src='/js/yqlgeo.js')
-    script(src='/js/geo.js')
     include head.jade
 
   body!= body
-  
+
+
+  script(src='/js/yqlgeo.js')
+  script(src='/js/geo.js')
   script
     if (window.location.hash == '#_=_')
       window.location.hash = '';
