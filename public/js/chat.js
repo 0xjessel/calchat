@@ -20,47 +20,59 @@ socket.on('announcement', function (msg) {
 });
 
 socket.on('nicknames', function (nicknames) {
-  for (var i in nicknames) {
-    if (!i == '') { 
-      $('#online').append('<li>'+nicknames[i]+'</li>');
-    }
-  }
+	for (var i in nicknames) {
+		if (!i == '') { 
+			$('#online').append('<li>'+nicknames[i]+'</li>');
+		}
+	}
 });
 
 socket.on('message', message);
 
 socket.on('reconnect', function () {
-  $('#lines').remove();
-  message('System', 'Reconnected to the server');
+	$('#lines').remove();
+	message('System', 'Reconnected to the server');
 });
 
 socket.on('reconnecting', function () {
-  message('System', 'Attempting to re-connect to the server');
+	message('System', 'Attempting to re-connect to the server');
 });
 
 socket.on('error', function (e) {
-  message('System', e ? e : 'A unknown error occurred');
+	message('System', e ? e : 'A unknown error occurred');
 });
 
 function message (from, msg) {
-  $('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
+	$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
+	chatDiv.scrollTop(chatDiv[0].scrollHeight);
 }
 
 function clear () {
-  $('#message').val('').focus();
+	$('#message').val('').focus();
 };
 
 // dom manipulation
 $(function () {
-  $('#send-message').submit(function () {
-    message(name, $('#message').val());
-    socket.emit('message', $('#message').val());
-    clear();
-    $('#lines').get(0).scrollTop = 10000000;
-    return false;
-  });
-
-  function clear () {
-    $('#message').val('').focus();
-  };
+	// setup classes in left nav sidebar
+	var roomsNav = $('#classes');
+	for (i in rooms) {
+		if (i == 0) {
+			roomsNav.append('<li class=\'active\'><a href=\'#\'>'+rooms[i]+'</a></li>');	
+		} else {
+			roomsNav.append('<li><a href=\'#\'>'+rooms[i]+'</a></li>');
+		}
+	}
+	
+	var chatDiv = $('#chat');
+	$('#send-message').submit(function () {
+		message(name, $('#message').val());
+		socket.emit('message', $('#message').val());
+		clear();
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);
+		return false;
+	});
+	
+	function clear () {
+		$('#message').val('').focus();
+	};
 });
