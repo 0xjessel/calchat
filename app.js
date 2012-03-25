@@ -27,8 +27,6 @@ everyauth.everymodule.findUserById(function (userId, callback) {
 	client.hgetall('user:'+userId, callback);
 });
 
-//everyauth.everymodule.userPkey('uid');
-
 everyauth.facebook
   .appId('297402036983700')
   .appSecret('aad4c11b1b2ccbad5ea5d3632cc5d920')
@@ -43,8 +41,9 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
+					'recent': new Array(),
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
-					'oauth': accessToken
+					'oauth': accessToken,
 				}, function() {
 					client.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {

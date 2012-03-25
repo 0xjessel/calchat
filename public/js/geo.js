@@ -46,6 +46,6 @@ function normalize_yql_response(response) {
 }
 
 function handle_geolocation_query(position) {
-alert('Lat: ' + position.coords.latitude +  
+console.log('Lat: ' + position.coords.latitude +  
                 ' Lon: ' + position.coords.longitude);
 }
