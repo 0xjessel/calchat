@@ -52,6 +52,16 @@ function clear () {
 
 // dom manipulation
 $(function () {
+	// setup classes in left nav sidebar
+	var roomsNav = $('#classes');
+	for (i in rooms) {
+		if (i == 0) {
+			roomsNav.append('<li class=\'active\'><a href=\'#\'>'+rooms[i]+'</a></li>');	
+		} else {
+			roomsNav.append('<li><a href=\'#\'>'+rooms[i]+'</a></li>');
+		}
+	}
+	
   $('#send-message').submit(function () {
     message(name, $('#message').val());
     socket.emit('message', $('#message').val());

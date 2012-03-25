@@ -41,7 +41,7 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
-					'recent': new Array(),
+					'recent': '',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 				}, function() {
@@ -94,7 +94,7 @@ app.configure('production', function(){
 app.get('/', routes.index);
 app.get('/dashboard', routes.dashboard);
 app.get('/chat', routes.chat);
-app.get('/chat/:room', routes.chat); 
+app.get('/chat/:room', routes.chatroom); 
 
 app.listen(3000);
 
