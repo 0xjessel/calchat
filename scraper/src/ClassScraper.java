@@ -91,8 +91,6 @@ public class ClassScraper {
 		else
 			result = gson.toJson(terms[termIndex]);
 
-		Utils.saveLocations();
-
 		Utils.disconnect();
 
 		return result;

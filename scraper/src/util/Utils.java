@@ -54,7 +54,14 @@ public class Utils {
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
 
-		buildings.add(m.building);
+		synchronized (buildings) {
+			if (!savedBuildings.contains(m.building)
+					&& buildings.add(m.building)) {
+				System.err.println(String.format("Found new building: %s",
+						m.building));
+				buildings.notify();
+			}
+		}
 
 		// classtimes
 		String[] days = m.days.split("(?=\\p{Upper})");
@@ -99,6 +106,18 @@ public class Utils {
 			pipeline = jedis.pipelined();
 
 			buildings = new HashSet<String>();
+			savedBuildings = new HashSet<String>();
+
+			saveLocationsThread = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					saveLocations();
+				}
+			});
+			saveLocationsAlive = true;
+			saveLocationsThread.start();
+
 			return true;
 		} catch (Exception exception) {
 			return false;
@@ -106,39 +125,65 @@ public class Utils {
 	}
 
 	public static void disconnect() {
+		// wait for saveLocationsThread to finish
+		System.err.println("Waiting for locations to be saved...");
+		synchronized (buildings) {
+			saveLocationsAlive = false;
+			buildings.notify();
+		}
+	}
+
+	// called from saveLocationsThread
+	private static void disconnectHelper() {
+		System.err.println("Disconnecting from Redis server...");
+		
 		pipeline.sync();
 		pipeline = null;
 		jedis.disconnect();
 		jedis = null;
 
 		buildings = null;
+		savedBuildings = null;
 	}
 
 	private static final String MAPS_URL = "http://maps.google.com/maps/api/geocode/json?address=%s,Berkeley,CA&sensor=false";
+
 	private static Set<String> buildings;
+	private static Set<String> savedBuildings;
+
+	private static Thread saveLocationsThread;
+	private static boolean saveLocationsAlive;
 
 	public static void saveLocations() {
-		System.err.println("Locating buildings...");
-
-		try {
-			int i = 0;
-			int size = buildings.size();
-			String previousPercentString = null;
-
-			for (String building : buildings) {
-				double percent = (float) i / size * 100;
-				String percentString = String.format("%.1f%%", percent);
-				if (!percentString.equals(previousPercentString)) {
-					System.err.println(percentString);
-					previousPercentString = percentString;
+		while (true) {
+			String building = null;
+			synchronized (buildings) {
+				if (buildings.isEmpty()) {
+					if (saveLocationsAlive) {
+						try {
+							buildings.wait();
+							continue;
+						} catch (InterruptedException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}
+					} else {
+						disconnectHelper();
+						return;
+					}
 				}
 
-				saveLocation(building);
-
-				i++;
+				building = buildings.toArray(new String[] {})[0];
+				buildings.remove(building);
+				savedBuildings.add(building);
 			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+
+			try {
+				saveLocation(building);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -168,8 +213,8 @@ public class Utils {
 			// check for failure
 			if ("Berkeley, CA, USA".equals(json.getJSONArray("results")
 					.getJSONObject(0).getString("formatted_address"))) {
-				System.err.println(String.format(
-						"Error: %s could not be located", building));
+				System.err.println(String.format("E: Couldn't locate: %s",
+						building));
 				return;
 			}
 
@@ -181,6 +226,9 @@ public class Utils {
 					locationJson.getDouble("lng"));
 
 			pipeline.set(key, location);
+
+			System.err.println(String.format("Found new location: %s (%s)",
+					building, location));
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.err.println(json.toString());
@@ -200,9 +248,16 @@ public class Utils {
 	public static void main(String[] args) {
 		connect();
 
-		buildings.add("tan");
-
-		saveLocations();
+		synchronized (buildings) {
+			buildings.add("tan");
+			buildings.notify();
+			buildings.add("soda");
+			buildings.notify();
+			buildings.add("etcheverry");
+			buildings.notify();
+			buildings.add("cory");
+			buildings.notify();
+		}
 
 		disconnect();
 	}
