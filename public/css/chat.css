@@ -4,6 +4,10 @@ body {
    padding-bottom: 40px;
 }
 
+.badge {
+	float: right;
+}
+
 ul.sidebar {
 	list-style-type: none;
 }

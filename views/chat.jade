@@ -3,7 +3,6 @@
 script
   var name = '#{name}';
   var rooms = !{JSON.stringify(rooms)}
-  var room = rooms[0];
 script(src='/socket.io/socket.io.js')
 script(src='js/chat.js')
 
@@ -31,13 +30,17 @@ div.navbar.navbar-fixed-top
 
 div.container-fluid
   div.row-fluid
-    div.span2
+    div.span3
       // sidebar content
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar#classes
           li.nav-header Chatrooms
 
-    div.span8
+      div.well.sidebar-nav
+        ul.nav.nav-list.sidebar#online
+          li.nav-header Online
+
+    div.span9
       // body content 
       div.hero-unit
         #chat
@@ -46,11 +49,8 @@ div.container-fluid
         hr
         form#send-message
           div.input-append
-            input(type='text', size='16').span10#message< 
+            input(type='text', size='16').span5#message< 
             button(type='button').btn Send
 
     div.span2
       // online
-      div.well.sidebar-nav
-        h4 Online
-        ul.sidebar#online

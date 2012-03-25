@@ -36,8 +36,6 @@ exports.chat = function(req, res) {
 	// convert string to array
 	var rooms = req.user.recent.split(',');
 	
-	console.log(rooms);
-	
     res.render('chat', { 
       title: 'CalChat', 
       layout: 'layout-chat',
@@ -54,7 +52,6 @@ exports.chatroom = function(req, res) {
 		var rooms = req.user.recent.split(',');
 
 		var room = req.params.room;
-		console.log(room);
 		if (room != undefined && isValid(room)) {
 			if (!req.user.recent) {
 				// first time, set rooms to be a new array with just the room
@@ -65,7 +62,6 @@ exports.chatroom = function(req, res) {
 			} 
 			// update db
 			client.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
-				console.log(rooms+' before redirecting back to /chat');
 				return res.redirect('/chat');
 			});
 			return;

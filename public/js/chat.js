@@ -1,18 +1,26 @@
 // socket.io specific code
 var socket = io.connect();
+var chatDiv = $('#chat');
+var current = rooms[0];
+var unread = {};
+for (var i = 0; i < rooms.length; i++) {
+	unread[rooms[i]] = 0;
+}
 
 socket.on('connect', function () {
-  // join this room
-  if (room != '') {
-    socket.emit('join room', room);
-  }
-  
-  // send fb name
-  socket.emit('nickname', name, function(set) {
-    if(!set) {
-      clear();
-    }
-  });
+	// join all rooms
+	for (var i = 0; i < rooms.length; i++) {
+		if (rooms[i] != '') {
+			socket.emit('join room', rooms[i]);
+		}	
+	}
+	
+	// send fb name
+	socket.emit('nickname', name, function(set) {
+		if(!set) {
+			clear();
+		}
+	});
 });
 
 socket.on('announcement', function (msg) {
@@ -42,9 +50,22 @@ socket.on('error', function (e) {
 	message('System', e ? e : 'A unknown error occurred');
 });
 
-function message (from, msg) {
-	$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
-	chatDiv.scrollTop(chatDiv[0].scrollHeight);
+function message (to, from, msg) {
+	if (to == current) {
+		// incoming msg to the current room
+		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);		
+	} else {
+		// incr badge
+		unread[to]++;
+		var badge = $('#'+to+' .badge');
+		
+		if (badge.length == 0) {
+			$('#'+to).append('<span class="badge badge-error">'+unread[to]+'</span>');
+		} else {
+			badge.text(unread[to]);
+		}
+	}
 }
 
 function clear () {
@@ -55,15 +76,14 @@ function clear () {
 $(function () {
 	// setup classes in left nav sidebar
 	var roomsNav = $('#classes');
-	for (i in rooms) {
+	for (var i = 0; i < rooms.length; i++) {
 		if (i == 0) {
-			roomsNav.append('<li class=\'active\'><a href=\'#\'>'+rooms[i]+'</a></li>');	
+			roomsNav.append('<li class="active"><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
 		} else {
-			roomsNav.append('<li><a href=\'#\'>'+rooms[i]+'</a></li>');
+			roomsNav.append('<li><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
 	
-	var chatDiv = $('#chat');
 	$('#send-message').submit(function () {
 		message(name, $('#message').val());
 		socket.emit('message', $('#message').val());

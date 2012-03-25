@@ -118,7 +118,7 @@ io.sockets.on('connection', function (socket) {
   socket.on('message', function (msg) {
       socket.get('room', function(err, room) {
         console.log(msg + ' to room ' + room);  
-        socket.broadcast.to(room).emit('message', socket.nickname, msg);
+        socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
       });
   });
 
