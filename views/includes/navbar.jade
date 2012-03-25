@@ -1,0 +1,37 @@
+div.navbar.navbar-fixed-top
+  div.navbar-inner
+    div.container
+      a(data-toggle='collapse', data-target='.nav-collapse').btn.btn-navbar
+        span.icon-bar
+        span.icon-bar
+        span.icon-bar
+      a(href='#').brand #{title}
+      div.nav-collapse
+        ul.nav
+          if index == 0
+            li.active
+              a(href='/') Home
+          else 
+            li
+              a(href='/') Home
+          if loggedIn
+            if index == 1
+              li.active
+                a(href='/dashboard') Dashboard
+            else 
+              li
+                a(href='/dashboard') Dashboard
+            if index == 2
+              li.active
+                a(href='/chat') Chat
+            else 
+              li
+                a(href='/chat') Chat
+        if loggedIn
+          form.navbar-search.pull-left
+            input(type='text', placeholder='Add Chatroom').search-query
+          ul.nav.pull-right
+            li
+              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')
+            li
+              a(href='/logout') Logout

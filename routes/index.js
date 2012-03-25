@@ -11,7 +11,8 @@ exports.index = function(req, res) {
   res.render('index', { 
     title: 'CalChat', 
     layout: 'layout-index', 
-    loggedIn: req.loggedIn
+    loggedIn: req.loggedIn,
+    index: 0
   });
 };
 
@@ -19,7 +20,9 @@ exports.dashboard = function(req, res) {
   if (req.loggedIn) {
     res.render('dashboard', {
       title: 'Dashboard',
-      layout: 'layout-dashboard'
+      layout: 'layout-dashboard',
+      loggedIn: req.loggedIn,
+      index: 1
     });
   } else {
     res.redirect('home');
@@ -39,7 +42,9 @@ exports.chat = function(req, res) {
     res.render('chat', { 
       title: 'CalChat', 
       layout: 'layout-chat',
-      rooms: rooms
+      loggedIn: req.loggedIn,
+      rooms: rooms,
+      index: 2
     });
   } else {
     res.redirect('home');

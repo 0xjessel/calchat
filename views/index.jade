@@ -1,26 +1,4 @@
-div.navbar.navbar-fixed-top
-  div.navbar-inner
-    div.container
-      a(data-toggle='collapse', data-target='.nav-collapse').btn.btn-navbar
-        span.icon-bar
-        span.icon-bar
-        span.icon-bar
-      a(href='#').brand #{title}
-      div.nav-collapse
-        ul.nav
-          li.active
-            a(href='#') Home
-          if loggedIn
-            li
-              a(href='/dashboard') Dashboard
-            li
-              a(href='/chat') Chat
-        ul.nav.pull-right
-          if loggedIn
-            li
-              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')
-            li
-              a(href='/logout') Logout
+include includes/navbar
 
 div.container
   div.hero-unit
