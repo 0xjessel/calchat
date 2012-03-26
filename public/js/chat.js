@@ -1,7 +1,7 @@
 // socket.io specific code
 var socket = io.connect();
-var chatDiv = $('#chat');
 var current = rooms[0];
+var chatDiv;
 var unread = {};
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i]] = 0;
@@ -16,21 +16,25 @@ socket.on('connect', function () {
 	}
 	
 	// send fb name
-	socket.emit('nickname', name, function(set) {
+	socket.emit('set name', name, function(set) {
 		if(!set) {
 			clear();
 		}
 	});
 });
 
-socket.on('announcement', function (msg) {
-  $('#lines').append($('<p>').append($('<em>').text(msg)));
+socket.on('announcement', function (to, msg) {
+	if (to == current) {
+		$('#lines').append($('<p>').append($('<em>').text(msg)));		
+	}
 });
 
-socket.on('nicknames', function (nicknames) {
-	for (var i in nicknames) {
-		if (!i == '') { 
-			$('#online').append('<li>'+nicknames[i]+'</li>');
+socket.on('nicknames', function (to, nicknames) {
+	if (to == current) {
+		for (var i in nicknames) {
+			if (!i == '') {
+				$('#online').append('<li>'+nicknames[i]+'</li>');
+			}
 		}
 	}
 });
@@ -39,22 +43,22 @@ socket.on('message', message);
 
 socket.on('reconnect', function () {
 	$('#lines').remove();
-	message('System', 'Reconnected to the server');
+	message(current, 'System', 'Reconnected to the server');
 });
 
 socket.on('reconnecting', function () {
-	message('System', 'Attempting to re-connect to the server');
+	message(current, 'System', 'Attempting to re-connect to the server');
 });
 
 socket.on('error', function (e) {
-	message('System', e ? e : 'A unknown error occurred');
+	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
 function message (to, from, msg) {
 	if (to == current) {
 		// incoming msg to the current room
 		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);		
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 	} else {
 		// incr badge
 		unread[to]++;
@@ -74,6 +78,8 @@ function clear () {
 
 // dom manipulation
 $(function () {
+	chatDiv = $('#chat');
+	
 	// setup classes in left nav sidebar
 	var roomsNav = $('#classes');
 	for (var i = 0; i < rooms.length; i++) {
@@ -84,15 +90,15 @@ $(function () {
 		}
 	}
 	
+	$('#classes a').click(function() {
+		console.log('hi');
+	});
+	
 	$('#send-message').submit(function () {
-		message(name, $('#message').val());
-		socket.emit('message', $('#message').val());
+		message(current, name, $('#message').val());
+		socket.emit('message', current, $('#message').val());
 		clear();
 		chatDiv.scrollTop(chatDiv[0].scrollHeight);
 		return false;
 	});
-	
-	function clear () {
-		$('#message').val('').focus();
-	};
 });
