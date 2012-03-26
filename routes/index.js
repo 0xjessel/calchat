@@ -2,7 +2,8 @@ var util = require('util')
     , everyauth = require('everyauth')
     , redis = require('redis');
 
-var client = redis.createClient();
+var client1 = redis.createClient();
+client1.select(1);
 
 /*
  * GET home page.
@@ -62,11 +63,24 @@ exports.chatroom = function(req, res) {
 				// first time, set rooms to be a new array with just the room
 				rooms = [room];
 			} else {
-				// prepend room to rooms, client-side will connect to the first room in rooms
-				rooms.unshift(room);
+				var found = false;
+				// check if room already exists inside rooms
+				for (var i = 0; i < rooms.length; i++) {
+					if (rooms[i] == room) {
+						// move room to front of array and return
+						var awesome = rooms.splice(i, i);
+						rooms.unshift(awesome);
+						found = true;
+					}
+				}
+				
+				if (!found) {
+					// prepend room to rooms, client-side will connect to the first room in rooms
+					rooms.unshift(room);
+				}
 			} 
 			// update db
-			client.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
+			client1.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
 				return res.redirect('/chat');
 			});
 			return;
@@ -77,7 +91,7 @@ exports.chatroom = function(req, res) {
 	res.redirect('home');
 }
 
-// query db to see if room is a valid room to join
+// query db to see if room is valid
 function isValid(room) {
   return true;
 }
