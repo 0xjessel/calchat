@@ -30,7 +30,7 @@ socket.on('chatlog', function (logs) {
 		// not showing timestamp for now
 		$('#lines').append($('<p>').append(logs[timestamp]));
 	}
-	chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+	scrollToBottom();
 });
 
 socket.on('announcement', function (to, msg) {
@@ -68,7 +68,7 @@ function message (to, from, msg) {
 	if (to == current) {
 		// incoming msg to the current room
 		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+		scrollToBottom();
 	} else {
 		// incr badge
 		unread[to]++;
@@ -85,6 +85,15 @@ function message (to, from, msg) {
 function clear () {
 	$('#message').val('').focus();
 };
+
+function scrollToBottom () {
+	// scroll to bottom only if already scrolled to bottom
+	console.log(chatDiv[0].scrollHeight - chatDiv.scrollTop() + 10);
+	console.log(chatDiv.outerHeight());
+	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 75 <= chatDiv.outerHeight()) {
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+	}
+}
 
 // dom manipulation
 $(function () {
@@ -119,7 +128,7 @@ $(function () {
 		message(current, name, $('#message').val());
 		socket.emit('message', current, $('#message').val());
 		clear();
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);
+		scrollToBottom();
 		return false;
 	});
 });
