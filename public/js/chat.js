@@ -90,8 +90,8 @@ function clear () {
 $(function () {
 	chatDiv = $('#chat');
 	
-	// setup classes in left nav sidebar
-	var roomsNav = $('#classes');
+	// setup chats in left nav sidebar
+	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
 		if (i == 0) {
 			roomsNav.append('<li class="active"><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
@@ -100,14 +100,18 @@ $(function () {
 		}
 	}
 	
-	$('#classes a').click(function() {
-		$('#lines').empty();
-		
-		$('#classes .active').removeClass('active');
-		$(this).parent().addClass('active');
-		
-		current = $(this).text();
-		socket.emit('get chatlog', current);
+	$('#chats a').click(function() {
+		if ($(this).text() != current) {
+			$('#lines').empty();
+			$('#online').empty();
+			$(this).find('.badge').remove();
+
+			$('#chats .active').removeClass('active');
+			$(this).parent().addClass('active');
+
+			current = $(this).text();
+			socket.emit('get chatlog', current);
+		}
 	});
 	
 	$('#send-message').submit(function () {
