@@ -103,7 +103,7 @@ $(function () {
 	$('#chats a').click(function() {
 		if ($(this).text() != current) {
 			$('#lines').empty();
-			$('#online').empty();
+			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();
 
 			$('#chats .active').removeClass('active');
