@@ -125,7 +125,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('get chatlog', function (room) {
-		// get last 50 messages
+		// get last 30 messages
 		client.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			console.log(replies.length + ' replies:');
 			replies.forEach(function(reply, i) {
