@@ -139,6 +139,10 @@ io.sockets.on('connection', function (socket) {
 			socket.emit('chatlog', toReturn);
 		});
 	});
+	
+	socket.on('get online', function (room) {
+		socket.emit('nicknames', room, nicknames[room]);
+	});
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);  
