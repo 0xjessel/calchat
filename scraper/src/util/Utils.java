@@ -101,6 +101,7 @@ public class Utils {
 		try {
 			jedis = new Jedis(REDIS_URL);
 			jedis.connect();
+			jedis.select(0);
 			jedis.flushDB();
 
 			pipeline = jedis.pipelined();
@@ -136,7 +137,7 @@ public class Utils {
 	// called from saveLocationsThread
 	private static void disconnectHelper() {
 		System.err.println("Disconnecting from Redis server...");
-		
+
 		pipeline.sync();
 		pipeline = null;
 		jedis.disconnect();

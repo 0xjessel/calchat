@@ -63,6 +63,12 @@ public class DetailsScraper {
 				if (locationSplit.length > 1) {
 					buildingNumber = locationSplit[0];
 					building = locationSplit[1];
+
+					if (building.equals("AUD")) {
+						String temp = building;
+						building = buildingNumber;
+						buildingNumber = temp;
+					}
 				}
 
 				ClassModel classModel = new ClassModel(term, department,
