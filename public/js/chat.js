@@ -28,7 +28,8 @@ socket.on('connect', function () {
 socket.on('chatlog', function (logs) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
-		$('#lines').append($('<p>').append(logs[timestamp]));
+		var msg = linkify(logs[timestamp]);
+		$('#lines').append($('<p>').append(msg));
 	}
 	scrollToBottom();
 });
@@ -65,6 +66,7 @@ socket.on('error', function (e) {
 });
 
 function message (to, from, msg) {
+	msg = linkify(msg);
 	if (to == current) {
 		// incoming msg to the current room
 		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
@@ -88,8 +90,6 @@ function clear () {
 
 function scrollToBottom () {
 	// scroll to bottom only if already scrolled to bottom
-	console.log(chatDiv[0].scrollHeight - chatDiv.scrollTop() + 10);
-	console.log(chatDiv.outerHeight());
 	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 75 <= chatDiv.outerHeight()) {
 		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 	}
