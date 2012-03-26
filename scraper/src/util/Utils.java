@@ -15,6 +15,7 @@ import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class Utils {
 	public static final String[] TERMS = { "SP", "SU", "FL" };
@@ -48,7 +49,8 @@ public class Utils {
 	private static final String REDIS_URL = "calchat.net";
 	// private static final String REDIS_URL = "localhost";
 
-	private static Jedis jedis;
+	private static Jedis jedis; // used to make the pipeline for async calls
+	private static Jedis syncJedis; // for synchronous calls
 	private static Pipeline pipeline;
 
 	public static void save(ClassModel m) {
@@ -73,7 +75,9 @@ public class Utils {
 					m.buildingNumber, day, m.term).replace(" ", "");
 			String field = m.time.replace(" ", "");
 
-			pipeline.hset(key, field, id);
+			synchronized (pipeline) {
+				pipeline.hset(key, field, id);
+			}
 		}
 
 		// classes
@@ -82,7 +86,9 @@ public class Utils {
 				String key = String.format("class:%s", id);
 				String value = (String) field.get(m);
 
-				pipeline.hset(key, field.getName(), value);
+				synchronized (pipeline) {
+					pipeline.hset(key, field.getName(), value);
+				}
 			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -103,6 +109,10 @@ public class Utils {
 			jedis.connect();
 			jedis.select(0);
 			jedis.flushDB();
+
+			syncJedis = new Jedis(REDIS_URL);
+			syncJedis.connect();
+			syncJedis.select(1);
 
 			pipeline = jedis.pipelined();
 
@@ -138,10 +148,15 @@ public class Utils {
 	private static void disconnectHelper() {
 		System.err.println("Disconnecting from Redis server...");
 
-		pipeline.sync();
+		synchronized (pipeline) {
+			pipeline.sync();
+		}
 		pipeline = null;
 		jedis.disconnect();
 		jedis = null;
+
+		syncJedis.disconnect();
+		syncJedis = null;
 
 		buildings = null;
 		savedBuildings = null;
@@ -188,51 +203,78 @@ public class Utils {
 		}
 	}
 
-	public static void saveLocation(final String building)
+	public static void saveLocation(String building)
 			throws InterruptedException {
-		String key = String.format("location:%s", building.replace(" ", ""));
-
 		HttpURLConnection connection = null;
 		JSONObject json = null;
 		try {
-			String url = String.format(MAPS_URL,
-					URLEncoder.encode(building, "UTF-8"));
-			connection = (HttpURLConnection) new URL(url).openConnection();
+			String key = String
+					.format("location:%s", building.replace(" ", ""));
+			String renameKey = String.format("rename:%s",
+					building.replace(" ", ""));
 
-			BufferedReader rd = new BufferedReader(new InputStreamReader(
-					connection.getInputStream(), "UTF-8"));
+			String location = null;
 
-			StringBuilder sb = new StringBuilder();
-			String line;
-			while ((line = rd.readLine()) != null) {
-				sb.append(line);
-			}
-			rd.close();
-
-			json = new JSONObject(sb.toString());
-
-			// check for failure
-			if ("Berkeley, CA, USA".equals(json.getJSONArray("results")
-					.getJSONObject(0).getString("formatted_address"))) {
-				System.err.println(String.format("E: Couldn't locate: %s",
-						building));
-				return;
+			try {
+				location = syncJedis.get(key);
+			} catch (JedisConnectionException e) {
+				location = syncJedis.get(key); // try again
 			}
 
-			JSONObject locationJson = json.getJSONArray("results")
-					.getJSONObject(0).getJSONObject("geometry")
-					.getJSONObject("location");
-			String location = String.format("%f,%f",
-					locationJson.getDouble("lat"),
-					locationJson.getDouble("lng"));
+			if (location == null) {
+				String name = null;
 
-			pipeline.set(key, location);
+				try {
+					name = syncJedis.get(renameKey);
+				} catch (JedisConnectionException e) {
+					syncJedis.get(renameKey); // try again
+				}
 
-			System.err.println(String.format("Found new location: %s (%s)",
+				if (name == null)
+					name = building;
+
+				String url = String.format(MAPS_URL,
+						URLEncoder.encode(name, "UTF-8"));
+				connection = (HttpURLConnection) new URL(url).openConnection();
+
+				BufferedReader rd = new BufferedReader(new InputStreamReader(
+						connection.getInputStream(), "UTF-8"));
+
+				StringBuilder sb = new StringBuilder();
+				String line;
+				while ((line = rd.readLine()) != null) {
+					sb.append(line);
+				}
+				rd.close();
+
+				json = new JSONObject(sb.toString());
+
+				// check for failure
+				if ("Berkeley, CA, USA".equals(json.getJSONArray("results")
+						.getJSONObject(0).getString("formatted_address"))) {
+					System.err.println(String.format("E: Couldn't locate: %s",
+							name));
+					return;
+				}
+
+				JSONObject locationJson = json.getJSONArray("results")
+						.getJSONObject(0).getJSONObject("geometry")
+						.getJSONObject("location");
+				location = String.format("%f,%f",
+						locationJson.getDouble("lat"),
+						locationJson.getDouble("lng"));
+			}
+
+			synchronized (pipeline) {
+				pipeline.set(key, location);
+			}
+
+			System.err.println(String.format("Found location for: %s (%s)",
 					building, location));
 		} catch (Exception ex) {
 			ex.printStackTrace();
-			System.err.println(json.toString());
+			if (json != null)
+				System.err.println(json.toString());
 		} finally {
 			if (connection != null)
 				connection.disconnect();
@@ -247,19 +289,5 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		connect();
-
-		synchronized (buildings) {
-			buildings.add("tan");
-			buildings.notify();
-			buildings.add("soda");
-			buildings.notify();
-			buildings.add("etcheverry");
-			buildings.notify();
-			buildings.add("cory");
-			buildings.notify();
-		}
-
-		disconnect();
 	}
 }
