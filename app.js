@@ -126,6 +126,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);  
+		client.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
 		socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
 	});
 
