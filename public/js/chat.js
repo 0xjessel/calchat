@@ -21,6 +21,16 @@ socket.on('connect', function () {
 			clear();
 		}
 	});
+	
+	socket.emit('get chatlog', current);
+});
+
+socket.on('chatlog', function (logs) {
+	for (timestamp in logs) {
+		// not showing timestamp for now
+		$('#lines').append($('<p>').append(logs[timestamp]));
+	}
+	chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 });
 
 socket.on('announcement', function (to, msg) {

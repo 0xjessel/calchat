@@ -27,9 +27,10 @@ div.navbar.navbar-fixed-top
             else 
               li
                 a(href='/chat') Chat
+            li.divider-vertical
+            form.navbar-search.pull-left
+              input(type='text', placeholder='Add Chatroom').search-query
         if loggedIn
-          form.navbar-search.pull-left
-            input(type='text', placeholder='Add Chatroom').search-query
           ul.nav.pull-right
             li
               img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?', height='37', width='37')

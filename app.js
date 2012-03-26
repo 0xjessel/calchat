@@ -124,6 +124,22 @@ io.sockets.on('connection', function (socket) {
 		socket.join(room);
 	});
 
+	socket.on('get chatlog', function (room) {
+		// get last 50 messages
+		client.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
+			console.log(replies.length + ' replies:');
+			replies.forEach(function(reply, i) {
+				console.log(i + ': ' + reply);
+			});
+			
+			var toReturn = {};
+			for (var i = 0; i < replies.length; i=i+2) {
+				toReturn[replies[i+1]] = replies[i];
+			}
+			socket.emit('chatlog', toReturn);
+		});
+	});
+
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);  
 		client.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
