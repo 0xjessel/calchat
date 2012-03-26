@@ -122,7 +122,6 @@ io.sockets.on('connection', function (socket) {
 		});
 
 		socket.join(room);
-		socket.get('rooms', function(err, rooms) { console.log(rooms);});
 	});
 
 	socket.on('message', function (room, msg) {

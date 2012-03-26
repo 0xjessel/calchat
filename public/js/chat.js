@@ -1,7 +1,7 @@
 // socket.io specific code
 var socket = io.connect();
-var chatDiv = $('#chat');
 var current = rooms[0];
+var chatDiv;
 var unread = {};
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i]] = 0;
@@ -23,7 +23,11 @@ socket.on('connect', function () {
 	});
 });
 
-socket.on('announcement', announce);
+socket.on('announcement', function (to, msg) {
+	if (to == current) {
+		$('#lines').append($('<p>').append($('<em>').text(msg)));		
+	}
+});
 
 socket.on('nicknames', function (to, nicknames) {
 	if (to == current) {
@@ -50,12 +54,6 @@ socket.on('error', function (e) {
 	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
-function announce (to, msg) {
-	if (to == current) {
-		$('#lines').append($('<p>').append($('<em>').text(msg)));		
-	} 
-}
-
 function message (to, from, msg) {
 	if (to == current) {
 		// incoming msg to the current room
@@ -80,6 +78,8 @@ function clear () {
 
 // dom manipulation
 $(function () {
+	chatDiv = $('#chat');
+	
 	// setup classes in left nav sidebar
 	var roomsNav = $('#classes');
 	for (var i = 0; i < rooms.length; i++) {
@@ -95,14 +95,10 @@ $(function () {
 	});
 	
 	$('#send-message').submit(function () {
-		message(name, $('#message').val());
+		message(current, name, $('#message').val());
 		socket.emit('message', current, $('#message').val());
 		clear();
 		chatDiv.scrollTop(chatDiv[0].scrollHeight);
 		return false;
 	});
-	
-	function clear () {
-		$('#message').val('').focus();
-	};
 });
