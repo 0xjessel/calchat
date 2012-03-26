@@ -121,6 +121,8 @@ $(function () {
 			current = $(this).text();
 			socket.emit('get chatlog', current);
 			socket.emit('get online', current);
+			
+			return false;
 		}
 	});
 	
