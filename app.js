@@ -14,7 +14,10 @@ var app = module.exports = express.createServer();
 /**
 * Redis
 */
-var client = redis.createClient();
+var client0 = redis.createClient();
+client0.select(0);
+var client1 = redis.createClient();
+client1.select(1);
 redis.debug_mode = false;
 
 /**
@@ -24,7 +27,7 @@ everyauth.debug = true;
 
 everyauth.everymodule.findUserById(function (userId, callback) {
 	// callback has the signature, function (err, user) {...}
-	client.hgetall('user:'+userId, callback);
+	client1.hgetall('user:'+userId, callback);
 });
 
 everyauth.facebook
@@ -33,11 +36,11 @@ everyauth.facebook
 .scope('email, user_about_me, read_friendlists')
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
-	client.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+	client1.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 		if (err == null) { // no errors
 			if (Object.keys(reply).length == 0) { 
 				// no user found, create new user
-				client.hmset('user:'+fbUserMetadata.id, {
+				client1.hmset('user:'+fbUserMetadata.id, {
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
@@ -45,7 +48,7 @@ everyauth.facebook
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 				}, function() {
-					client.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+					client1.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
 							promise.fulfill(reply);
 						}
@@ -126,7 +129,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('get chatlog', function (room) {
 		// get last 30 messages
-		client.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
+		client1.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			console.log(replies.length + ' replies:');
 			replies.forEach(function(reply, i) {
 				console.log(i + ': ' + reply);
@@ -146,7 +149,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);  
-		client.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
+		client1.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
 		socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
 	});
 

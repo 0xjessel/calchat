@@ -15,14 +15,14 @@ socket.on('connect', function () {
 		}	
 	}
 	
+	socket.emit('get chatlog', current);
+	
 	// send fb name
 	socket.emit('set name', name, function(set) {
 		if(!set) {
 			clear();
 		}
 	});
-	
-	socket.emit('get chatlog', current);
 });
 
 socket.on('chatlog', function (logs) {
