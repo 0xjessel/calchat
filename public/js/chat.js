@@ -52,7 +52,7 @@ socket.on('nicknames', function (to, nicknames) {
 socket.on('message', message);
 
 socket.on('reconnect', function () {
-	$('#lines').remove();
+	$('#lines').empty();
 	message(current, 'System', 'Reconnected to the server');
 });
 
@@ -101,7 +101,13 @@ $(function () {
 	}
 	
 	$('#classes a').click(function() {
-		console.log('hi');
+		$('#lines').empty();
+		
+		$('#classes .active').removeClass('active');
+		$(this).parent().addClass('active');
+		
+		current = $(this).text();
+		socket.emit('get chatlog', current);
 	});
 	
 	$('#send-message').submit(function () {
