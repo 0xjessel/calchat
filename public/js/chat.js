@@ -1,5 +1,7 @@
 // socket.io specific code
-var socket = io.connect();
+var opts = {};
+opts['sync disconnect on unload'] = false;
+var socket = io.connect(null, opts);
 var current = rooms[0];
 var chatDiv;
 var unread = {};
@@ -12,7 +14,7 @@ socket.on('connect', function () {
 	for (var i = 0; i < rooms.length; i++) {
 		if (rooms[i] != '') {
 			socket.emit('join room', rooms[i]);
-		}	
+		}
 	}
 	
 	socket.emit('get chatlog', current);
@@ -31,7 +33,7 @@ socket.on('chatlog', function (logs) {
 		var msg = linkify(logs[timestamp]);
 		$('#lines').append($('<p>').append(msg));
 	}
-	scrollToBottom();
+	chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 });
 
 socket.on('announcement', function (to, msg) {
@@ -134,3 +136,8 @@ $(function () {
 		return false;
 	});
 });
+
+window.onbeforeunload = function() {
+	socket.emit('save chat', uid, current);
+	socket.disconnect();
+};

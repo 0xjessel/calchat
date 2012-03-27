@@ -56,7 +56,6 @@ exports.chatroom = function(req, res) {
 	if (req.loggedIn) {
 		// convert string to array
 		var rooms = req.user.recent.split(',');
-
 		var room = req.params.room;
 		if (room != undefined && isValid(room)) {
 			if (!req.user.recent) {
@@ -68,8 +67,7 @@ exports.chatroom = function(req, res) {
 				for (var i = 0; i < rooms.length; i++) {
 					if (rooms[i] == room) {
 						// move room to front of array and return
-						var awesome = rooms.splice(i, i);
-						rooms.unshift(awesome);
+						rooms.unshift(rooms.splice(i, 1).join());
 						found = true;
 					}
 				}

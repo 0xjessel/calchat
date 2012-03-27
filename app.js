@@ -146,11 +146,6 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get chatlog', function (room) {
 		// get last 30 messages
 		client1.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
-			console.log(replies.length + ' replies:');
-			replies.forEach(function(reply, i) {
-				console.log(i + ': ' + reply);
-			});
-			
 			var toReturn = {};
 			for (var i = 0; i < replies.length; i=i+2) {
 				toReturn[replies[i+1]] = replies[i];
@@ -162,6 +157,26 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get online', function (room) {
 		socket.emit('nicknames', room, nicknames[room]);
 	});
+	
+	socket.on('save chat', function(uid, room) {
+		client1.hget('user:'+uid, 'recent', function(err, replies) {
+			if (replies) {
+				var rooms = replies.split(',');
+				var found = false;
+				for (var i = 0; i < rooms.length; i++) {
+					if (rooms[i] == room) {
+						rooms.unshift(rooms.splice(i, 1).join());
+						found = true;
+					}
+				}
+				if (!found) {
+					rooms.unshift(room);
+				}
+			
+				client1.hset('user:'+uid, 'recent', rooms.join());
+			}
+		});
+	})
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);  

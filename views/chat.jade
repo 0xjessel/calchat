@@ -1,6 +1,7 @@
 - var name = everyauth.facebook.user.first_name + ' ' + everyauth.facebook.user.last_name.charAt(0)
 
 script
+  var uid = #{user.id};
   var name = '#{name}';
   var rooms = !{JSON.stringify(rooms)}
 script(src='/socket.io/socket.io.js')
