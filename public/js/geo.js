@@ -1,3 +1,9 @@
+var socket = io.connect();
+
+socket.on('nearest buildings', function(buildings) {
+    console.log(buildings);
+});
+
 if (navigator.geolocation) {
 	navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
 } else {
@@ -46,6 +52,7 @@ function normalize_yql_response(response) {
 }
 
 function handle_geolocation_query(position) {
-console.log('Lat: ' + position.coords.latitude +  
+    console.log('Lat: ' + position.coords.latitude +  
                 ' Lon: ' + position.coords.longitude);
+    socket.emit('get nearest buildings', position.coords.latitude, position.coords.longitude, 3);
 }

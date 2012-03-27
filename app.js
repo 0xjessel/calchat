@@ -100,6 +100,21 @@ app.get('/chat/:room', routes.chatroom);
 
 app.listen(3000);
 
+// Functions
+
+function dist(lat1, lng1, lat2, lng2) {
+    var R = 6371; // km
+    var dLat = (lat2-lat1) * Math.PI / 180;
+    var dLon = (lng2-lng1) * Math.PI / 180;
+    var lat1 = lat1 * Math.PI / 180;
+    var lat2 = lat2 * Math.PI / 180;
+
+    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    var d = R * c;
+    return d;
+}
+
 /**
 * Socket.IO server (single process only)
 */
@@ -184,10 +199,33 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
     
-    socket.on('get nearest buidings', function(location) {
-        // get buildings from redis db
-        var buildings = null;
-        sockets.emit('nearest buildings', buildings);
+    socket.on('get nearest buildings', function(lat, lng, num) {
+        client0.hgetall("location:all", function(err, replies) {
+            var locations = new Array(replies.length);
+            for (var key in replies) {
+                locations.push(key);
+            }
+            
+            //sort locations from nearest to furthest
+            locations.sort(function(a,b) {
+                var latA = a.split(",")[0];
+                var lngA = a.split(",")[1];
+                var distA = dist(lat, lng, latA, lngA);
+                var latB = b.split(",")[0];
+                var lngB = b.split(",")[1];
+                var distB = dist(lat, lng, latB, lngB);
+
+                return distA - distB;
+            });
+            
+            var buildings = new Array(num);
+            for (var i = 0; i < num; i++) {
+                var location = locations[i];
+                buildings[i] = replies[location];
+            }
+            
+            socket.emit('nearest buildings', buildings);
+        });
     });
 });
 

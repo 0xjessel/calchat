@@ -7,6 +7,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import model.ClassModel;
@@ -46,8 +47,8 @@ public class Utils {
 		}
 	}
 
-	private static final String REDIS_URL = "calchat.net";
-	// private static final String REDIS_URL = "localhost";
+	// private static final String REDIS_URL = "calchat.net";
+	private static final String REDIS_URL = "localhost";
 
 	private static Jedis jedis; // used to make the pipeline for async calls
 	private static Jedis syncJedis; // for synchronous calls
@@ -210,15 +211,24 @@ public class Utils {
 		try {
 			String key = String
 					.format("location:%s", building.replace(" ", ""));
+			String hkey = "location:all";
 			String renameKey = String.format("rename:%s",
 					building.replace(" ", ""));
 
-			String location = null;
-
+			String lat = null, lng = null, location = null;
 			try {
-				location = syncJedis.get(key);
+				Map<String, String> latlng = syncJedis.hgetAll(key);
+				if (latlng != null) {
+					location = String.format("%f,%f", latlng.get("lat"),
+							latlng.get("lng"));
+				}
 			} catch (JedisConnectionException e) {
-				location = syncJedis.get(key); // try again
+				// try again
+				Map<String, String> latlng = syncJedis.hgetAll(key);
+				if (latlng != null) {
+					location = String.format("%f,%f", latlng.get("lat"),
+							latlng.get("lng"));
+				}
 			}
 
 			if (location == null) {
@@ -260,13 +270,17 @@ public class Utils {
 				JSONObject locationJson = json.getJSONArray("results")
 						.getJSONObject(0).getJSONObject("geometry")
 						.getJSONObject("location");
-				location = String.format("%f,%f",
-						locationJson.getDouble("lat"),
-						locationJson.getDouble("lng"));
+
+				lat = String.format("%f", locationJson.getDouble("lat"));
+				lng = String.format("%f", locationJson.getDouble("lng"));
+				location = String.format("%f,%f", lat, lng);
 			}
 
 			synchronized (pipeline) {
-				pipeline.set(key, location);
+				pipeline.hset(key, "lat", lat);
+				pipeline.hset(key, "lng", lng);
+
+				pipeline.hset(hkey, location, building);
 			}
 
 			System.err.println(String.format("Found location for: %s (%s)",
