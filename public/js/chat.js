@@ -105,7 +105,7 @@ $(function () {
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
 		if (i == 0) {
-			roomsNav.append('<li class="active"><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
+			roomsNav.append('<li class="active"><a href="javascript:" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
 		} else {
 			roomsNav.append('<li><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
@@ -123,9 +123,8 @@ $(function () {
 			current = $(this).text();
 			socket.emit('get chatlog', current);
 			socket.emit('get online', current);
-			
-			return false;
 		}
+		return false;
 	});
 	
 	$('#send-message').submit(function () {
