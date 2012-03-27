@@ -14,9 +14,10 @@ var app = module.exports = express.createServer();
 /**
 * Redis
 */
-var client0 = redis.createClient();
+var redisUrl = "calchat.net"
+var client0 = redis.createClient(null, redisUrl);
 client0.select(0);
-var client1 = redis.createClient();
+var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
 redis.debug_mode = false;
 

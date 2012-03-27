@@ -47,8 +47,7 @@ public class Utils {
 		}
 	}
 
-	// private static final String REDIS_URL = "calchat.net";
-	private static final String REDIS_URL = "localhost";
+	private static final String REDIS_URL = "calchat.net";
 
 	private static Jedis jedis; // used to make the pipeline for async calls
 	private static Jedis syncJedis; // for synchronous calls
