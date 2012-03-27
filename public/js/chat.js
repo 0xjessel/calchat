@@ -4,6 +4,7 @@ opts['sync disconnect on unload'] = false;
 var socket = io.connect(null, opts);
 var current = rooms[0];
 var chatDiv;
+var selfAnnounced = false;
 var unread = {};
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i]] = 0;
@@ -17,28 +18,31 @@ socket.on('connect', function () {
 		}
 	}
 	
-	socket.emit('get chatlog', current);
-	
-	// send fb name
-	socket.emit('set name', name, function(set) {
-		if(!set) {
-			clear();
+	socket.emit('get chatlog', current, function (logs) {
+		for (timestamp in logs) {
+			// not showing timestamp for now
+			var msg = linkify(logs[timestamp]);
+			$('#lines').append($('<p>').append(msg));
 		}
-	});
-});
 
-socket.on('chatlog', function (logs) {
-	for (timestamp in logs) {
-		// not showing timestamp for now
-		var msg = linkify(logs[timestamp]);
-		$('#lines').append($('<p>').append(msg));
-	}
-	chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+		// send fb name
+		socket.emit('set name', name, function(set) {
+			if(!set) {
+				clear();
+			}
+		});
+	});
 });
 
 socket.on('announcement', function (to, msg) {
 	if (to == current) {
-		$('#lines').append($('<p>').append($('<em>').text(msg)));		
+		$('#lines').append($('<p>').append($('<em>').text(msg)));
+		if (!selfAnnounced) {
+			// scroll chat to bottom after chatlog and this announcement 
+			// only once (in the beginning)
+			chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+			selfAnnounced = true;
+		}
 	}
 });
 
@@ -92,7 +96,7 @@ function clear () {
 
 function scrollToBottom () {
 	// scroll to bottom only if already scrolled to bottom
-	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 75 <= chatDiv.outerHeight()) {
+	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 80 <= chatDiv.outerHeight()) {
 		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 	}
 }
@@ -121,7 +125,15 @@ $(function () {
 			$(this).parent().addClass('active');
 
 			current = $(this).text();
-			socket.emit('get chatlog', current);
+			socket.emit('get chatlog', current, function (logs) {
+				for (timestamp in logs) {
+					// not showing timestamp for now
+					var msg = linkify(logs[timestamp]);
+					$('#lines').append($('<p>').append(msg));
+				}
+				chatDiv.scrollTop(chatDiv[0].scrollHeight);
+			});
+			
 			socket.emit('get online', current);
 		}
 		return false;

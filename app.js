@@ -143,14 +143,14 @@ io.sockets.on('connection', function (socket) {
 		socket.join(room);
 	});
 
-	socket.on('get chatlog', function (room) {
+	socket.on('get chatlog', function (room, fn) {
 		// get last 30 messages
 		client1.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			var toReturn = {};
 			for (var i = 0; i < replies.length; i=i+2) {
 				toReturn[replies[i+1]] = replies[i];
 			}
-			socket.emit('chatlog', toReturn);
+			fn(toReturn);
 		});
 	});
 	
