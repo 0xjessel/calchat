@@ -218,8 +218,8 @@ public class Utils {
 			String lat = null, lng = null, location = null;
 			try {
 				Map<String, String> latlng = syncJedis.hgetAll(key);
-				if (latlng != null) {
-					location = String.format("%f,%f", latlng.get("lat"),
+				if (!latlng.isEmpty()) {
+					location = String.format("%s,%s", latlng.get("lat"),
 							latlng.get("lng"));
 				}
 			} catch (JedisConnectionException e) {
@@ -273,7 +273,10 @@ public class Utils {
 
 				lat = String.format("%f", locationJson.getDouble("lat"));
 				lng = String.format("%f", locationJson.getDouble("lng"));
-				location = String.format("%f,%f", lat, lng);
+				location = String.format("%s,%s", lat, lng);
+			} else {
+				lat = location.split(",")[0];
+				lng = location.split(",")[1];
 			}
 
 			synchronized (pipeline) {

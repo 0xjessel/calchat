@@ -2,6 +2,7 @@ var socket = io.connect();
 
 socket.on('nearest buildings', function(buildings) {
     console.log(buildings);
+    // do stuff to DOM in dashboard.jade and layout-index.jade
 });
 
 if (navigator.geolocation) {
