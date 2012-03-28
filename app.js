@@ -105,8 +105,9 @@ app.listen(3000);
 * Socket.IO server (single process only)
 */
 
-var io = sio.listen(app)
-, nicknames = {};
+var io = sio.listen(app);
+var nicknames = {};
+var uids = {};
 
 io.sockets.on('connection', function (socket) {
 
@@ -154,6 +155,7 @@ io.sockets.on('connection', function (socket) {
 		console.log('incoming request to join '+room);
 		if (!nicknames[room]) {
 			nicknames[room] = {};
+            uids[room] = {};
 		}
 		socket.join(room);
 	});
@@ -172,9 +174,10 @@ io.sockets.on('connection', function (socket) {
 					} else {
 						fn(false);
 						nicknames[room][nick] = socket.nickname;
+                        uids[room][nick] = uid;
 					}
 					io.sockets.in(room).emit('announcement', room, nick + ' connected');
-					io.sockets.in(room).emit('online', room, nicknames[room]);
+					io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
 				}
 			}
 		
@@ -198,7 +201,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('get online', function (room) {
-		socket.emit('online', room, nicknames[room]);
+		socket.emit('online', room, nicknames[room], uids[room]);
 	});
 
 	socket.on('message', function (room, msg) {
@@ -293,8 +296,12 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('disconnect', function () {
 		if (!socket.nickname) return;
-
-		delete nicknames[socket.nickname];
+        
+        for (room in nicknames) {
+            delete nicknames[room][socket.nickname]
+            delete uids[room][socket.nickname]
+        }
+        
 		socket.get('uid', function (err, uid) {
 			client1.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
@@ -302,7 +309,7 @@ io.sockets.on('connection', function (socket) {
 					for (var i = 0; i < rooms.length; i++) {
 						var room = rooms[i];
 						io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-						io.sockets.in(room).emit('online', room, nicknames[room]);
+						io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
 					}
 				}
 			});

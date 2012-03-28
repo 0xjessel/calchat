@@ -43,16 +43,16 @@ socket.on('announcement', function (to, msg) {
 });
 
 var users = null;
-socket.on('online', function(room, nicknames) {
+socket.on('online', function(room, nicknames, uids) {
 	if (room == current) {
-        users = nicknames;
+        users = uids;
         
 		// empty out sidebar, repopulate with all online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
 
 		for (var name in nicknames) {
-			onlineSidebar.append('<li>'+name+'</li>');
+			onlineSidebar.append('<li>'+nicknames[name]+'</li>');
             // TODO: make link using id = nicknames[name]
 		}
 	}
@@ -75,9 +75,7 @@ socket.on('error', function (e) {
 
 function message (to, from, msg, mentions) {
 	msg = linkify(msg);
-    msg = mentionize(msg);
-    
-    console.log('mentions: ' + mentions);
+    msg = mentionize(msg, mentions);
     
 	if (to == current) {
 		// incoming msg to the current room
@@ -176,14 +174,7 @@ $(function () {
     $('#message').keyup(function(e) {
         if (!suggesting) {
             // check for '@' to begin suggestions
-            if (e.which == 50) {
-                $('#user-suggestions').show();
-                
-                // populate suggestions
-                for (user in users) {
-                    $('#suggestion-list').append($('<li>').text(user));
-                }
-                
+            if (e.which == 50) {                
                 suggesting = true;
             }
         } else {
@@ -214,6 +205,7 @@ $(function () {
                     $('#user-suggestions').show();
                     // TODO: make much prettier
                     $('#suggestion-list').append('<li><a href="javascript:void(0)" id="user'+users[user]+'">'+user+'</a></li>');
+                    
                     $('#user'+users[user]).click(function(){
                         // get id of clicked suggestion
                         var id = users[$(this).text()];
@@ -242,13 +234,6 @@ $(function () {
             }
         }
     });
-
-	$('#message').keyup(function (e) {
-		// check for @
-		if (e.which == 50) {
-			console.log("@ pressed");
-		}
-	});
 
 	$('.close').click(function () {
 		// remove chatroom from sidebar
