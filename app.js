@@ -101,21 +101,6 @@ app.get('/chat/:room', routes.chatroom);
 
 app.listen(3000);
 
-// Functions
-
-function dist(lat1, lng1, lat2, lng2) {
-	var R = 6371; // km
-	var dLat = (lat2-lat1) * Math.PI / 180;
-	var dLon = (lng2-lng1) * Math.PI / 180;
-	var lat1 = lat1 * Math.PI / 180;
-	var lat2 = lat2 * Math.PI / 180;
-
-	var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
-	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-	var d = R * c;
-	return d;
-}
-
 /**
 * Socket.IO server (single process only)
 */
@@ -214,7 +199,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
-	socket.on('get nearest buildings', function(lat, lng, num) {        
+	socket.on('get nearest buildings', function(lat, lng, num) {
 		client0.hgetall("location:all", function(err, replies) {
 			var locations = new Array(replies.length);
 			for (var key in replies) {
@@ -243,6 +228,19 @@ io.sockets.on('connection', function (socket) {
 
 			socket.emit('nearest buildings', buildings);
 		});
+		
+		function dist(lat1, lng1, lat2, lng2) {
+			var R = 6371; // km
+			var dLat = (lat2-lat1) * Math.PI / 180;
+			var dLon = (lng2-lng1) * Math.PI / 180;
+			var lat1 = lat1 * Math.PI / 180;
+			var lat2 = lat2 * Math.PI / 180;
+
+			var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+			var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+			var d = R * c;
+			return d;
+		}
 	});
 });
 
