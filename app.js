@@ -109,6 +109,47 @@ var io = sio.listen(app)
 , nicknames = {};
 
 io.sockets.on('connection', function (socket) {
+    function getMentions(msgs, callback) {
+        var mentions = {};
+        
+        var expected = 0;
+        var encountered = 0;
+        for (var stage in [0,1]) { // first calculate expected, then calculate encountered
+            for (var k = 0; k < msgs.length; k++) {
+                var msg = msgs[k];
+                var slices = msg.split('#');
+                for (var i = 1; i < slices.length; i++) { // skip first slice
+                    if (stage == 0) {
+                        expected++;
+                        continue;
+                    } else {
+                        var slice = slices[i];
+                        var id = slice.substring(0, slice.indexOf('$'));
+                        
+                        var firstname = null;
+                        client1.hget('user:'+id, 'firstname', function(err, reply){
+                            firstname = reply;
+                        });
+                        var lastname = null;
+                        client1.hget('user:'+id, 'lastname', function(err, reply){
+                            encountered ++;
+                            // this callback is guaranteed to be called after the firstname callback
+                            lastname = reply;
+                            if (firstname && lastname) {
+                                mentions[id] = firstname + ' ' + lastname.charAt(0);
+                            }
+                            
+                            if (encountered == expected) {
+                                callback(mentions);
+                            }
+                        });
+                    }
+                }
+            }
+        }
+        console.log('fail');
+    }
+    
 	socket.on('join room', function(room) {
 		console.log('incoming request to join '+room);
 		if (!nicknames[room]) {
@@ -132,10 +173,15 @@ io.sockets.on('connection', function (socket) {
 		// get last 30 messages
 		client1.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			var toReturn = {};
+            var msgs = [];
 			for (var i = 0; i < replies.length; i=i+2) {
 				toReturn[replies[i+1]] = replies[i];
+                msgs.push(replies[i]);
 			}
-			fn(toReturn);
+            
+            getMentions(msgs, function(mentions){
+                fn(toReturn, mentions);
+            });
 		});
 	});
 
@@ -166,7 +212,9 @@ io.sockets.on('connection', function (socket) {
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);
 		client1.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
-		socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
+        getMentions([msg], function(mentions) {
+            io.sockets.in(room).emit('message', room, socket.nickname, msg, mentions);
+        });
 	});
 
 	socket.on('set name', function (nick, uid, fn) {

@@ -18,10 +18,11 @@ socket.on('connect', function () {
 		}
 	}
 	
-	socket.emit('get chatlog', current, function (logs) {
+	socket.emit('get chatlog', current, function (logs, mentions) {
 		for (timestamp in logs) {
 			// not showing timestamp for now
 			var msg = linkify(logs[timestamp]);
+			msg = mentionize(msg, mentions);
 			$('#lines').append($('<p>').append(msg));
 		}
 
@@ -51,11 +52,6 @@ socket.on('online', function(room, nicknames) {
 	if (room == current) {
         users = nicknames;
         
-        // for testing
-        users['anonymous'] = 11111;
-        users['user'] = 22222;
-        users['student'] = 33333;
-        
 		// empty out sidebar, repopulate with all online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
@@ -82,8 +78,12 @@ socket.on('error', function (e) {
 	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
-function message (to, from, msg) {
+function message (to, from, msg, mentions) {
 	msg = linkify(msg);
+    msg = mentionize(msg);
+    
+    console.log('mentions: ' + mentions);
+    
 	if (to == current) {
 		// incoming msg to the current room
 		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
@@ -99,6 +99,15 @@ function message (to, from, msg) {
 			badge.text(unread[to]);
 		}
 	}
+}
+
+function mentionize(msg, mentions) {
+    for (id in mentions) {
+        var text = '@'+mentions[id];
+        msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)">'+text+'</a>');
+        // TODO: make the link actually go somewhere
+    }
+    return msg;
 }
 
 function clear () {
@@ -136,10 +145,11 @@ $(function () {
 			$(this).parent().addClass('active');
 
 			current = $(this).text();
-			socket.emit('get chatlog', current, function (logs) {
+			socket.emit('get chatlog', current, function (logs, mentions) {
 				for (timestamp in logs) {
 					// not showing timestamp for now
 					var msg = linkify(logs[timestamp]);
+                    msg = mentionize(msg, mentions);
 					$('#lines').append($('<p>').append(msg));
 				}
 				chatDiv.scrollTop(chatDiv[0].scrollHeight);
@@ -151,7 +161,9 @@ $(function () {
 	});
 	
 	$('#send-message').submit(function () {
-		message(current, name, $('#message').val());
+        // TODO: since we are sending the message to the server and waiting for the reply
+        //       we should display some kind of 'Sending…' text
+        
 		socket.emit('message', current, $('#message').val());
 		clear();
 		scrollToBottom();
@@ -213,7 +225,7 @@ $(function () {
                         }
                         
                         // turn the '@filter' into '#id ' and keep the before and after text the same
-                        var transformedMsg = msg.substring(0, start) + '#' + id + ' ' + after;
+                        var transformedMsg = msg.substring(0, start) + '#' + id + '$ ' + after;
                         
                         // calculate the new caret position
                         var caretPosition = transformedMsg.length - after.length;
