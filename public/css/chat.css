@@ -8,7 +8,7 @@ body {
 	float: right;
 }
 
-ul.sidebar {
+ul.sidebar, #suggestion-list {
 	list-style-type: none;
 }
 

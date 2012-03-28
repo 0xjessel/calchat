@@ -17,17 +17,12 @@ socket.on('connect', function () {
 			socket.emit('join room', rooms[i]);
 		}
 	}
-	
+    
 	socket.emit('get chatlog', current, function (logs, mentions) {
-		for (timestamp in logs) {
-			// not showing timestamp for now
-			var msg = linkify(logs[timestamp]);
-			msg = mentionize(msg, mentions);
-			$('#lines').append($('<p>').append(msg));
-		}
+		renderChatlogs(logs, mentions);
 
 		// send fb name
-		socket.emit('set name', name, uid, function(set) {
+		socket.emit('set name', uid, name, function(set) {
 			if(!set) {
 				clear();
 			}
@@ -86,13 +81,13 @@ function message (to, from, msg, mentions) {
     
 	if (to == current) {
 		// incoming msg to the current room
-		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
+		$('#lines').append($('<p>').append($('<strong>').text(from), ': '+msg));
 		scrollToBottom();
 	} else {
 		// incr badge
 		unread[to]++;
 		var badge = $('#'+to+' .badge');
-		
+
 		if (badge.length == 0) {
 			$('#'+to).append('<span class="badge badge-error">'+unread[to]+'</span>');
 		} else {
@@ -121,10 +116,24 @@ function scrollToBottom () {
 	}
 }
 
+var renderChatlogs = function (logs, mentions) {
+	for (timestamp in logs) {
+		// not showing timestamp for now
+		var entry = linkify(logs[timestamp])
+        entry = mentionize(entry, mentions);
+		var i = entry.indexOf(":");
+		entry = [entry.slice(0,i), entry.slice(i+1)];
+		var from = entry[0];
+		var msg = entry[1];
+		$('#lines').append($('<p>').append($('<strong>').text(from), ':'+ msg));
+	}
+	chatDiv.scrollTop(chatDiv[0].scrollHeight);
+}
+
 // dom manipulation
 $(function () {
 	chatDiv = $('#chat');
-	
+
 	// setup chats in left nav sidebar
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
@@ -134,8 +143,8 @@ $(function () {
 			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
-	
-	$('#chats a').click(function() {
+
+	$('#chats a').click(function () {
 		if ($(this).text() != current) {
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
@@ -145,21 +154,13 @@ $(function () {
 			$(this).parent().addClass('active');
 
 			current = $(this).text();
-			socket.emit('get chatlog', current, function (logs, mentions) {
-				for (timestamp in logs) {
-					// not showing timestamp for now
-					var msg = linkify(logs[timestamp]);
-                    msg = mentionize(msg, mentions);
-					$('#lines').append($('<p>').append(msg));
-				}
-				chatDiv.scrollTop(chatDiv[0].scrollHeight);
-			});
-			
+            
+			socket.emit('get chatlog', current, renderChatlogs);
 			socket.emit('get online', current);
 		}
 		return false;
 	});
-	
+
 	$('#send-message').submit(function () {
         // TODO: since we are sending the message to the server and waiting for the reply
         //       we should display some kind of 'Sending…' text
@@ -241,9 +242,39 @@ $(function () {
             }
         }
     });
+
+	$('#message').keyup(function (e) {
+		// check for @
+		if (e.which == 50) {
+			console.log("@ pressed");
+		}
+	});
+
+	$('.close').click(function () {
+		// remove chatroom from sidebar
+		// load next chatroom in line
+		// if no chatroom redirect to dashboard with params
+		socket.emit('leave room', current);
+		
+		$('#lines').empty();
+		$('#online li:not(.nav-header)').remove();
+		$('#chats .active').remove();
+
+		var next = $('#chats a:first')
+		if (next.length) {
+			next.parent().addClass('active');
+			current = next.text();
+			socket.emit('get chatlog', current, renderChatlogs);
+			socket.emit('get online', current);
+		} else {
+			// redirect
+			window.location.href = '/dashboard';
+		}
+		
+	})
 });
 
-window.onbeforeunload = function() {
-	socket.emit('save chat', uid, current);
+window.onbeforeunload = function () {
+	socket.emit('save chat', current);
 	socket.disconnect();
 };
