@@ -46,12 +46,14 @@ socket.on('announcement', function (to, msg) {
 	}
 });
 
-socket.on('nicknames', function (to, nicknames) {
-	if (to == current) {
-		for (var i in nicknames) {
-			if (!i == '') {
-				$('#online').append('<li>'+nicknames[i]+'</li>');
-			}
+socket.on('online', function(room, nicknames) {
+	if (room == current) {
+		// empty out sidebar, repopulate with all online people
+		var onlineSidebar = $('#online');
+		$('#online li:not(.nav-header)').remove();
+
+		for (var index in nicknames) {
+			onlineSidebar.append('<li>'+nicknames[index]+'</li>');
 		}
 	}
 });
@@ -109,9 +111,9 @@ $(function () {
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
 		if (i == 0) {
-			roomsNav.append('<li class="active"><a href="javascript:" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
+			roomsNav.append('<li class="active"><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
 		} else {
-			roomsNav.append('<li><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
+			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
 	
