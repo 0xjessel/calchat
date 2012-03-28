@@ -26,7 +26,7 @@ socket.on('connect', function () {
 		}
 
 		// send fb name
-		socket.emit('set name', name, function(set) {
+		socket.emit('set name', name, uid, function(set) {
 			if(!set) {
 				clear();
 			}
@@ -46,11 +46,20 @@ socket.on('announcement', function (to, msg) {
 	}
 });
 
+var users = null;
 socket.on('nicknames', function (to, nicknames) {
 	if (to == current) {
-		for (var i in nicknames) {
-			if (!i == '') {
-				$('#online').append('<li>'+nicknames[i]+'</li>');
+        users = nicknames;
+        
+        // for testing
+        users['anonymous'] = 11111;
+        users['user'] = 22222;
+        users['student'] = 33333;
+        
+		for (var name in nicknames) {
+			if (!name == '') {
+				$('#online').append('<li>'+name+'</li>');
+                // TODO: make link using id = nicknames[name]
 			}
 		}
 	}
@@ -147,12 +156,76 @@ $(function () {
 		return false;
 	});
     
+    // Suggestions
+    var suggesting = false;
     $('#message').keyup(function(e) {
-        // check for @
-        if (e.which == 50) {
-            console.log("@ pressed");
+        if (!suggesting) {
+            // check for '@' to begin suggestions
+            if (e.which == 50) {
+                $('#user-suggestions').show();
+                
+                // populate suggestions
+                for (user in users) {
+                    $('#suggestion-list').append($('<li>').text(user));
+                }
+                
+                suggesting = true;
+            }
+        } else {
+            // filter suggestions
+            var msg = $('#message').val();
+            // get caret position
+            var end = $('#message').get(0).selectionStart;
+            // get position of '@'
+            var start = msg.substring(0, end).lastIndexOf('@');
+            
+            // did user delete '@'?
+            if (start == -1) {
+                $('#user-suggestions').hide();
+                suggesting = false;
+                return;
+            }
+            
+            // the text in between '@' and caret position
+            var filter = msg.substring(start+1, end);
+            
+            // clear suggestions box to be repopulated
+            $('#user-suggestions').hide();
+            $('#suggestion-list').empty();
+            
+            for (user in users) {
+                // filter text matches a user name
+                if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
+                    $('#user-suggestions').show();
+                    // TODO: make much prettier
+                    $('#suggestion-list').append('<li><a href="javascript:void(0)" id="user'+users[user]+'">'+user+'</a></li>');
+                    $('#user'+users[user]).click(function(){
+                        // get id of clicked suggestion
+                        var id = users[$(this).text()];
+                        // get text after the caret position
+                        var after = msg.substring(end);
+                        // make sure there is at least 1 space between replaced text and after text
+                        if (after && after.length > 0 && after.charAt(0) == ' ') {
+                            // we are adding a space later, so if there is already a space, remove it
+                            after = after.substring(1);
+                        }
+                        
+                        // turn the '@filter' into '#id ' and keep the before and after text the same
+                        var transformedMsg = msg.substring(0, start) + '#' + id + ' ' + after;
+                        
+                        // calculate the new caret position
+                        var caretPosition = transformedMsg.length - after.length;
+                        
+                        // hide suggestions box
+                        $('#user-suggestions').hide();
+                        suggesting = false;
+                        
+                        // set new value for input
+                        $('#message').val(transformedMsg).focus().get(0).setSelectionRange(caretPosition,caretPosition);
+                    });
+                }
+            }
         }
-        
     });
 });
 

@@ -184,7 +184,7 @@ io.sockets.on('connection', function (socket) {
 		socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
 	});
 
-	socket.on('set name', function (nick, fn) {
+	socket.on('set name', function (nick, uid, fn) {
 		socket.nickname = nick;
 		socket.get('rooms', function(err, rooms) {
 			for (var i = 0; i < rooms.length; i++) {
@@ -193,7 +193,7 @@ io.sockets.on('connection', function (socket) {
 					fn(true);
 				} else {
 					fn(false);
-					nicknames[room][nick] = socket.nickname;
+					nicknames[room][nick] = uid;
 				}
 				io.sockets.in(room).emit('announcement', room, nick + ' connected');
 				io.sockets.in(room).emit('nicknames', room, nicknames[room]);
