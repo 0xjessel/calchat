@@ -120,11 +120,11 @@ io.sockets.on('connection', function (socket) {
             for (var k = 0; k < msgs.length; k++) {
                 var msg = msgs[k];
                 var slices = msg.split('#');
-                for (var i = 1; i < slices.length; i++) { // skip first slice
+                for (var i = 0; i < slices.length; i++) {
                     if (stage == 0) {
                         expected++;
                         continue;
-                    } else {
+                    } else {                        
                         var slice = slices[i];
                         var id = slice.substring(0, slice.indexOf('$'));
                         
@@ -150,8 +150,6 @@ io.sockets.on('connection', function (socket) {
                 }
             }
         }
-        
-        callback(mentions);
     }
     
 	socket.on('join room', function (room) {
