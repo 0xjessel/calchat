@@ -25,7 +25,7 @@ redis.debug_mode = false;
 * Facebook Connect
 */
 everyauth.debug = true;
-
+everyauth.everymodule.moduleTimeout(-1); // turn off timeouts (github issue #29)
 everyauth.everymodule.findUserById(function (userId, callback) {
 	// callback has the signature, function (err, user) {...}
 	client1.hgetall('user:'+userId, callback);
@@ -101,21 +101,6 @@ app.get('/chat/:room', routes.chatroom);
 
 app.listen(3000);
 
-// Functions
-
-function dist(lat1, lng1, lat2, lng2) {
-    var R = 6371; // km
-    var dLat = (lat2-lat1) * Math.PI / 180;
-    var dLon = (lng2-lng1) * Math.PI / 180;
-    var lat1 = lat1 * Math.PI / 180;
-    var lat2 = lat2 * Math.PI / 180;
-
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    var d = R * c;
-    return d;
-}
-
 /**
 * Socket.IO server (single process only)
 */
@@ -129,7 +114,7 @@ io.sockets.on('connection', function (socket) {
 		if (!nicknames[room]) {
 			nicknames[room] = {};
 		}
-		
+
 		socket.get('rooms', function(err, rooms) {
 			if (rooms == null) {
 				socket.set('rooms', [room]);
@@ -153,11 +138,11 @@ io.sockets.on('connection', function (socket) {
 			fn(toReturn);
 		});
 	});
-	
+
 	socket.on('get online', function (room) {
-		socket.emit('nicknames', room, nicknames[room]);
+		socket.emit('online', room, nicknames[room]);
 	});
-	
+
 	socket.on('save chat', function(uid, room) {
 		client1.hget('user:'+uid, 'recent', function(err, replies) {
 			if (replies) {
@@ -172,7 +157,7 @@ io.sockets.on('connection', function (socket) {
 				if (!found) {
 					rooms.unshift(room);
 				}
-			
+
 				client1.hset('user:'+uid, 'recent', rooms.join());
 			}
 		});
@@ -196,7 +181,7 @@ io.sockets.on('connection', function (socket) {
 					nicknames[room][nick] = uid;
 				}
 				io.sockets.in(room).emit('announcement', room, nick + ' connected');
-				io.sockets.in(room).emit('nicknames', room, nicknames[room]);
+				io.sockets.in(room).emit('online', room, nicknames[room]);
 			}
 		});
 	});
@@ -205,46 +190,58 @@ io.sockets.on('connection', function (socket) {
 		if (!socket.nickname) return;
 
 		delete nicknames[socket.nickname];
-		
 		socket.get('rooms', function(err, rooms) {
 			for (var i = 0; i < rooms.length; i++) {
 				var room = rooms[i];
-				io.sockets.in(room).emit('announcement', socket.nickname + ' disconnected');
-				io.sockets.in(room).emit('nicknames', nicknames);
+				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+				io.sockets.in(room).emit('online', room, nicknames[room]);
 			}
 		});
 	});
-    
-    socket.on('get nearest buildings', function(lat, lng, num) {        
-        client0.hgetall("location:all", function(err, replies) {
-            var locations = new Array(replies.length);
-            for (var key in replies) {
-                locations.push(key);
-            }
-            
-            //sort locations from nearest to furthest
-            locations.sort(function(a,b) {
-                var latA = a.split(",")[0];
-                var lngA = a.split(",")[1];
-                var distA = dist(lat, lng, latA, lngA);
-                var latB = b.split(",")[0];
-                var lngB = b.split(",")[1];
-                var distB = dist(lat, lng, latB, lngB);
 
-                return distA - distB;
-            });
-            
-            var buildings = {};
-            for (var i = 0; i < num; i++) {
-                var location = locations[i];
-                var lat2 = location.split(",")[0];
-                var lng2 = location.split(",")[1];
-                buildings[replies[location]] = dist(lat,lng,lat2,lng2);
-            }
-            
-            socket.emit('nearest buildings', buildings);
-        });
-    });
+	socket.on('get nearest buildings', function(lat, lng, num) {
+		client0.hgetall("location:all", function(err, replies) {
+			var locations = new Array(replies.length);
+			for (var key in replies) {
+				locations.push(key);
+			}
+
+			//sort locations from nearest to furthest
+			locations.sort(function(a,b) {
+				var latA = a.split(",")[0];
+				var lngA = a.split(",")[1];
+				var distA = dist(lat, lng, latA, lngA);
+				var latB = b.split(",")[0];
+				var lngB = b.split(",")[1];
+				var distB = dist(lat, lng, latB, lngB);
+
+				return distA - distB;
+			});
+
+			var buildings = {};
+			for (var i = 0; i < num; i++) {
+				var location = locations[i];
+				var lat2 = location.split(",")[0];
+				var lng2 = location.split(",")[1];
+				buildings[replies[location]] = dist(lat,lng,lat2,lng2);
+			}
+
+			socket.emit('nearest buildings', buildings);
+		});
+		
+		function dist(lat1, lng1, lat2, lng2) {
+			var R = 6371; // km
+			var dLat = (lat2-lat1) * Math.PI / 180;
+			var dLon = (lng2-lng1) * Math.PI / 180;
+			var lat1 = lat1 * Math.PI / 180;
+			var lat2 = lat2 * Math.PI / 180;
+
+			var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.sin(dLon/2) * Math.sin(dLon/2) * Math.cos(lat1) * Math.cos(lat2); 
+			var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+			var d = R * c;
+			return d;
+		}
+	});
 });
 
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);

@@ -47,8 +47,8 @@ socket.on('announcement', function (to, msg) {
 });
 
 var users = null;
-socket.on('nicknames', function (to, nicknames) {
-	if (to == current) {
+socket.on('online', function(room, nicknames) {
+	if (room == current) {
         users = nicknames;
         
         // for testing
@@ -56,11 +56,13 @@ socket.on('nicknames', function (to, nicknames) {
         users['user'] = 22222;
         users['student'] = 33333;
         
+		// empty out sidebar, repopulate with all online people
+		var onlineSidebar = $('#online');
+		$('#online li:not(.nav-header)').remove();
+
 		for (var name in nicknames) {
-			if (!name == '') {
-				$('#online').append('<li>'+name+'</li>');
-                // TODO: make link using id = nicknames[name]
-			}
+			onlineSidebar.append('<li>'+name+'</li>');
+            // TODO: make link using id = nicknames[name]
 		}
 	}
 });
@@ -118,9 +120,9 @@ $(function () {
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
 		if (i == 0) {
-			roomsNav.append('<li class="active"><a href="javascript:" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
+			roomsNav.append('<li class="active"><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
 		} else {
-			roomsNav.append('<li><a href="#" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
+			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
 	
