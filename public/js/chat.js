@@ -171,13 +171,18 @@ $(function () {
     
     // Suggestions
     var suggesting = false;
-    $('#message').keyup(function(e) {
+    $('#message').keypress(function(e) {
         if (!suggesting) {
             // check for '@' to begin suggestions
-            if (e.which == 50) {                
+            if (e.which == '@'.charCodeAt(0)) {                
                 suggesting = true;
             }
-        } else {
+        }
+    });
+    
+    // upon keyup, the val() would have already been updated
+    $('#message').keyup(function(e) {
+        if (suggesting) {
             // filter suggestions
             var msg = $('#message').val();
             // get caret position
