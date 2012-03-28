@@ -179,7 +179,7 @@ io.sockets.on('connection', function (socket) {
 	})
 
 	socket.on('message', function (room, msg) {
-		console.log(msg + ' to room ' + room);  
+		console.log(msg + ' to room ' + room);
 		client1.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
 		socket.broadcast.to(room).emit('message', room, socket.nickname, msg);
 	});
@@ -215,7 +215,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
     
-    socket.on('get nearest buildings', function(lat, lng, num) {
+    socket.on('get nearest buildings', function(lat, lng, num) {        
         client0.hgetall("location:all", function(err, replies) {
             var locations = new Array(replies.length);
             for (var key in replies) {
@@ -234,10 +234,12 @@ io.sockets.on('connection', function (socket) {
                 return distA - distB;
             });
             
-            var buildings = new Array(num);
+            var buildings = {};
             for (var i = 0; i < num; i++) {
                 var location = locations[i];
-                buildings[i] = replies[location];
+                var lat2 = location.split(",")[0];
+                var lng2 = location.split(",")[1];
+                buildings[replies[location]] = dist(lat,lng,lat2,lng2);
             }
             
             socket.emit('nearest buildings', buildings);

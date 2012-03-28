@@ -1,7 +1,10 @@
 var socket = io.connect();
 
 socket.on('nearest buildings', function(buildings) {
-    console.log(buildings);
+    console.log("got nearest buildings");
+    for (key in buildings) {
+        console.log(key + ": " + buildings[key]);
+    }
     // do stuff to DOM in dashboard.jade and layout-index.jade
 });
 

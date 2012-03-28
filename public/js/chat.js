@@ -146,6 +146,14 @@ $(function () {
 		scrollToBottom();
 		return false;
 	});
+    
+    $('#message').keyup(function(e) {
+        // check for @
+        if (e.which == 50) {
+            console.log("@ pressed");
+        }
+        
+    });
 });
 
 window.onbeforeunload = function() {
