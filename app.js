@@ -143,12 +143,15 @@ io.sockets.on('connection', function (socket) {
                             
                             if (encountered == expected) {
                                 callback(mentions);
+                                return;
                             }
                         });
                     }
                 }
             }
         }
+        
+        callback(mentions);
     }
     
 	socket.on('join room', function (room) {
