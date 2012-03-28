@@ -82,7 +82,7 @@ function message (to, from, msg) {
 	msg = linkify(msg);
 	if (to == current) {
 		// incoming msg to the current room
-		$('#lines').append($('<p>').append($('<b>').text(from), ': '+msg));
+		$('#lines').append($('<p>').append($('<strong>').text(from), ': '+msg));
 		scrollToBottom();
 	} else {
 		// incr badge
@@ -111,8 +111,12 @@ function scrollToBottom () {
 var renderChatlogs = function (logs) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
-		var msg = linkify(logs[timestamp]);
-		$('#lines').append($('<p>').append(msg));
+		var entry = linkify(logs[timestamp])
+		var i = entry.indexOf(":");
+		entry = [entry.slice(0,i), entry.slice(i+1)];
+		var from = entry[0];
+		var msg = entry[1];
+		$('#lines').append($('<p>').append($('<strong>').text(from), ':'+ msg));
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
 }
