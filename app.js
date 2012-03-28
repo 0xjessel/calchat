@@ -25,7 +25,7 @@ redis.debug_mode = false;
 * Facebook Connect
 */
 everyauth.debug = true;
-
+everyauth.everymodule.moduleTimeout(-1); // turn off timeouts (github issue #29)
 everyauth.everymodule.findUserById(function (userId, callback) {
 	// callback has the signature, function (err, user) {...}
 	client1.hgetall('user:'+userId, callback);
