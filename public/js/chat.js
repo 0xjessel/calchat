@@ -42,12 +42,8 @@ socket.on('announcement', function (to, msg) {
 	}
 });
 
-<<<<<<< HEAD
 var users = null;
 socket.on('online', function(room, nicknames) {
-=======
-socket.on('online', function (room, nicknames) {
->>>>>>> crude fix #10, no css applied yet but functionality works.  added new 'leave room' command on socket.io  also got rid of the socket 'rooms' variable and using redis user:* 'recent' instead
 	if (room == current) {
         users = nicknames;
         
@@ -158,7 +154,6 @@ $(function () {
 		scrollToBottom();
 		return false;
 	});
-<<<<<<< HEAD
     
     // Suggestions
     var suggesting = false;
@@ -231,7 +226,6 @@ $(function () {
             }
         }
     });
-=======
 
 	$('#message').keyup(function (e) {
 		// check for @
@@ -262,7 +256,6 @@ $(function () {
 		}
 		
 	})
->>>>>>> crude fix #10, no css applied yet but functionality works.  added new 'leave room' command on socket.io  also got rid of the socket 'rooms' variable and using redis user:* 'recent' instead
 });
 
 window.onbeforeunload = function () {
