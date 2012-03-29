@@ -70,13 +70,12 @@ socket.on('error', function (e) {
 	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
-function message (to, from, msg, mentions) {
-	msg = linkify(msg);
-    msg = mentionize(msg, mentions);
-    
+function message (to, from, msg, mentions) {    
 	if (to == current) {
-		// incoming msg to the current room
-		$('#lines').append($('<p>').append($('<strong>').text(from), ': '+msg));
+		// append incoming msg to the current room
+        var element = renderChatMessage(from, msg, mentions);
+		$('#lines').append(element);
+        
 		scrollToBottom();
 	} else {
 		// incr badge
@@ -111,18 +110,30 @@ function scrollToBottom () {
 	}
 }
 
-var renderChatlogs = function (logs, mentions) {
+function renderChatlogs (logs, mentions) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
-		var entry = linkify(logs[timestamp])
-        entry = mentionize(entry, mentions);
+        
+        var entry = logs[timestamp];
 		var i = entry.indexOf(":");
-		entry = [entry.slice(0,i), entry.slice(i+1)];
-		var from = entry[0];
-		var msg = entry[1];
-		$('#lines').append($('<p>').append($('<span class="from">').append(from + ':'), $('<span class="message">').append(msg)));
+        
+		var from = entry.slice(0,i);
+		var msg = entry.slice(i+1);
+        
+        var element = renderChatMessage(from, msg, mentions);
+		$('#lines').append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
+}
+
+function renderChatMessage(from, msg, mentions) {
+    msg = linkify(msg);
+    msg = mentionize(msg, mentions);
+    
+    var element = $('<p>').append(
+        $('<span class="from">').append(from + ': '),
+        $('<span class="message">').append(msg));
+    return element;
 }
 
 // dom manipulation
