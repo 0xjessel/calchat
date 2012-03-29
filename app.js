@@ -156,12 +156,39 @@ io.sockets.on('connection', function (socket) {
     }
     
 	socket.on('join room', function (room) {
-		console.log('incoming request to join '+room);
-		if (!nicknames[room]) {
-			nicknames[room] = {};
-            uids[room] = {};
-		}
-		socket.join(room);
+        socket.get('uid', function (err, uid) {
+            console.log('incoming request to join '+room);
+            if (!nicknames[room]) {
+                nicknames[room] = {};
+                uids[room] = {};
+            }
+            socket.join(room);
+        });
+	});
+	
+	socket.on('leave room', function (room) {
+		socket.get('uid', function (err, uid) {
+            delete nicknames[room][socket.nickname]
+            delete uids[room][socket.nickname]
+            
+			client2.hget('user:'+uid, 'recent', function(err, reply) {
+				if (reply) {
+					var rooms = reply.split(',');
+					for (var i = 0; i < rooms.length; i++) {
+						if (room == rooms[i]) {
+							rooms.splice(i, 1);
+							
+                            client2.hset('user:'+uid, 'recent', rooms.join());
+						}
+					}
+				}
+			});
+            
+            client2.srem('users:'+room, uid);
+            
+            io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+            io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
+		});
 	});
 
 	socket.on('set name', function (uid, nick, fn) {
@@ -180,6 +207,9 @@ io.sockets.on('connection', function (socket) {
 						nicknames[room][nick] = socket.nickname;
                         uids[room][nick] = uid;
 					}
+            
+                    client2.sadd('users:'+room, uid);
+            
 					io.sockets.in(room).emit('announcement', room, nick + ' connected');
 					io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
 				}
@@ -217,6 +247,8 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('save chat', function (room) {
+        console.log('save chat room');
+        console.log(room);
 		socket.get('uid', function (err, uid) {
 			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
@@ -231,7 +263,8 @@ io.sockets.on('connection', function (socket) {
 					if (!found) {
 						rooms.unshift(room);
 					}
-					client2.hset('user:'+uid, 'recent', rooms.join());
+					
+                    client2.hset('user:'+uid, 'recent', rooms.join());
 				}
 			});
 		});
@@ -279,23 +312,6 @@ io.sockets.on('connection', function (socket) {
 			var d = R * c;
 			return d;
 		}
-	});
-	
-	socket.on('leave room', function (room) {
-		socket.get('uid', function (err, uid) {
-			client2.hget('user:'+uid, 'recent', function(err, reply) {
-				if (reply) {
-					var rooms = reply.split(',');
-					for (var i = 0; i < rooms.length; i++) {
-						if (room == rooms[i]) {
-							rooms.splice(i, 1);
-							console.log(rooms);
-							client2.hset('user:'+uid, 'recent', rooms.join());
-						}
-					}
-				}
-			});
-		});
 	});
 
 	socket.on('disconnect', function () {
