@@ -2,8 +2,8 @@ var util = require('util')
     , everyauth = require('everyauth')
     , redis = require('redis');
 
-var client1 = redis.createClient();
-client1.select(1);
+var client2 = redis.createClient();
+client2.select(2);
 
 /*
  * GET home page.
@@ -78,7 +78,7 @@ exports.chatroom = function(req, res) {
 				}
 			} 
 			// update db
-			client1.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
+			client2.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
 				return res.redirect('/chat');
 			});
 			return;

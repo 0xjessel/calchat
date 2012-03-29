@@ -17,8 +17,8 @@ var app = module.exports = express.createServer();
 var redisUrl = "calchat.net"
 var client0 = redis.createClient(null, redisUrl);
 client0.select(0);
-var client1 = redis.createClient(null, redisUrl);
-client1.select(1);
+var client2 = redis.createClient(null, redisUrl);
+client2.select(2);
 redis.debug_mode = false;
 
 /**
@@ -28,7 +28,7 @@ everyauth.debug = true;
 everyauth.everymodule.moduleTimeout(-1); // turn off timeouts (github issue #29)
 everyauth.everymodule.findUserById(function (userId, callback) {
 	// callback has the signature, function (err, user) {...}
-	client1.hgetall('user:'+userId, callback);
+	client2.hgetall('user:'+userId, callback);
 });
 
 everyauth.facebook
@@ -37,11 +37,11 @@ everyauth.facebook
 .scope('email, user_about_me, read_friendlists')
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
-	client1.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+	client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 		if (err == null) { // no errors
 			if (Object.keys(reply).length == 0) { 
 				// no user found, create new user
-				client1.hmset('user:'+fbUserMetadata.id, {
+				client2.hmset('user:'+fbUserMetadata.id, {
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
@@ -49,7 +49,7 @@ everyauth.facebook
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 				}, function() {
-					client1.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
 							promise.fulfill(reply);
 						}
@@ -132,11 +132,11 @@ io.sockets.on('connection', function (socket) {
                         var id = slice.substring(0, slice.indexOf('$'));
                         
                         var firstname = null;
-                        client1.hget('user:'+id, 'firstname', function(err, reply){
+                        client2.hget('user:'+id, 'firstname', function(err, reply){
                             firstname = reply;
                         });
                         var lastname = null;
-                        client1.hget('user:'+id, 'lastname', function(err, reply){
+                        client2.hget('user:'+id, 'lastname', function(err, reply){
                             encountered ++;
                             // this callback is guaranteed to be called after the firstname callback
                             lastname = reply;
@@ -168,7 +168,7 @@ io.sockets.on('connection', function (socket) {
 		socket.nickname = nick;
 		socket.set('uid', uid);
 		
-		client1.hget('user:'+uid, 'recent', function(err, reply) {
+		client2.hget('user:'+uid, 'recent', function(err, reply) {
 			if (reply) {
 				var rooms = reply.split(',');
 				for (var i = 0; i < rooms.length; i++) {
@@ -190,7 +190,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get chatlog', function (room, fn) {
 		// get last 30 messages
-		client1.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
+		client2.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			var toReturn = {};
             var msgs = [];
 			for (var i = 0; i < replies.length; i=i+2) {
@@ -210,7 +210,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);
-		client1.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
+		client2.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
         getMentions([msg], function(mentions) {
             io.sockets.in(room).emit('message', room, socket.nickname, msg, mentions);
         });
@@ -218,7 +218,7 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('save chat', function (room) {
 		socket.get('uid', function (err, uid) {
-			client1.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					var found = false;
@@ -231,7 +231,7 @@ io.sockets.on('connection', function (socket) {
 					if (!found) {
 						rooms.unshift(room);
 					}
-					client1.hset('user:'+uid, 'recent', rooms.join());
+					client2.hset('user:'+uid, 'recent', rooms.join());
 				}
 			});
 		});
@@ -283,14 +283,14 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('leave room', function (room) {
 		socket.get('uid', function (err, uid) {
-			client1.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					for (var i = 0; i < rooms.length; i++) {
 						if (room == rooms[i]) {
 							rooms.splice(i, 1);
 							console.log(rooms);
-							client1.hset('user:'+uid, 'recent', rooms.join());
+							client2.hset('user:'+uid, 'recent', rooms.join());
 						}
 					}
 				}
@@ -307,7 +307,7 @@ io.sockets.on('connection', function (socket) {
         }
         
 		socket.get('uid', function (err, uid) {
-			client1.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					for (var i = 0; i < rooms.length; i++) {
