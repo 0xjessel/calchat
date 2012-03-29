@@ -48,3 +48,8 @@ a.from:hover {
 .message {
     font-size:85%;
 }
+
+#user-suggestions {
+    background-color:#d0e4fe;
+    position:absolute;
+}

@@ -2,7 +2,8 @@ var util = require('util')
     , everyauth = require('everyauth')
     , redis = require('redis');
 
-var client2 = redis.createClient();
+var redisUrl = 'db.calchat.net';
+var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
 /*

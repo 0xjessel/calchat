@@ -151,6 +151,9 @@ $(function () {
 			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
+    
+    // set suggestions box width
+    $('#user-suggestions').width($('#message').outerWidth()).hide();
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
