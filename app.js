@@ -107,7 +107,6 @@ app.listen(3000);
 
 var io = sio.listen(app);
 var nicknames = {};
-var uids = {};
 
 io.sockets.on('connection', function (socket) {
     function getMentions(msgs, callback) {
@@ -160,7 +159,6 @@ io.sockets.on('connection', function (socket) {
             console.log('incoming request to join '+room);
             if (!nicknames[room]) {
                 nicknames[room] = {};
-                uids[room] = {};
             }
             socket.join(room);
         });
@@ -168,8 +166,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('leave room', function (room) {
 		socket.get('uid', function (err, uid) {
-            delete nicknames[room][socket.nickname]
-            delete uids[room][socket.nickname]
+            delete nicknames[room][uid];
             
 			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
@@ -187,7 +184,7 @@ io.sockets.on('connection', function (socket) {
             client2.srem('users:'+room, uid);
             
             io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-            io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
+            io.sockets.in(room).emit('online', room, nicknames[room]);
 		});
 	});
 
@@ -200,18 +197,17 @@ io.sockets.on('connection', function (socket) {
 				var rooms = reply.split(',');
 				for (var i = 0; i < rooms.length; i++) {
 					var room = rooms[i];
-					if (nicknames[room] && nicknames[room][nick]) {
+					if (nicknames[room] && nicknames[room][uid]) {
 						fn(true);
 					} else {
 						fn(false);
-						nicknames[room][nick] = socket.nickname;
-                        uids[room][nick] = uid;
+						nicknames[room][uid] = socket.nickname;
 					}
             
                     client2.sadd('users:'+room, uid);
             
 					io.sockets.in(room).emit('announcement', room, nick + ' connected');
-					io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
+					io.sockets.in(room).emit('online', room, nicknames[room]);
 				}
 			}
 		
@@ -235,7 +231,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('get online', function (room) {
-		socket.emit('online', room, nicknames[room], uids[room]);
+		socket.emit('online', room, nicknames[room]);
 	});
 
 	socket.on('message', function (room, msg) {
@@ -313,23 +309,56 @@ io.sockets.on('connection', function (socket) {
 			return d;
 		}
 	});
+    
+    socket.on('get users', function(room, callback){
+        client2.smembers('users:'+room, function(err, ids){
+            var users = {};
+            
+            // INFO
+            // this for loop is asynchronous (because of redis), so lots of things need to be done:
+            for (var i = 0; i < ids.length; i++) {
+                // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
+                var closure = function() {
+                    var id = ids[i];
+                    var name = null;
+                    client2.hget('user:'+id, 'firstname', function(err, firstname){
+                        name = firstname;
+                    });
+                    // 2nd callback function guaranteed to be called after 1st callback function above
+                    client2.hget('user:'+id, 'lastname', function(err, lastname){
+                        name = name + ' ' + lastname.charAt(0);
+                    });
+                    // use ping to guarantee call order
+                    client2.ping(function(){
+                        users[id] = name;
+                    });
+                }
+                // immediately call the created closure
+                closure();
+            }
+            
+            // use ping to guarantee this callback is executed after all above callbacks have executed
+            client2.ping(function(){
+                callback(users);
+            });
+        });
+    });
 
 	socket.on('disconnect', function () {
-		if (!socket.nickname) return;
-        
-        for (room in nicknames) {
-            delete nicknames[room][socket.nickname]
-            delete uids[room][socket.nickname]
-        }
+		if (!socket.nickname) return;        
         
 		socket.get('uid', function (err, uid) {
+            for (room in nicknames) {
+                delete nicknames[room][uid];
+            }
+            
 			client2.hget('user:'+uid, 'recent', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					for (var i = 0; i < rooms.length; i++) {
 						var room = rooms[i];
 						io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-						io.sockets.in(room).emit('online', room, nicknames[room], uids[room]);
+						io.sockets.in(room).emit('online', room, nicknames[room]);
 					}
 				}
 			});

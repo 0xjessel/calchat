@@ -42,18 +42,15 @@ socket.on('announcement', function (to, msg) {
 	}
 });
 
-var users = null;
-socket.on('online', function(room, nicknames, uids) {
-	if (room == current) {
-        users = uids;
-        
+socket.on('online', function(room, nicknames) {
+	if (room == current) {        
 		// empty out sidebar, repopulate with all online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
 
-		for (var name in nicknames) {
-			onlineSidebar.append('<li>'+nicknames[name]+'</li>');
-            // TODO: make link using id = nicknames[name]
+		for (var id in nicknames) {
+			onlineSidebar.append('<li>'+nicknames[id]+'</li>');
+            // TODO: make link using id
 		}
 	}
 });
@@ -182,6 +179,12 @@ $(function () {
     
     // upon keyup, the val() would have already been updated
     $('#message').keyup(function(e) {
+        // ignore if input has not been changed
+        if ($(this).data('prev') == $(this).val()) {
+            return;
+        }
+        $(this).data('prev', $(this).val());
+        
         if (suggesting) {
             // filter suggestions
             var msg = $('#message').val();
@@ -201,42 +204,48 @@ $(function () {
             var filter = msg.substring(start+1, end);
             
             // clear suggestions box to be repopulated
-            $('#user-suggestions').hide();
             $('#suggestion-list').empty();
+            $('#user-suggestions').show();
+            // TODO: show spinning 'Loading…' icon
             
-            for (user in users) {
-                // filter text matches a user name
-                if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
-                    $('#user-suggestions').show();
-                    // TODO: make much prettier
-                    $('#suggestion-list').append('<li><a href="javascript:void(0)" id="user'+users[user]+'">'+user+'</a></li>');
-                    
-                    $('#user'+users[user]).click(function(){
-                        // get id of clicked suggestion
-                        var id = users[$(this).text()];
-                        // get text after the caret position
-                        var after = msg.substring(end);
-                        // make sure there is at least 1 space between replaced text and after text
-                        if (after && after.length > 0 && after.charAt(0) == ' ') {
-                            // we are adding a space later, so if there is already a space, remove it
-                            after = after.substring(1);
-                        }
-                        
-                        // turn the '@filter' into '#id ' and keep the before and after text the same
-                        var transformedMsg = msg.substring(0, start) + '#' + id + '$ ' + after;
-                        
-                        // calculate the new caret position
-                        var caretPosition = transformedMsg.length - after.length;
-                        
-                        // hide suggestions box
-                        $('#user-suggestions').hide();
-                        suggesting = false;
-                        
-                        // set new value for input
-                        $('#message').val(transformedMsg).focus().get(0).setSelectionRange(caretPosition,caretPosition);
-                    });
+            socket.emit('get users', current, function(users){                
+                for (id in users) {
+                    var user = users[id];
+                    // filter text matches a user name
+                    if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
+                        // TODO: make much prettier
+                        $('#suggestion-list').append('<li><a href="javascript:void(0)" id="user'+id+'">'+user+'</a></li>');
+                        $('#user'+id).data('id', id);
+                        $('#user'+id).click(function(){
+                            // get id of clicked suggestion
+                            var id = $(this).data('id');
+                            // get text after the caret position
+                            var after = msg.substring(end);
+                            // make sure there is at least 1 space between replaced text and after text
+                            if (after && after.length > 0 && after.charAt(0) == ' ') {
+                                // we are adding a space later, so if there is already a space, remove it
+                                after = after.substring(1);
+                            }
+                            
+                            // turn the '@filter' into '#id ' and keep the before and after text the same
+                            var transformedMsg = msg.substring(0, start) + '#' + id + '$ ' + after;
+                            
+                            // calculate the new caret position
+                            var caretPosition = transformedMsg.length - after.length;
+                            
+                            // hide suggestions box
+                            $('#user-suggestions').hide();
+                            suggesting = false;
+                            
+                            // set new value for input
+                            $('#message')
+                                .val(transformedMsg)
+                                .focus()
+                                .get(0).setSelectionRange(caretPosition,caretPosition);
+                        });
+                    }
                 }
-            }
+            });
         }
     });
 
