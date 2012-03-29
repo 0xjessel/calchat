@@ -33,13 +33,13 @@ exports.dashboard = function(req, res) {
 
 exports.chat = function(req, res) {
   if (req.loggedIn) {		
-	if (req.user.recent === '') {
+	if (req.user.chatrooms === '') {
 		// redirect to dashboard to add some classes to favorites or select a class
 		return res.redirect('/dashboard?error=newbie'); // add some query param to indicate error
 	}
 	
 	// convert string to array
-	var rooms = req.user.recent.split(',');
+	var rooms = req.user.chatrooms.split(',');
 	
     res.render('chat', { 
       title: 'CalChat', 
@@ -56,10 +56,10 @@ exports.chat = function(req, res) {
 exports.chatroom = function(req, res) {
 	if (req.loggedIn) {
 		// convert string to array
-		var rooms = req.user.recent.split(',');
+		var rooms = req.user.chatrooms.split(',');
 		var room = req.params.room;
 		if (room != undefined && isValid(room)) {
-			if (!req.user.recent) {
+			if (!req.user.chatrooms) {
 				// first time, set rooms to be a new array with just the room
 				rooms = [room];
 			} else {
@@ -79,7 +79,7 @@ exports.chatroom = function(req, res) {
 				}
 			} 
 			// update db
-			client2.hset('user:'+req.user.id, 'recent', rooms.join(), function() {
+			client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
 				return res.redirect('/chat');
 			});
 			return;

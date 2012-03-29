@@ -45,7 +45,7 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
-					'recent': '',
+					'chatrooms': '',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 				}, function() {
@@ -188,14 +188,14 @@ io.sockets.on('connection', function (socket) {
 		socket.get('uid', function (err, uid) {
             delete nicknames[room][uid];
             
-			client2.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					for (var i = 0; i < rooms.length; i++) {
 						if (room == rooms[i]) {
 							rooms.splice(i, 1);
 							
-                            client2.hset('user:'+uid, 'recent', rooms.join());
+                            client2.hset('user:'+uid, 'chatrooms', rooms.join());
 						}
 					}
 				}
@@ -212,7 +212,7 @@ io.sockets.on('connection', function (socket) {
 		socket.nickname = nick;
 		socket.set('uid', uid);
 		
-		client2.hget('user:'+uid, 'recent', function(err, reply) {
+		client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 			if (reply) {
 				var rooms = reply.split(',');
 				for (var i = 0; i < rooms.length; i++) {
@@ -266,7 +266,7 @@ io.sockets.on('connection', function (socket) {
         console.log('save chat room');
         console.log(room);
 		socket.get('uid', function (err, uid) {
-			client2.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					var found = false;
@@ -280,7 +280,7 @@ io.sockets.on('connection', function (socket) {
 						rooms.unshift(room);
 					}
 					
-                    client2.hset('user:'+uid, 'recent', rooms.join());
+                    client2.hset('user:'+uid, 'chatrooms', rooms.join());
 				}
 			});
 		});
@@ -344,7 +344,7 @@ io.sockets.on('connection', function (socket) {
                 delete nicknames[room][uid];
             }
             
-			client2.hget('user:'+uid, 'recent', function(err, reply) {
+			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
 					for (var i = 0; i < rooms.length; i++) {
