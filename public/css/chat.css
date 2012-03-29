@@ -78,6 +78,10 @@ a.from:hover {
 }
 
 #user-suggestions {
-    background-color:#d0e4fe;
-    position:absolute;
+    background-color:aliceblue;
+    position:static;
+}
+
+.suggestion-selected {
+    background-color:red;
 }

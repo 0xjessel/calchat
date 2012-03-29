@@ -155,6 +155,8 @@ $(document).ready(function () {
     
     // set suggestions box width
     $('#user-suggestions').width($('#message').outerWidth()).hide();
+    // first suggestion highlighted first
+    $('#suggestion-list').data('selected', 0);
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
@@ -187,23 +189,58 @@ $(document).ready(function () {
 	// Suggestions
 	var suggesting = false;
 	$('#message').keypress(function(e) {
-		if (!suggesting) {
+        $(this).data('prev', $(this).val());
+        if (!suggesting) {
 			// check for '@' to begin suggestions
 			if (e.which == '@'.charCodeAt(0)) {                
 				suggesting = true;
 			}
 		}
 	});
+    
+    $('#message').keydown(function(e) {
+        if ($('#user-suggestions').css('display') != 'none') {
+            switch(e.which) {
+                case 27: //ESC
+                case 38: //arrow up
+                case 40: //arrow down
+                case 13: //ENTER
+                    e.preventDefault();
+                    break;
+            }
+        }
+    });
 
 	// upon keyup, the val() would have already been updated
 	$('#message').keyup(function(e) {
-		// ignore if input has not been changed
-		if ($(this).data('prev') == $(this).val()) {
-			return;
-		}
-		$(this).data('prev', $(this).val());
-
-		if (suggesting) {
+        var prev = $(this).data('prev');
+        $(this).data('prev', $(this).val());
+        
+        var prevSelected = $('#suggestion-list').data('selected');
+        var newSelected = prevSelected;
+        
+        if ($('#user-suggestions').css('display') != 'none') {
+            switch(e.which) {
+                case 27: //ESC
+                    $('#user-suggestions').hide();
+                    newSelected = 0;
+                    break;
+                case 38: //arrow up
+                    newSelected = prevSelected - 1;
+                    refreshSelection();
+                    break;
+                case 40: //arrow down
+                    newSelected = prevSelected + 1;
+                    refreshSelection();
+                    break;
+                case 13: //ENTER
+                    $('#suggestion-list').children().get(newSelected).children.item(0).click();
+                    return;
+            }
+        }
+        
+		// recalculate if input has been changed
+		if (suggesting && prev != $(this).val()) {
 			// filter suggestions
 			var msg = $('#message').val();
 			// get caret position
@@ -223,16 +260,27 @@ $(document).ready(function () {
 
 			// clear suggestions box to be repopulated
 			$('#suggestion-list').empty();
-			$('#user-suggestions').show();
-			// TODO: show spinning 'Loading…' icon
+            
+            var displayLoading = setTimeout(function() {
+                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading..'))
+                $('#user-suggestions').show();
+            }, 1000);
 
-			socket.emit('get users', current, function(users){                
+			socket.emit('get users', current, function(users){
+                clearTimeout(displayLoading);
+                $('.suggestion-hint').remove();
+                var matches = 0;
 				for (id in users) {
 					var user = users[id];
 					// filter text matches a user name
-					if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
-						// TODO: make much prettier
-						$('#suggestion-list').append('<li><a href="javascript:void(0)" id="user'+id+'">'+user+'</a></li>');
+					if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {    
+                        var suggestionClass = "suggestion-unselected";
+                        if (matches == 0) {
+                            suggestionClass = "suggestion-selected";
+                        }
+                        
+                        var suggestionItem = $('<li>').data('suggestion-index', matches).append('<a href="javascript:void(0)" id="user'+id+'">'+user+'</a>');
+						$('#suggestion-list').append(suggestionItem);
 						$('#user'+id).data('id', id);
 						$('#user'+id).click(function(){
 							// get id of clicked suggestion
@@ -261,10 +309,35 @@ $(document).ready(function () {
 							.focus()
 							.get(0).setSelectionRange(caretPosition,caretPosition);
 						});
+                        
+                        matches++;
 					}
 				}
+                
+                if (matches) {
+                    $('#user-suggestions').show();
+                } else {
+                    $('#user-suggestions').hide();
+                }
+                
+                refreshSelection();
 			});
 		}
+        
+        function refreshSelection(){        
+            newSelected = Math.max(0, Math.min($('#suggestion-list').children().length-1, newSelected));
+            $('#suggestion-list').data('selected', newSelected);
+            
+            // figure out which suggestion is highlighted
+            $('#suggestion-list').children().each(function() {
+                var suggestionIndex = $(this).data('suggestion-index');
+                if (newSelected == suggestionIndex && !$(this).hasClass('suggestion-hint')) {
+                    $(this).addClass('suggestion-selected');
+                } else {
+                    $(this).removeClass('suggestion-selected');
+                }
+            });
+        }
 	});
 
 	$('#archives').click(function () {
