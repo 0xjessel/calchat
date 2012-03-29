@@ -110,9 +110,11 @@ function renderChatMessage(from, msg, mentions) {
     msg = linkify(msg);
     msg = mentionize(msg, mentions);
     
-    var element = $('<p>').append(
-        $('<span class="from">').append(from + ': '),
-        $('<span class="message">').append(msg));
+    var fromElement = $('<span class="from">').append($('<a href="javascript:void(0)" class="from">').append(from), ': ');
+    // TODO: make the link actually do something
+    var msgElement = $('<span class="message">').append(msg);
+    
+    var element = $('<p>').append(fromElement, msgElement);
     return element;
 }
 
@@ -120,7 +122,7 @@ function mentionize(msg, mentions) {
     for (id in mentions) {
         var text = '@'+mentions[id];
         msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)" class="mention">'+text+'</a>');
-        // TODO: make the link actually go somewhere
+        // TODO: make the link actually do something
     }
     return msg;
 }

@@ -19,11 +19,11 @@ ul.sidebar, #suggestion-list {
 	border:1px solid green;
 }
 
-.mention {
+a.mention {
     color:dimgrey;
     font-weight:bold;
 }
-.mention:hover {
+a.mention:hover {
     text-decoration:none;
     color:darkgrey;
     font-weight:bold;
@@ -34,6 +34,17 @@ ul.sidebar, #suggestion-list {
     font-size:100%;
 }
 
+a.from {
+    color:black;
+    font-weight:bold;
+}
+
+a.from:hover {
+    text-decoration:none;
+    color:dimgrey;
+    font-weight:bold;
+}
+
 .message {
-    font-size:90%;
+    font-size:85%;
 }
