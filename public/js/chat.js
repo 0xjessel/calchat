@@ -90,26 +90,6 @@ function message (to, from, msg, mentions) {
 	}
 }
 
-function mentionize(msg, mentions) {
-    for (id in mentions) {
-        var text = '@'+mentions[id];
-        msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)" class="mention">'+text+'</a>');
-        // TODO: make the link actually go somewhere
-    }
-    return msg;
-}
-
-function clear () {
-	$('#message').val('').focus();
-};
-
-function scrollToBottom () {
-	// scroll to bottom only if already scrolled to bottom
-	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 80 <= chatDiv.outerHeight()) {
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
-	}
-}
-
 function renderChatlogs (logs, mentions) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
@@ -134,6 +114,26 @@ function renderChatMessage(from, msg, mentions) {
         $('<span class="from">').append(from + ': '),
         $('<span class="message">').append(msg));
     return element;
+}
+
+function mentionize(msg, mentions) {
+    for (id in mentions) {
+        var text = '@'+mentions[id];
+        msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)" class="mention">'+text+'</a>');
+        // TODO: make the link actually go somewhere
+    }
+    return msg;
+}
+
+function clear () {
+	$('#message').val('').focus();
+};
+
+function scrollToBottom () {
+	// scroll to bottom only if already scrolled to bottom
+	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 80 <= chatDiv.outerHeight()) {
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+	}
 }
 
 // dom manipulation
