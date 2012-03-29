@@ -19,3 +19,6 @@ Session.vim
 # no redis
 redis*
 dump.rdb
+
+# node bin
+node_modules/.bin
