@@ -32,6 +32,14 @@ div.navbar.navbar-fixed-top
               input(type='text', placeholder='Add Chatroom').search-query
         if loggedIn
           ul.nav.pull-right
-            li  
-              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?type=square', height='37', width='37').avatar< 
-              a(href='/logout', style="float:right") Logout
+            li.dropdown
+              a(href='#', data-toggle='dropdown', style='padding:5px').dropdown-toggle
+                img(src='http://graph.facebook.com/'+user.id+'/picture?type=square', height='30', width='30').avatar 
+                #{user.firstname+' '+user.lastname}
+                b(style='margin-top:12px').caret
+              ul.dropdown-menu
+                li
+                  a(href='/preferences') Preferences
+                li.divider
+                li
+                  a(href='/logout') Logout

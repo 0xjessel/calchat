@@ -1,24 +1,10 @@
 !!! 5
 html(lang='en')
   head
-    style(type='text/css')
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-      }
-      #login {
-        display: block;
-        width: 280px;
-        height: 47px;
-        background: url('img/fb-connect.png') bottom;
-       }
-       #login:hover {
-         background-position: 0 0;
-       }
+    link(rel='stylesheet', href='css/dashboard.css')
     include includes/head
 
   body!= body
-
 
   script(src='/socket.io/socket.io.js')
   script(src='/js/yqlgeo.js')
@@ -26,5 +12,5 @@ html(lang='en')
   script
     if (window.location.hash == '#_=_')
       window.location.hash = '';
-  script(src='/js/libs/bootstrap/transition.js')
-  script(src='/js/libs/bootstrap/collapse.js')
+
+  include includes/footer
