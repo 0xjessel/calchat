@@ -18,4 +18,4 @@ Session.vim
 
 # no redis
 redis*
-
+dump.rdb
