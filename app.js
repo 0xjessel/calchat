@@ -110,9 +110,12 @@ var nicknames = {};
 var uids = {};
 
 io.sockets.on('connection', function (socket) {
-
     function getMentions(msgs, callback) {
         var mentions = {};
+        
+        if (msgs.length == 0) {
+            callback(mentions);
+        }
         
         var expected = 0;
         var encountered = 0;
