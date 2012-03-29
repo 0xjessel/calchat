@@ -94,7 +94,7 @@ function message (to, from, msg, mentions) {
 function mentionize(msg, mentions) {
     for (id in mentions) {
         var text = '@'+mentions[id];
-        msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)">'+text+'</a>');
+        msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)" class="mention">'+text+'</a>');
         // TODO: make the link actually go somewhere
     }
     return msg;
@@ -120,7 +120,7 @@ var renderChatlogs = function (logs, mentions) {
 		entry = [entry.slice(0,i), entry.slice(i+1)];
 		var from = entry[0];
 		var msg = entry[1];
-		$('#lines').append($('<p>').append($('<strong>').text(from), ':'+ msg));
+		$('#lines').append($('<p>').append($('<span class="from">').append(from + ':'), $('<span class="message">').append(msg)));
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
 }

@@ -18,3 +18,22 @@ ul.sidebar, #suggestion-list {
 	overflow-y:auto;
 	border:1px solid green;
 }
+
+.mention {
+    color:dimgrey;
+    font-weight:bold;
+}
+.mention:hover {
+    text-decoration:none;
+    color:darkgrey;
+    font-weight:bold;
+}
+
+.from {
+    font-weight:bold;
+    font-size:100%;
+}
+
+.message {
+    font-size:90%;
+}
