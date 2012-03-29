@@ -50,7 +50,7 @@ socket.on('online', function(room, nicknames) {
 
 		for (var id in nicknames) {
 			var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
-			onlineSidebar.append('<li><a href="http://www.facebook.com/'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
+			onlineSidebar.append('<li><a target="_blank" href="http://www.facebook.com/'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
 		}
 	}
 });
