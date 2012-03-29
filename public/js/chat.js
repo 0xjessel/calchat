@@ -44,13 +44,13 @@ socket.on('announcement', function (to, msg) {
 
 socket.on('online', function(room, nicknames) {
 	if (room == current) {        
-		// empty out sidebar, repopulate with all online people
+		// empty out sidebar, repopulate with online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
 
 		for (var id in nicknames) {
-			onlineSidebar.append('<li>'+nicknames[id]+'</li>');
-			// TODO: make link using id
+			var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
+			onlineSidebar.append('<li><a href="http://www.facebook.com/'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
 		}
 	}
 });

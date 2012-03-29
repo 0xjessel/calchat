@@ -1,11 +1,15 @@
 /* CSS Document */
 body {
-   padding-top: 60px;
-   padding-bottom: 40px;
+	padding-top: 60px;
+	padding-bottom: 40px;
 }
 
 ul.sidebar, #suggestion-list {
 	list-style-type: none;
+}
+
+ul#online {
+	font-size:1.3em;
 }
 
 .badge {
@@ -35,32 +39,40 @@ ul.sidebar, #suggestion-list {
 	margin:10px;	
 }
 
-a.mention {
-    color:dimgrey;
-    font-weight:bold;
+.avatar {
+	        border-radius: 5px;
+	   -moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	margin-right: 10px;
 }
+
+a.mention {
+	color:dimgrey;
+	font-weight:bold;
+}
+
 a.mention:hover {
-    text-decoration:none;
-    color:darkgrey;
-    font-weight:bold;
+	text-decoration:none;
+	color:darkgrey;
+	font-weight:bold;
 }
 
 .from {
-    font-weight:bold;
-    font-size:100%;
+	font-weight:bold;
+	font-size:100%;
 }
 
 a.from {
-    color:black;
-    font-weight:bold;
+	color:black;
+	font-weight:bold;
 }
 
 a.from:hover {
-    text-decoration:none;
-    color:dimgrey;
-    font-weight:bold;
+	text-decoration:none;
+	color:dimgrey;
+	font-weight:bold;
 }
 
 .message {
-    font-size:85%;
+	font-size:85%;
 }
