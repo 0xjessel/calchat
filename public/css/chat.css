@@ -1,15 +1,19 @@
 /* CSS Document */
 body {
-   padding-top: 60px;
-   padding-bottom: 40px;
-}
-
-.badge {
-	float: right;
+	padding-top: 60px;
+	padding-bottom: 40px;
 }
 
 ul.sidebar, #suggestion-list {
 	list-style-type: none;
+}
+
+ul#online {
+	font-size:1.3em;
+}
+
+.badge {
+	float: right;
 }
 
 #chat {
@@ -19,30 +23,54 @@ ul.sidebar, #suggestion-list {
 	border:1px solid green;
 }
 
-a.mention {
-    color:dimgrey;
-    font-weight:bold;
+.chat-header {
+	margin-bottom:45px;
 }
+
+.actions {
+	float:right;
+}
+
+.chat-title {
+	float:left;
+}
+
+.actions .action {
+	margin:10px;	
+}
+
+.avatar {
+	        border-radius: 5px;
+	   -moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	margin-right: 10px;
+}
+
+a.mention {
+	color:dimgrey;
+	font-weight:bold;
+}
+
 a.mention:hover {
-    text-decoration:none;
-    color:darkgrey;
-    font-weight:bold;
+	text-decoration:none;
+	color:darkgrey;
+	font-weight:bold;
 }
 
 .from {
-    font-weight:bold;
-    font-size:100%;
+	font-weight:bold;
+	font-size:100%;
 }
 
 a.from {
-    color:black;
-    font-weight:bold;
+	color:black;
+	font-weight:bold;
 }
 
 a.from:hover {
-    text-decoration:none;
-    color:dimgrey;
-    font-weight:bold;
+	text-decoration:none;
+	color:dimgrey;
+	font-weight:bold;
 }
 
 .message {

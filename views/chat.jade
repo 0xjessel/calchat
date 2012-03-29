@@ -24,10 +24,19 @@ div.container-fluid
 
     div.span9
       div.hero-unit#body-content
-        a.close ×
-        #chat
-          #messages
-            #lines
+        div.chat-header
+          div.chat-title
+            h2 chatroom
+          div.actions
+            a(href='#', rel='tooltip', title='view archives')#archives
+              i.icon-inbox.action
+            a(href='#', rel='tooltip', title='share chatroom')#share
+              i.icon-share.action
+            a(href='#', rel='tooltip', title='close chatroom')#close
+              i.icon-remove.action
+        div#chat
+          div#messages
+            div#lines
         hr
         form.form-inline#send-message
           div.input-append
