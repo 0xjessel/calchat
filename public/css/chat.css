@@ -4,12 +4,12 @@ body {
    padding-bottom: 40px;
 }
 
-.badge {
-	float: right;
-}
-
 ul.sidebar, #suggestion-list {
 	list-style-type: none;
+}
+
+.badge {
+	float: right;
 }
 
 #chat {
@@ -17,6 +17,22 @@ ul.sidebar, #suggestion-list {
 	height:350px;
 	overflow-y:auto;
 	border:1px solid green;
+}
+
+.chat-header {
+	margin-bottom:45px;
+}
+
+.actions {
+	float:right;
+}
+
+.chat-title {
+	float:left;
+}
+
+.actions .action {
+	margin:10px;	
 }
 
 a.mention {
