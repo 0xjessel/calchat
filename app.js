@@ -110,48 +110,68 @@ var nicknames = {};
 
 io.sockets.on('connection', function (socket) {
     function getMentions(msgs, callback) {
-        var mentions = {};
-        
-        if (msgs.length == 0) {
-            callback(mentions);
-        }
-        
-        var expected = 0;
-        var encountered = 0;
-        for (var stage in [0,1]) { // first calculate expected, then calculate encountered
-            for (var k = 0; k < msgs.length; k++) {
-                var msg = msgs[k];
-                var slices = msg.split('#');
-                for (var i = 0; i < slices.length; i++) {
-                    if (stage == 0) {
-                        expected++;
-                        continue;
-                    } else {                        
-                        var slice = slices[i];
-                        var id = slice.substring(0, slice.indexOf('$'));
-                        
-                        var firstname = null;
-                        client2.hget('user:'+id, 'firstname', function(err, reply){
-                            firstname = reply;
-                        });
-                        var lastname = null;
-                        client2.hget('user:'+id, 'lastname', function(err, reply){
-                            encountered ++;
-                            // this callback is guaranteed to be called after the firstname callback
-                            lastname = reply;
-                            if (firstname && lastname) {
-                                mentions[id] = firstname + ' ' + lastname.charAt(0);
-                            }
-                            
-                            if (encountered == expected) {
-                                callback(mentions);
-                                return;
-                            }
-                        });
-                    }
-                }
+        // find all ids
+        var ids = {};        
+        for (var k = 0; k < msgs.length; k++) {
+            var msg = msgs[k];
+            var slices = msg.split('#');
+            for (var i = 0; i < slices.length; i++) {
+                var slice = slices[i];
+                var id = slice.substring(0, slice.indexOf('$'));
+                // nicely removes duplicates
+                ids[id] = id;
             }
         }
+        
+        var idsList = [];
+        for (id in ids) {
+            idsList.push(id);
+        }
+        
+        getUsers(idsList, callback);
+    }
+    
+    function getUsers(ids, callback) {
+        var users = {};
+            
+        // INFO
+        // this for loop is asynchronous (because of redis), so lots of things need to be done:
+        for (var i = 0; i < ids.length; i++) {
+            // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
+            var closure = function() {
+                var id = ids[i];
+                var name = null;
+                var fail = false;
+                client2.hget('user:'+id, 'firstname', function(err, firstname){                    
+                    name = firstname;
+                    
+                    if (!name) {
+                        fail = true;
+                    }
+                });
+                
+                // 2nd callback function guaranteed to be called after 1st callback function above
+                client2.hget('user:'+id, 'lastname', function(err, lastname){
+                    if (!fail) {
+                        name = name + ' ' + lastname.charAt(0);
+                    }
+                });
+                
+                // use ping to guarantee call order
+                client2.ping(function(){
+                    if (!fail) {
+                        users[id] = name;
+                    }
+                });
+            }
+            // immediately call the created closure
+            closure();
+        }
+        
+        // use ping to guarantee this callback is executed after all above callbacks have executed
+        client2.ping(function(){
+            callback(users);
+        });
     }
     
 	socket.on('join room', function (room) {
@@ -312,35 +332,7 @@ io.sockets.on('connection', function (socket) {
     
     socket.on('get users', function(room, callback){
         client2.smembers('users:'+room, function(err, ids){
-            var users = {};
-            
-            // INFO
-            // this for loop is asynchronous (because of redis), so lots of things need to be done:
-            for (var i = 0; i < ids.length; i++) {
-                // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
-                var closure = function() {
-                    var id = ids[i];
-                    var name = null;
-                    client2.hget('user:'+id, 'firstname', function(err, firstname){
-                        name = firstname;
-                    });
-                    // 2nd callback function guaranteed to be called after 1st callback function above
-                    client2.hget('user:'+id, 'lastname', function(err, lastname){
-                        name = name + ' ' + lastname.charAt(0);
-                    });
-                    // use ping to guarantee call order
-                    client2.ping(function(){
-                        users[id] = name;
-                    });
-                }
-                // immediately call the created closure
-                closure();
-            }
-            
-            // use ping to guarantee this callback is executed after all above callbacks have executed
-            client2.ping(function(){
-                callback(users);
-            });
+            getUsers(ids, callback);
         });
     });
 
