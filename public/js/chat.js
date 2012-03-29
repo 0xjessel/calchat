@@ -36,9 +36,9 @@ socket.on('announcement', function (to, msg) {
 		if (!selfAnnounced) {
 			// scroll chat to bottom after chatlog and this announcement 
 			// only once (in the beginning)
-			chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 			selfAnnounced = true;
 		}
+		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
 	}
 });
 

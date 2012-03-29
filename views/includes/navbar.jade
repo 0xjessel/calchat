@@ -32,7 +32,6 @@ div.navbar.navbar-fixed-top
               input(type='text', placeholder='Add Chatroom').search-query
         if loggedIn
           ul.nav.pull-right
-            li
-              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?type=square', height='37', width='37')
-            li
-              a(href='/logout') Logout
+            li  
+              img(src='http://graph.facebook.com/'+everyauth.facebook.user.id+'/picture?type=square', height='37', width='37').avatar< 
+              a(href='/logout', style="float:right") Logout
