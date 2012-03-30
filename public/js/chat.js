@@ -269,11 +269,16 @@ $(document).ready(function () {
                 $('#user-suggestions').show();
             }, 1000);
 
-			socket.emit('get users', current, function(users){
+			socket.emit('get users', current, function(users, online, offline) {
+				online.sort();
+				offline.sort();
+				var ids = online.concat(offline);
+				
                 clearTimeout(displayLoading);
                 $('.suggestion-hint').remove();
                 var matches = 0;
-				for (id in users) {
+				for (var i = 0; i < ids.length; i++) {
+					var id = ids[i];
 					var user = users[id];
 					// filter text matches a user name
 					if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {    

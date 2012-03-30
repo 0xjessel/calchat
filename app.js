@@ -134,7 +134,8 @@ io.sockets.on('connection', function (socket) {
     
     function getUsers(ids, callback) {
         var users = {};
-            
+		var online = [];
+		
         // INFO
         // this for loop is asynchronous (because of redis), so lots of things need to be done:
         for (var i = 0; i < ids.length; i++) {
@@ -380,7 +381,18 @@ io.sockets.on('connection', function (socket) {
     
     socket.on('get users', function(room, callback){
         client2.smembers('users:'+room, function(err, ids){
-            getUsers(ids, callback);
+            getUsers(ids, function(users) {
+            	var online = [];
+				var offline = [];
+				for (id in users) {
+					if (nicknames[room][id]) {
+						online.push(id);
+					} else {
+						offline.push(id);
+					}
+				}
+				callback(users, online, offline);
+            });
         });
     });
 
