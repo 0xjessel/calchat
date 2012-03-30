@@ -21,7 +21,7 @@ exports.index = function(req, res) {
 exports.dashboard = function(req, res) {
   if (req.loggedIn) {
     res.render('dashboard', {
-      title: 'Dashboard',
+      title: 'CalChat',
       layout: 'layout-dashboard',
       loggedIn: req.loggedIn,
       index: 1
