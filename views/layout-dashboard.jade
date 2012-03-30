@@ -6,4 +6,7 @@ html(lang='en')
 
   body!= body
 
+  script
+    if (window.location.hash == '#_=_')
+      window.location.hash = '';
   include includes/footer

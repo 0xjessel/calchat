@@ -68,7 +68,7 @@ everyauth.facebook
 	});
 	return promise;
 })
-.redirectPath('/');
+.redirectPath('/dashboard');
 
 // App Configuration
 app.configure(function() {
@@ -80,7 +80,6 @@ app.configure(function() {
 	app.use(express.cookieParser());
 	app.use(express.session({ secret: 'nelarkonesse' }));
 	app.use(everyauth.middleware());
-	// app.use(app.router);
 });
 
 everyauth.helpExpress(app);
@@ -191,11 +190,21 @@ io.sockets.on('connection', function (socket) {
 			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 				if (reply) {
 					var rooms = reply.split(',');
+					console.log(rooms);
 					for (var i = 0; i < rooms.length; i++) {
 						if (room == rooms[i]) {
 							rooms.splice(i, 1);
-							
-                            client2.hset('user:'+uid, 'chatrooms', rooms.join());
+							console.log('found chatroom');
+							var tog = rooms.join();
+							console.log(tog == "");
+							if (tog == "") {
+								client2.hset('user:'+uid, 'chatrooms', "fuck", function (err, reply) {
+									console.log(err);
+									console.log(reply);
+								});
+							} else {
+	                            client2.hset('user:'+uid, 'chatrooms', tog);
+							}
 						}
 					}
 				}
