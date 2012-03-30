@@ -20,10 +20,14 @@ exports.index = function(req, res) {
 
 exports.dashboard = function(req, res) {
   if (req.loggedIn) {
+	// convert string to array
+	var rooms = req.user.chatrooms.split(',');
+	
     res.render('dashboard', {
       title: 'CalChat',
       layout: 'layout-dashboard',
       loggedIn: req.loggedIn,
+      rooms: rooms,
       index: 1
     });
   } else {
