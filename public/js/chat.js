@@ -193,7 +193,7 @@ $(document).ready(function () {
 	// Suggestions
 	var suggesting = false;
 	$('#message').keypress(function(e) {
-        $(this).data('prev', $(this).val());
+        $(this).data('prevFilter', null);
         if (!suggesting) {
 			// check for '@' to begin suggestions
 			if (e.which == '@'.charCodeAt(0)) {                
@@ -280,6 +280,7 @@ $(document).ready(function () {
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
 					var user = users[id];
+					
 					// filter text matches a user name
 					if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {    
                         var suggestionClass = "suggestion-unselected";
