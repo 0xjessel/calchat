@@ -1,18 +1,72 @@
-- var name = everyauth.facebook.user.first_name + ' ' + everyauth.facebook.user.last_name.charAt(0)
+- var name = user.firstname + ' ' + user.lastname
 
 include includes/navbar
 
-div.container
-  div.hero-unit
-    h1 Dashboard
-      p Usually this is where you'll see a list of your favorites, recents, and maybe suggested or whatever dude.  Lorem ipsum ip man never let you down.
-  div.row
-    div.span4
-      h2 Sup mah man
-    div.span4
-      h2 Heading
-    div.span4
-      h2 Bored and sleepy
+div.container-fluid
+  div.alert.alert-error
+  div.row-fluid
+    div.span12
+      div.hero-unit
+        div.picture
+          img(src='http://graph.facebook.com/'+user.id+'/picture?type=large', width='90%').avatar
+        h1 Welcome, #{name}
+        p This is your CalChat dashboard where you can manage your account and chatrooms.  You can add and delete chatrooms from here as well as access your preferences.
+        p
+          a(href='/preferences') Preferences
+          span.separator
+            ·
+          a(href='/logout') Logout
+
+  div.row-fluid
+    div.span12
+      div.well
+        h1 Add Chatroom
+        div.nearby
+          dl.dl-horizontal 
+            dt Nearby Rooms
+            dd
+              button.btn 306 Soda
+              button.btn Cory
+              button.btn Etcheverry
+            dt Search for rooms:
+            dd
+              form.form-search.form-inline
+                input(type='text').input-medium.search-query
+                button(type='submit').btn.btn-primary Add
+       
+  div.row-fluid
+        div.span4
+          h2 Chatrooms
+          hr
+          ul.nav.nav-list.unstyled
+            li  
+              a(href='#') CS188
+            li
+              a(href='#') EE40
+            li 
+              a(href='#') calchat
+        div.span4
+          h2 Private Chats
+          hr
+          ul.nav.nav-list.unstyled
+            li  
+              a(href='#') Mark W
+            li
+              a(href='#') Nelson H
+            li 
+              a(href='#') Jonathan T
+        div.span4
+          h2 Miscellaneous
+          hr
+          ul.unstyled
+            li
+              a(href='#') Help
+            li
+              a(href='#') About
+            li
+              a(href='#') Feedback
+            li
+              a(href='#') Contact Us
 
 script(src='/socket.io/socket.io.js')
 script(src='/js/geo.js')

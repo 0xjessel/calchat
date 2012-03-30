@@ -4,9 +4,39 @@ body {
    padding-bottom: 40px;
 }
 
+.alert-error {
+	display:none;
+}
+
+.picture {
+	width:160px;
+	height:220px;
+	float:left;
+}
+
 .avatar {
 	        border-radius: 5px;
 	   -moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	margin-right: 10px;
+}
+
+.separator {
+	margin-left:5px;
+}
+
+dt, dd {
+	margin-bottom:30px;
+}
+
+dt {
+	font-size:1.3em;
+}
+
+dd .btn {
+	margin-right:15px;
+}
+
+dd .btn-primary {
+	margin-left:5px;
 }

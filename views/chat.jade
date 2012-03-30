@@ -1,4 +1,4 @@
-- var name = everyauth.facebook.user.first_name + ' ' + everyauth.facebook.user.last_name.charAt(0)
+- var name = user.firstname + ' ' + user.lastname.charAt(0)
 
 script
   var uid = #{user.id};
@@ -15,11 +15,11 @@ div.container-fluid
     div.span3
       // sidebar content
       div.well.sidebar-nav
-        ul.nav.nav-list.sidebar#chats
+        ul.nav.nav-list.sidebar.unstyled#chats
           li.nav-header Chatrooms
 
       div.well.sidebar-nav
-        ul.nav.nav-list.sidebar#online
+        ul.nav.nav-list.sidebar.unstyled#online
           li.nav-header Online
 
     div.span9
