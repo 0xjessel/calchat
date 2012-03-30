@@ -348,20 +348,28 @@ $(document).ready(function () {
 		// remove chatroom from sidebar
 		// load next chatroom in line
 		// if no chatroom redirect to dashboard with params
-		socket.emit('leave room', current);
 
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
 		$('#chats .active').remove();
-
+		var left = current;
+		
 		var next = $('#chats a:first')
 		if (next.length) {
 			next.parent().addClass('active');
 			current = next.text();
-			$('.chat-title h2').text(current);
-			socket.emit('get chatlog', current, renderChatlogs);
-			socket.emit('get online', current);
-		} else {
+			$('.chat-title h2').text('Loading...');
+		}
+
+		socket.emit('leave room', left, function() {
+			if (next.length) {
+				socket.emit('get chatlog', current, renderChatlogs);
+				socket.emit('get online', current);
+				$('.chat-title h2').text(current);
+			}
+		});
+		
+		if (!next.length) {
 			// redirect
 			window.location.href = '/dashboard';
 		}
@@ -369,8 +377,3 @@ $(document).ready(function () {
 	
 	$('a[rel=tooltip]').tooltip();
 });
-
-window.onbeforeunload = function () {
-	socket.emit('save chat', current);
-	socket.disconnect();
-};

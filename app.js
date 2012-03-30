@@ -183,33 +183,30 @@ io.sockets.on('connection', function (socket) {
         });
 	});
 	
-	socket.on('leave room', function (room) {
+	socket.on('leave room', function (room, callback) {
 		socket.get('uid', function (err, uid) {
             delete nicknames[room][uid];
             
-			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-				if (reply) {
-					var rooms = reply.split(',');
-					console.log(rooms);
-					for (var i = 0; i < rooms.length; i++) {
-						if (room == rooms[i]) {
-							rooms.splice(i, 1);
-							console.log('found chatroom');
-							var tog = rooms.join();
-							console.log(tog == "");
-							if (tog == "") {
-								client2.hset('user:'+uid, 'chatrooms', "fuck", function (err, reply) {
-									console.log(err);
-									console.log(reply);
-								});
-							} else {
-	                            client2.hset('user:'+uid, 'chatrooms', tog);
-							}
-						}
-					}
+			// remove room from user's list of chatrooms
+			client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
+				var rooms = chatrooms.split(',');
+				
+				//remove room from rooms
+				rooms.splice(rooms.indexOf(room), 1);
+				
+				var newRooms = rooms.join();
+				console.log('leave room');
+				console.log(newRooms);
+				client2.hset('user:'+uid, 'chatrooms', newRooms, function(err, reply) {
+					callback();
+				});
+				
+				if (rooms.length == 0) {
+					console.log('do stuff');
 				}
 			});
-            
+
+            // remove user from chatroom's list of users
             client2.srem('users:'+room, uid);
             
             io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
@@ -260,6 +257,22 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('get online', function (room) {
+		socket.get('uid', function(err, uid) {
+			// make this chatroom most recent in user's list
+			client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
+				var rooms = chatrooms.split(',');
+				
+				// move room to front of rooms
+				rooms.unshift(rooms.splice(rooms.indexOf(room), 1));
+				
+				var newChatrooms = rooms.join();
+				console.log('get online');
+				console.log(newChatrooms);
+				client2.hset('user:'+uid, 'chatrooms', newChatrooms);
+			});
+		});
+		
+		// send updated online users list
 		socket.emit('online', room, nicknames[room]);
 	});
 
@@ -270,30 +283,6 @@ io.sockets.on('connection', function (socket) {
             io.sockets.in(room).emit('message', room, socket.nickname, msg, mentions);
         });
 	});
-
-	socket.on('save chat', function (room) {
-        console.log('save chat room');
-        console.log(room);
-		socket.get('uid', function (err, uid) {
-			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-				if (reply) {
-					var rooms = reply.split(',');
-					var found = false;
-					for (var i = 0; i < rooms.length; i++) {
-						if (rooms[i] == room) {
-							rooms.unshift(rooms.splice(i, 1).join());
-							found = true;
-						}
-					}
-					if (!found) {
-						rooms.unshift(room);
-					}
-					
-                    client2.hset('user:'+uid, 'chatrooms', rooms.join());
-				}
-			});
-		});
-	})
 
 	socket.on('get nearest buildings', function (lat, lng, num) {
 		client0.hgetall("location:all", function (err, replies) {
