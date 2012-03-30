@@ -108,7 +108,7 @@ var io = sio.listen(app);
 var nicknames = {};
 
 io.sockets.on('connection', function (socket) {
-    function getMentions(msgs, callback) {
+    function getMentions(msgs) {
         // find all ids
         var ids = {};        
         for (var k = 0; k < msgs.length; k++) {
@@ -126,8 +126,8 @@ io.sockets.on('connection', function (socket) {
         for (id in ids) {
             idsList.push(id);
         }
-        
-        getUsers(idsList, callback);
+		
+		return idsList;
     }
     
     function getUsers(ids, callback) {
@@ -240,7 +240,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-	socket.on('get chatlog', function (room, fn) {
+	socket.on('get chatlog', function (room, callback) {
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, 'withscores', function(err, replies) {
 			var toReturn = {};
@@ -249,10 +249,10 @@ io.sockets.on('connection', function (socket) {
 				toReturn[replies[i+1]] = replies[i];
                 msgs.push(replies[i]);
 			}
-            
-            getMentions(msgs, function(mentions){
-                fn(toReturn, mentions);
-            });
+			
+			getUsers(getMentions(msgs), function(mapping) {
+				callback(toReturn, mapping);
+			});
 		});
 	});
 
@@ -278,10 +278,12 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('message', function (room, msg) {
 		console.log(msg + ' to room ' + room);
-		client2.zadd('chatlog:'+room, new Date().getTime(), socket.nickname+': '+msg);
-        getMentions([msg], function(mentions) {
-            io.sockets.in(room).emit('message', room, socket.nickname, msg, mentions);
-        });
+		var timestamp = new Date().getTime();
+		client2.zadd('chatlog:'+room, timestamp, socket.nickname+': '+msg);
+		
+		getUsers(getMentions([msg]), function(mapping) {
+			io.sockets.in(room).emit('message', room, socket.nickname, msg, mapping);
+		});
 	});
 
 	socket.on('get nearest buildings', function (lat, lng, num) {
