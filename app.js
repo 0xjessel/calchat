@@ -337,7 +337,7 @@ io.sockets.on('connection', function (socket) {
     });
 
 	socket.on('disconnect', function () {
-		if (!socket.nickname) return;        
+		if (!socket.nickname) return;
         
 		socket.get('uid', function (err, uid) {
             for (room in nicknames) {
