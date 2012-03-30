@@ -216,10 +216,7 @@ $(document).ready(function () {
     });
 
 	// upon keyup, the val() would have already been updated
-	$('#message').keyup(function(e) {
-        var prev = $(this).data('prev');
-        $(this).data('prev', $(this).val());
-        
+	$('#message').keyup(function(e) {        
         var prevSelected = $('#suggestion-list').data('selected');
         var newSelected = prevSelected;
         
@@ -242,31 +239,33 @@ $(document).ready(function () {
                     return;
             }
         }
+
+		// filter suggestions
+		var msg = $(this).val();
+		// get caret position
+		var end = $(this).get(0).selectionStart;
+		// get position of '@'
+		var start = msg.substring(0, end).lastIndexOf('@');
+
+		// did user delete '@'?
+		if (start == -1) {
+			$('#user-suggestions').hide();
+			return;
+		}
+
+		// the text in between '@' and caret position
+		var filter = msg.substring(start+1, end);
         
-		// recalculate if input has been changed
-		if (suggesting && prev != $(this).val()) {
-			// filter suggestions
-			var msg = $('#message').val();
-			// get caret position
-			var end = $('#message').get(0).selectionStart;
-			// get position of '@'
-			var start = msg.substring(0, end).lastIndexOf('@');
-
-			// did user delete '@'?
-			if (start == -1) {
-				$('#user-suggestions').hide();
-				suggesting = false;
-				return;
-			}
-
-			// the text in between '@' and caret position
-			var filter = msg.substring(start+1, end);
-
+		// recalculate if filter has been changed
+		if (suggesting && filter != $(this).data('prevFilter')) {
+			$(this).data('prevFilter', filter);
+			
 			// clear suggestions box to be repopulated
 			$('#suggestion-list').empty();
             
             var displayLoading = setTimeout(function() {
-                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading..'))
+				$('#suggestion-list').empty();
+                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading...'))
                 $('#user-suggestions').show();
             }, 1000);
 
