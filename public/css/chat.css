@@ -77,9 +77,15 @@ a.from:hover {
 	font-weight:bold;
 }
 
-#user-suggestions {
+div#user-suggestions {
     background-color:aliceblue;
     position:static;
+}
+
+ul#suggestion-list {
+	list-style-type: none;
+	padding: 0;
+	margin-left: 0;
 }
 
 .suggestion-selected {

@@ -157,6 +157,10 @@ $(document).ready(function () {
     $('#user-suggestions').width($('#message').outerWidth()).hide();
     // first suggestion highlighted first
     $('#suggestion-list').data('selected', 0);
+	
+	$(document).click(function() {
+		$('#user-suggestions').hide();
+	});
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
