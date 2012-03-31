@@ -50,7 +50,7 @@ socket.on('online', function(room, nicknames) {
 
 		for (var id in nicknames) {
 			var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
-			onlineSidebar.append('<li><a target="_blank" href="http://www.facebook.com/'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
+			onlineSidebar.append('<li><a '+ getUserLinkAttributes(id) +'><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
 		}
 	}
 });
@@ -95,23 +95,23 @@ function renderChatlogs (logs, mentions) {
 		// not showing timestamp for now
 
 		var entry = logs[timestamp];
-		var i = entry.indexOf(":");
+		
+		var from = entry['from'];
+		var text = entry['text'];
 
-		var from = entry.slice(0,i);
-		var msg = entry.slice(i+1);
-
-		var element = renderChatMessage(from, msg, mentions);
+		var element = renderChatMessage(from, text, mentions);
 		$('#lines').append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
 }
 
-function renderChatMessage(from, msg, mentions) {
+function renderChatMessage(fromUid, msg, mentions) {
 	msg = linkify(msg);
 	msg = mentionize(msg, mentions);
+	
+	var from = mentions[fromUid]
 
-	var fromElement = $('<span class="from">').append($('<a href="javascript:void(0)" class="from">').append(from), ': ');
-	// TODO: make the link actually do something
+	var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
 	var msgElement = $('<span class="message">').append(msg);
 
 	var element = $('<p>').append(fromElement, msgElement);
@@ -121,10 +121,14 @@ function renderChatMessage(from, msg, mentions) {
 function mentionize(msg, mentions) {
 	for (id in mentions) {
 		var text = '@'+mentions[id];
-		msg = msg.replace('#'+id+'$', '<a href="javascript:void(0)" class="mention">'+text+'</a>');
+		msg = msg.replace('#'+id+'$', '<a '+ getUserLinkAttributes(id) +' class="mention">'+text+'</a>');
 		// TODO: make the link actually do something
 	}
 	return msg;
+}
+
+function getUserLinkAttributes(id) {
+	return 'target="_blank" href="http://www.facebook.com/'+ id +'" ';
 }
 
 function clear () {
@@ -276,6 +280,8 @@ $(document).ready(function () {
 				
                 clearTimeout(displayLoading);
                 $('.suggestion-hint').remove();
+				$('#suggestion-list').empty();
+			
                 var matches = 0;
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];

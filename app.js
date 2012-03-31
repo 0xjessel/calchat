@@ -108,9 +108,18 @@ var io = sio.listen(app);
 var nicknames = {};
 
 io.sockets.on('connection', function (socket) {
-    function getMentions(msgs) {
+	// msgs: list of messages to parse for ids. uids: list of ids to include
+    function getMentions(msgs, uids) {
+        var ids = {};
+		
+		if (uids) {
+			for (var i = 0; i < uids.length; i++) {
+				var uid = uids[i];
+				ids[uid] = uid;
+			}
+		}
+		
         // find all ids
-        var ids = {};        
         for (var k = 0; k < msgs.length; k++) {
             var msg = msgs[k];
             var slices = msg.split('#');
@@ -254,31 +263,30 @@ io.sockets.on('connection', function (socket) {
 					var timestamp = messageReplies[0];
 					var fromUid = messageReplies[1];
 					var text = messageReplies[2];
-					
-					client2.hmget('user:'+fromUid, 'firstname', 'lastname', function(err, userReplies) {
-						var firstname = userReplies[0];
-						var lastname = userReplies[1];
-						var from = firstname + ' ' + lastname[0];
-						logs[timestamp] = from + ': ' + text;
 						
-						var mention = getMentions([text]);
-						if (mention != '') {
-							// de-duplicate
-							mentions[mention] = mention;
+					var entry = {
+						'from'	: fromUid,
+						'text'	: text,
+					};
+					logs[timestamp] = entry;
+						
+					var mention = getMentions([text]);
+					if (mention != '') {
+						// de-duplicate
+						mentions[mention] = mention;
+					}
+						
+					added++;
+						
+					if (added == chatlog.length) {
+						var ids = [];
+						for (id in mentions) {
+							ids.push(id);
 						}
-						
-						added++;
-						
-						if (added == chatlog.length) {
-							var ids = [];
-							for (id in mentions) {
-								ids.push(id);
-							}
-							getUsers(ids, function(mapping) {
-								callback(logs, mapping);
-							});
-						}
-					});
+						getUsers(ids, function(mapping) {
+							callback(logs, mapping);
+						});
+					}
 				});
 			}
 		});
@@ -305,15 +313,15 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('message', function (room, text) {
-		console.log(text + ' to room ' + room);
-		var timestamp = new Date().getTime();
-		var mentions = getMentions([text]);
-			
-		getUsers(mentions, function(mapping) {
-			io.sockets.in(room).emit('message', room, socket.nickname, text, mapping);
-		});
-		
 		socket.get('uid', function(err, uid) {
+			console.log(text + ' to room ' + room);
+			var timestamp = new Date().getTime();
+			var mentions = getMentions([text], [uid]);
+			
+			getUsers(mentions, function(mapping) {
+				io.sockets.in(room).emit('message', room, uid, text, mapping);
+			});
+		
 			client2.incr('message:id:next', function(err, mid) {
 				client2.hmset('message:'+mid, {
 					'from'		: uid,
