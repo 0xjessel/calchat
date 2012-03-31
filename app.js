@@ -258,7 +258,7 @@ io.sockets.on('connection', function (socket) {
 					client2.hmget('user:'+fromUid, 'firstname', 'lastname', function(err, userReplies) {
 						var firstname = userReplies[0];
 						var lastname = userReplies[1];
-						var from = firstname + ', ' + lastname[0];
+						var from = firstname + ' ' + lastname[0];
 						logs[timestamp] = from + ': ' + text;
 						
 						var mention = getMentions([text]);
