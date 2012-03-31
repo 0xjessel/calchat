@@ -6,11 +6,13 @@ import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import model.ClassModel;
+import model.ClassModel.Schedule;
 
 import org.json.JSONObject;
 
@@ -55,40 +57,19 @@ public class Utils {
 
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
-
-		synchronized (buildings) {
-			if (!savedBuildings.contains(m.building)
-					&& buildings.add(m.building)) {
-				System.err.println(String.format("Found new building: %s",
-						m.building));
-				buildings.notify();
-			}
-		}
-
-		// classtimes
-		String[] days = m.days.split("(?=\\p{Upper})");
-		for (String day : days) {
-			if (day.equals("")) {
-				continue;
-			}
-			String key = String.format("room:%s:%s:%s:%s", m.building,
-					m.buildingNumber, day, m.term).replace(" ", "");
-			String field = m.time.replace(" ", "");
-
-			synchronized (pipeline) {
-				pipeline.hset(key, field, id);
-			}
-		}
+		String key = String.format("class:%s", id);
 
 		// classes
 		try {
+			Map<String, String> mapping = new HashMap<String, String>();
 			for (Field field : ClassModel.class.getFields()) {
-				String key = String.format("class:%s", id);
-				String value = (String) field.get(m);
+				String value = field.get(m).toString();
 
-				synchronized (pipeline) {
-					pipeline.hset(key, field.getName(), value);
-				}
+				mapping.put(field.getName(), value);
+			}
+
+			synchronized (pipeline) {
+				pipeline.hmset(key, mapping);
 			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -96,6 +77,34 @@ public class Utils {
 			e.printStackTrace();
 		}
 
+		// locations
+		for (Schedule schedule : m.schedules) {
+			synchronized (buildings) {
+				if (!savedBuildings.contains(schedule.building)
+						&& buildings.add(schedule.building)) {
+					System.err.println(String.format("Found new building: %s",
+							schedule.building));
+					buildings.notify();
+				}
+			}
+
+			// classtimes
+			String[] days = schedule.days.split("(?=\\p{Upper})");
+			for (String day : days) {
+				if (day.equals("")) {
+					continue;
+				}
+				String roomKey = String
+						.format("room:%s:%s:%s:%s", schedule.building,
+								schedule.buildingNumber, day, m.term).replace(
+								" ", "");
+				String field = schedule.time.replace(" ", "");
+
+				synchronized (pipeline) {
+					pipeline.hset(roomKey, field, id);
+				}
+			}
+		}
 	}
 
 	public static String getClassId(ClassModel m) {

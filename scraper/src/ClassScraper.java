@@ -128,6 +128,7 @@ public class ClassScraper {
 				for (int j = 0; j < numRows; j += 3) {
 					String department = Utils.trim(classRows.get(j + 0).text());
 					String number = Utils.trim(classRows.get(j + 1).text());
+					String title = Utils.trim(classRows.get(j + 2).text());
 
 					float percent = 0;
 					if (termIndex == -1) {
@@ -144,12 +145,12 @@ public class ClassScraper {
 					}
 
 					try {
-						ArrayList<ClassModel> newClassModels = DetailsScraper
-								.getClassModel(Utils.TERMS[i], department,
-										number);
+						ClassModel classModel = DetailsScraper.getClassModel(
+								Utils.TERMS[i], department, number, title);
 
 						retry = 0;
-						classModels.addAll(newClassModels);
+						classModels.add(classModel);
+						Utils.save(classModel);
 					} catch (IOException e) {
 						if (retry < RETRY_LIMIT) {
 							j--; // retry
