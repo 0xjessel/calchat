@@ -97,6 +97,7 @@ app.get('/', routes.index);
 app.get('/dashboard', routes.dashboard);
 app.get('/chat', routes.chat);
 app.get('/chat/:room', routes.chatroom); 
+app.get('/chat/:room/archives', routes.archives);
 
 app.listen(3000);
 
