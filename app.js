@@ -153,7 +153,7 @@ io.sockets.on('connection', function (socket) {
                 var id = ids[i];
                 var name = null;
                 var fail = false;
-                client2.hget('user:'+id, 'firstname', function(err, firstname){                    
+                client2.hget('user:'+id, 'firstname', function(err, firstname) {                    
                     name = firstname;
                     
                     if (!name) {
@@ -162,7 +162,7 @@ io.sockets.on('connection', function (socket) {
                 });
                 
                 // 2nd callback function guaranteed to be called after 1st callback function above
-                client2.hget('user:'+id, 'lastname', function(err, lastname){
+                client2.hget('user:'+id, 'lastname', function(err, lastname) {
                     if (!fail) {
                         name = name + ' ' + lastname.charAt(0);
                     }
@@ -270,10 +270,13 @@ io.sockets.on('connection', function (socket) {
 					};
 					logs[timestamp] = entry;
 						
-					var mention = getMentions([text]);
-					if (mention != '') {
-						// de-duplicate
-						mentions[mention] = mention;
+					var messageMentions = getMentions([text], [fromUid]);
+					for (var i = 0; i < messageMentions.length; i++) {
+						var mention = messageMentions[i];
+						if (mention != '') {
+							// de-duplicate
+							mentions[mention] = mention;
+						}
 					}
 						
 					added++;
