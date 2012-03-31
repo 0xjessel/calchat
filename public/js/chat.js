@@ -291,8 +291,10 @@ $(document).ready(function () {
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
 					var user = users[id];
-                        
-					var suggestionItem = $('<li>').data('suggestion-index', i).append('<a href="javascript:void(0)" id="user'+id+'">'+user+'</a>');
+                    
+					var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
+					var suggestionItem = $('<li>').data('suggestion-index', i).append('<a href="javascript:void(0)" id="user'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+user+'</a>');
+					
 					$('#suggestion-list').append(suggestionItem);
 					$('#user'+id).data('id', id);
 					$('#user'+id).click(function(){
