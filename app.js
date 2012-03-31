@@ -390,19 +390,25 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
     
-    socket.on('get users', function(room, callback){
-        client2.smembers('users:'+room, function(err, ids){
+    socket.on('get users', function(room, filter, callback) {
+        client2.smembers('users:'+room, function(err, ids) {
             getUsers(ids, function(users) {
             	var online = [];
 				var offline = [];
+				var filteredUsers = {};
+				
 				for (id in users) {
-					if (nicknames[room][id]) {
-						online.push(id);
-					} else {
-						offline.push(id);
+					var user = users[id];
+					if (!filter || user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
+						filteredUsers[id] = user;
+						if (nicknames[room][id]) {
+							online.push(id);
+						} else {
+							offline.push(id);
+						}
 					}
 				}
-				callback(users, online, offline);
+				callback(filteredUsers, online, offline);
             });
         });
     });

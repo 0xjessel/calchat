@@ -109,7 +109,7 @@ function renderChatMessage(fromUid, msg, mentions) {
 	msg = linkify(msg);
 	msg = mentionize(msg, mentions);
 	
-	var from = mentions[fromUid]
+	var from = mentions[fromUid];
 
 	var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
 	var msgElement = $('<span class="message">').append(msg);
@@ -142,6 +142,27 @@ function scrollToBottom () {
 	}
 }
 
+function hideMentionSuggestions() {
+	$('#user-suggestions').hide();
+	$('#message').data('prevFilter', null);
+	$('#suggestion-list').data('selected', 0);
+}
+        
+function setMentionSuggestionSelection(selection) {
+	selection = Math.max(0, Math.min($('#suggestion-list').children().length-1, selection));
+	$('#suggestion-list').data('selected', selection);
+            
+	// figure out which suggestion is highlighted
+	$('#suggestion-list').children().each(function() {
+		var suggestionIndex = $(this).data('suggestion-index');
+		if (selection == suggestionIndex && !$(this).hasClass('suggestion-hint')) {
+			$(this).addClass('suggestion-selected');
+		} else {
+			$(this).removeClass('suggestion-selected');
+		}
+	});
+}
+
 // dom manipulation
 $(document).ready(function () {
 	$('.chat-title h2').text(current);
@@ -163,7 +184,7 @@ $(document).ready(function () {
     $('#suggestion-list').data('selected', 0);
 	
 	$(document).click(function() {
-		$('#user-suggestions').hide();
+		hideMentionSuggestions();
 	});
 
 	$('#chats a').click(function () {
@@ -194,18 +215,7 @@ $(document).ready(function () {
 		return false;
 	});
 
-	// Suggestions
-	var suggesting = false;
-	$('#message').keypress(function(e) {
-        $(this).data('prevFilter', null);
-        if (!suggesting) {
-			// check for '@' to begin suggestions
-			if (e.which == '@'.charCodeAt(0)) {                
-				suggesting = true;
-			}
-		}
-	});
-    
+	// @mentions
     $('#message').keydown(function(e) {
         if ($('#user-suggestions').css('display') != 'none') {
             switch(e.which) {
@@ -222,22 +232,18 @@ $(document).ready(function () {
 	// upon keyup, the val() would have already been updated
 	$('#message').keyup(function(e) {        
         var prevSelected = $('#suggestion-list').data('selected');
-        var newSelected = prevSelected;
         
         if ($('#user-suggestions').css('display') != 'none') {
             switch(e.which) {
                 case 27: //ESC
-                    $('#user-suggestions').hide();
-                    newSelected = 0;
-                    break;
+                    hideMentionSuggestions();
+                    return;
                 case 38: //arrow up
-                    newSelected = prevSelected - 1;
-                    refreshSelection();
-                    break;
+                    setMentionSuggestionSelection(prevSelected - 1);
+                    return;
                 case 40: //arrow down
-                    newSelected = prevSelected + 1;
-                    refreshSelection();
-                    break;
+                    setMentionSuggestionSelection(prevSelected + 1);
+                    return;
                 case 13: //ENTER
                     $('#suggestion-list').children().get(newSelected).children.item(0).click();
                     return;
@@ -253,7 +259,7 @@ $(document).ready(function () {
 
 		// did user delete '@'?
 		if (start == -1) {
-			$('#user-suggestions').hide();
+			hideMentionSuggestions();
 			return;
 		}
 
@@ -261,7 +267,7 @@ $(document).ready(function () {
 		var filter = msg.substring(start+1, end);
         
 		// recalculate if filter has been changed
-		if (suggesting && filter != $(this).data('prevFilter')) {
+		if (filter != $(this).data('prevFilter')) {
 			$(this).data('prevFilter', filter);
 			
 			// clear suggestions box to be repopulated
@@ -269,85 +275,58 @@ $(document).ready(function () {
             
             var displayLoading = setTimeout(function() {
 				$('#suggestion-list').empty();
-                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading...'))
+                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading...'));
                 $('#user-suggestions').show();
             }, 1000);
 
-			socket.emit('get users', current, function(users, online, offline) {
+			socket.emit('get users', current, filter, function(users, online, offline) {
 				online.sort();
 				offline.sort();
 				var ids = online.concat(offline);
 				
-                clearTimeout(displayLoading);
-                $('.suggestion-hint').remove();
+				clearTimeout(displayLoading);
+				$('.suggestion-hint').remove();
 				$('#suggestion-list').empty();
-			
-                var matches = 0;
+				
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
 					var user = users[id];
-					
-					// filter text matches a user name
-					if (user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {    
-                        var suggestionClass = "suggestion-unselected";
-                        if (matches == 0) {
-                            suggestionClass = "suggestion-selected";
-                        }
                         
-                        var suggestionItem = $('<li>').data('suggestion-index', matches).append('<a href="javascript:void(0)" id="user'+id+'">'+user+'</a>');
-						$('#suggestion-list').append(suggestionItem);
-						$('#user'+id).data('id', id);
-						$('#user'+id).click(function(){
-							// get id of clicked suggestion
-							var id = $(this).data('id');
-							// get text after the caret position
-							var after = msg.substring(end);
+					var suggestionItem = $('<li>').data('suggestion-index', i).append('<a href="javascript:void(0)" id="user'+id+'">'+user+'</a>');
+					$('#suggestion-list').append(suggestionItem);
+					$('#user'+id).data('id', id);
+					$('#user'+id).click(function(){
+						// get id of clicked suggestion
+						var id = $(this).data('id');
+						// get text after the caret position
+						var after = msg.substring(end);
 							
-							// turn the '@filter' into '#id ' and keep the before and after text the same
-							var transformedMsg = msg.substring(0, start) + '#' + id + '$' + after;
+						// turn the '@filter' into '#id ' and keep the before and after text the same
+						var transformedMsg = msg.substring(0, start) + '#' + id + '$' + after;
 
-							// calculate the new caret position
-							var caretPosition = transformedMsg.length - after.length;
+						// calculate the new caret position
+						var caretPosition = transformedMsg.length - after.length;
 
-							// hide suggestions box
-							$('#user-suggestions').hide();
-							suggesting = false;
+						// hide suggestions box
+						hideMentionSuggestions();
 
-							// set new value for input
-							$('#message')
-							.val(transformedMsg)
-							.focus()
-							.get(0).setSelectionRange(caretPosition,caretPosition);
-						});
-                        
-                        matches++;
-					}
+						// set new value for input
+						$('#message')
+						.val(transformedMsg)
+						.focus()
+						.get(0).setSelectionRange(caretPosition,caretPosition);
+					});
 				}
                 
-                if (matches) {
+                if (ids.length) {
                     $('#user-suggestions').show();
                 } else {
-                    $('#user-suggestions').hide();
+                    hideMentionSuggestions();
                 }
                 
-                refreshSelection();
+                setMentionSuggestionSelection(0);
 			});
 		}
-        
-        function refreshSelection(){        
-            newSelected = Math.max(0, Math.min($('#suggestion-list').children().length-1, newSelected));
-            $('#suggestion-list').data('selected', newSelected);
-            
-            // figure out which suggestion is highlighted
-            $('#suggestion-list').children().each(function() {
-                var suggestionIndex = $(this).data('suggestion-index');
-                if (newSelected == suggestionIndex && !$(this).hasClass('suggestion-hint')) {
-                    $(this).addClass('suggestion-selected');
-                } else {
-                    $(this).removeClass('suggestion-selected');
-                }
-            });
-        }
 	});
 
 	$('#archives').click(function () {
