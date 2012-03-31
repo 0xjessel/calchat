@@ -302,14 +302,9 @@ $(document).ready(function () {
 							var id = $(this).data('id');
 							// get text after the caret position
 							var after = msg.substring(end);
-							// make sure there is at least 1 space between replaced text and after text
-							if (after && after.length > 0 && after.charAt(0) == ' ') {
-								// we are adding a space later, so if there is already a space, remove it
-								after = after.substring(1);
-							}
-
+							
 							// turn the '@filter' into '#id ' and keep the before and after text the same
-							var transformedMsg = msg.substring(0, start) + '#' + id + '$ ' + after;
+							var transformedMsg = msg.substring(0, start) + '#' + id + '$' + after;
 
 							// calculate the new caret position
 							var caretPosition = transformedMsg.length - after.length;
