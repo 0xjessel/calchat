@@ -245,7 +245,7 @@ $(document).ready(function () {
                     setMentionSuggestionSelection(prevSelected + 1);
                     return;
                 case 13: //ENTER
-                    $('#suggestion-list').children().get(newSelected).children.item(0).click();
+                    $('#suggestion-list').children().get(prevSelected).children.item(0).click();
                     return;
             }
         }
