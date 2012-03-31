@@ -185,16 +185,50 @@ io.sockets.on('connection', function (socket) {
             callback(users);
         });
     }
-    
-	socket.on('join room', function (room) {
-        socket.get('uid', function (err, uid) {
-            console.log('incoming request to join '+room);
-            if (!nicknames[room]) {
-                nicknames[room] = {};
-            }
-            socket.join(room);
-        });
+	
+	
+	socket.on('initialize', function(uid, nick, rooms, current, callback) {
+		socket.nickname = nick;
+		socket.set('uid', uid);
+		
+		joinRooms(rooms);
+		
+		getChatlog(current, function(logs, mentions) {			
+			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
+				if (reply) {
+					var rooms = reply.split(',');
+					for (var i = 0; i < rooms.length; i++) {
+						var room = rooms[i];
+						nicknames[room][uid] = socket.nickname;
+	                    client2.sadd('users:'+room, uid);
+            
+						if (room != current) {
+							io.sockets.in(room).emit('announcement', room, nick + ' connected');
+							io.sockets.in(room).emit('online', room, nicknames[room]);
+						}
+					}
+
+					callback(logs, mentions);
+					
+					io.sockets.in(current).emit('announcement', current, nick + ' connected');
+					io.sockets.in(current).emit('online', current, nicknames[current]);
+				}
+			});
+		});
 	});
+	
+	socket.on('join room', function (room) {
+		joinRooms([room]);
+	});
+	function joinRooms(rooms) {
+		for (var i = 0; i < rooms.length; i++) {
+			var room = rooms[i];
+			if (!nicknames[room]) {
+				nicknames[room] = {};
+			}
+			socket.join(room);
+		}
+	}
 	
 	socket.on('leave room', function (room, callback) {
 		socket.get('uid', function (err, uid) {
@@ -220,34 +254,9 @@ io.sockets.on('connection', function (socket) {
             io.sockets.in(room).emit('online', room, nicknames[room]);
 		});
 	});
-
-	socket.on('set name', function (uid, nick, fn) {
-		socket.nickname = nick;
-		socket.set('uid', uid);
-		
-		client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-			if (reply) {
-				var rooms = reply.split(',');
-				for (var i = 0; i < rooms.length; i++) {
-					var room = rooms[i];
-					if (nicknames[room] && nicknames[room][uid]) {
-						fn(true);
-					} else {
-						fn(false);
-						nicknames[room][uid] = socket.nickname;
-					}
-            
-                    client2.sadd('users:'+room, uid);
-            
-					io.sockets.in(room).emit('announcement', room, nick + ' connected');
-					io.sockets.in(room).emit('online', room, nicknames[room]);
-				}
-			}
-		
-		});
-	});
 	
-	socket.on('get chatlog', function (room, callback) {
+	socket.on('get chatlog', getChatlog);
+	function getChatlog(room, callback) {
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (chatlog.length == 0) {
@@ -255,7 +264,7 @@ io.sockets.on('connection', function (socket) {
 				return;
 			}
 			
-            var logs = {};
+			var logs = {};
 			var mentions = {};
 			var added = 0;
 			for (var i = 0; i < chatlog.length; i++) {
@@ -294,7 +303,7 @@ io.sockets.on('connection', function (socket) {
 				});
 			}
 		});
-	});
+	}
 
 	socket.on('get online', function (room) {
 		socket.get('uid', function(err, uid) {

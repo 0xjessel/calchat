@@ -11,22 +11,9 @@ for (var i = 0; i < rooms.length; i++) {
 }
 
 socket.on('connect', function () {
-	// join all rooms
-	for (var i = 0; i < rooms.length; i++) {
-		if (rooms[i] != '') {
-			socket.emit('join room', rooms[i]);
-		}
-	}
-
-	socket.emit('get chatlog', current, function (logs, mentions) {
+	// join all rooms, set uid and nick, get online, get chatlog
+	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions) {
 		renderChatlogs(logs, mentions);
-
-		// send fb name
-		socket.emit('set name', uid, name, function(set) {
-			if(!set) {
-				clear();
-			}
-		});
 	});
 });
 
@@ -60,10 +47,12 @@ socket.on('message', message);
 socket.on('reconnect', function () {
 	$('#lines').empty();
 	message(current, 'System', 'Reconnected to the server');
+	// $('#message').prop('disabled', false);
 });
 
 socket.on('reconnecting', function () {
 	message(current, 'System', 'Attempting to re-connect to the server');
+	// $('#message').prop('disabled', true);
 });
 
 socket.on('error', function (e) {
@@ -103,6 +92,9 @@ function renderChatlogs (logs, mentions) {
 		$('#lines').append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
+	
+	$('#message').prop('disabled', false);
+	clear();
 }
 
 function renderChatMessage(fromUid, msg, mentions) {
@@ -198,6 +190,8 @@ $(document).ready(function () {
 
 			current = $(this).text();
 			$('.chat-title h2').text(current);
+			
+			$('#message').prop('disabled', true);
 
 			socket.emit('get chatlog', current, renderChatlogs);
 			socket.emit('get online', current);
@@ -349,6 +343,8 @@ $(document).ready(function () {
 			current = next.text();
 			$('.chat-title h2').text('Loading...');
 		}
+		
+		$('#message').prop('disabled', true);
 
 		socket.emit('leave room', left, function() {
 			if (next.length) {
