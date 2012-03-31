@@ -331,9 +331,7 @@ $(document).ready(function () {
 		}
 	});
 
-	$('#archives').click(function () {
-		window.location.href = '/'+current+'/archives';
-	});
+	$('#archives').attr('href', '/chat/'+current+'/archives');
 
 	$('#close').click(function () {
 		// remove chatroom from sidebar

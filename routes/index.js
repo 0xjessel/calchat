@@ -1,60 +1,60 @@
 var util = require('util')
-    , everyauth = require('everyauth')
-    , redis = require('redis');
+, everyauth = require('everyauth')
+, redis = require('redis');
 
 var redisUrl = 'db.calchat.net';
 var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
 /*
- * GET home page.
- */
+* GET home page.
+*/
 exports.index = function(req, res) {
-  res.render('index', { 
-    title: 'CalChat', 
-    layout: 'layout-index', 
-    loggedIn: req.loggedIn,
-    index: 0
-  });
+	res.render('index', { 
+		title: 'CalChat', 
+		layout: 'layout-index', 
+		loggedIn: req.loggedIn,
+		index: 0
+	});
 };
 
 exports.dashboard = function(req, res) {
-  if (req.loggedIn) {
-	// convert string to array
-	var rooms = req.user.chatrooms.split(',');
-	
-    res.render('dashboard', {
-      title: 'CalChat',
-      layout: 'layout-dashboard',
-      loggedIn: req.loggedIn,
-      rooms: rooms,
-      index: 1
-    });
-  } else {
-    res.redirect('home');
-  }
+	if (req.loggedIn) {
+		// convert string to array
+		var rooms = req.user.chatrooms.split(',');
+
+		res.render('dashboard', {
+			title: 'CalChat',
+			layout: 'layout-dashboard',
+			loggedIn: req.loggedIn,
+			rooms: rooms,
+			index: 1
+		});
+	} else {
+		res.redirect('home');
+	}
 };
 
 exports.chat = function(req, res) {
-  if (req.loggedIn) {		
-	if (req.user.chatrooms === '') {
-		// redirect to dashboard to add some classes to favorites or select a class
-		return res.redirect('/dashboard?error=newbie'); // add some query param to indicate error
+	if (req.loggedIn) {		
+		if (req.user.chatrooms === '') {
+			// redirect to dashboard to add some classes to favorites or select a class
+			return res.redirect('/dashboard?error=newbie'); // add some query param to indicate error
+		}
+
+		// convert string to array
+		var rooms = req.user.chatrooms.split(',');
+
+		res.render('chat', { 
+			title: 'CalChat', 
+			layout: 'layout-chat',
+			loggedIn: req.loggedIn,
+			rooms: rooms,
+			index: 2
+		});
+	} else {
+		res.redirect('home');
 	}
-	
-	// convert string to array
-	var rooms = req.user.chatrooms.split(',');
-	
-    res.render('chat', { 
-      title: 'CalChat', 
-      layout: 'layout-chat',
-      loggedIn: req.loggedIn,
-      rooms: rooms,
-      index: 2
-    });
-  } else {
-    res.redirect('home');
-  }
 };
 
 exports.chatroom = function(req, res) {
@@ -76,7 +76,7 @@ exports.chatroom = function(req, res) {
 						found = true;
 					}
 				}
-				
+
 				if (!found) {
 					// prepend room to rooms, client-side will connect to the first room in rooms
 					rooms.unshift(room);
@@ -94,7 +94,23 @@ exports.chatroom = function(req, res) {
 	res.redirect('home');
 }
 
+exports.archives = function(req, res) {
+	if (req.loggedIn) {
+		var room = req.params.room;
+
+		res.render('archives', { 
+			title: 'CalChat', 
+			layout: 'layout-archives',
+			loggedIn: req.loggedIn,
+			room: room,
+			index: 3 //wtf should this be
+		});
+	} else {
+		res.redirect('home');
+	}
+}
+
 // query db to see if room is valid
 function isValid(room) {
-  return true;
+	return true;
 }

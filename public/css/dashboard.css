@@ -8,6 +8,12 @@ body {
 	display:none;
 }
 
+.alert {
+	width:50%;
+	margin-left:auto;
+	margin-right:auto;
+}
+
 .picture {
 	width:160px;
 	height:220px;
