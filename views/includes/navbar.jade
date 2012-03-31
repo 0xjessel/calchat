@@ -1,3 +1,5 @@
+script(src='js/navbar.js')
+
 div.navbar.navbar-fixed-top
   div.navbar-inner
     div.container
@@ -29,7 +31,10 @@ div.navbar.navbar-fixed-top
                 a(href='/chat') Chat
             li.divider-vertical
             form.navbar-search.pull-left
-              input(type='text', placeholder='Add Chatroom').search-query
+              div
+                input(type='text', placeholder='Add Chatroom', autocomplete='off', name='room-search').search-query#search
+                div.dropdown-menu#search-suggestions
+                  ul#search-suggestions-list
         if loggedIn
           ul.nav.pull-right
             li.dropdown

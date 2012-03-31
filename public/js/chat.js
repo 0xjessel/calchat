@@ -11,7 +11,7 @@ for (var i = 0; i < rooms.length; i++) {
 }
 
 socket.on('connect', function () {
-	// join all rooms, set uid and nick, get online, get chatlog
+	// join all rooms, set uid and nick, get chatlog
 	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions) {
 		renderChatlogs(logs, mentions);
 	});
