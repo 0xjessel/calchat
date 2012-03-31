@@ -77,12 +77,12 @@ a.from:hover {
 	font-weight:bold;
 }
 
-div#user-suggestions {
+div.suggestions {
     background-color:aliceblue;
     position:static;
 }
 
-ul#suggestion-list {
+ul.suggestions-list {
 	list-style-type: none;
 	padding: 0;
 	margin-left: 0;

@@ -143,17 +143,17 @@ function scrollToBottom () {
 }
 
 function hideMentionSuggestions() {
-	$('#user-suggestions').hide();
+	$('#mention-suggestions').hide();
 	$('#message').data('prevFilter', null);
-	$('#suggestion-list').data('selected', 0);
+	$('#mention-suggestions-list').data('selected', 0);
 }
         
 function setMentionSuggestionSelection(selection) {
-	selection = Math.max(0, Math.min($('#suggestion-list').children().length-1, selection));
-	$('#suggestion-list').data('selected', selection);
+	selection = Math.max(0, Math.min($('#mention-suggestions-list').children().length-1, selection));
+	$('#mention-suggestions-list').data('selected', selection);
             
 	// figure out which suggestion is highlighted
-	$('#suggestion-list').children().each(function() {
+	$('#mention-suggestions-list').children().each(function() {
 		var suggestionIndex = $(this).data('suggestion-index');
 		if (selection == suggestionIndex && !$(this).hasClass('suggestion-hint')) {
 			$(this).addClass('suggestion-selected');
@@ -179,9 +179,9 @@ $(document).ready(function () {
 	}
     
     // set suggestions box width
-    $('#user-suggestions').width($('#message').outerWidth()).hide();
+    $('#mention-suggestions').width($('#message').outerWidth()).hide();
     // first suggestion highlighted first
-    $('#suggestion-list').data('selected', 0);
+    $('#mention-suggestions-list').data('selected', 0);
 	
 	$(document).click(function() {
 		hideMentionSuggestions();
@@ -217,7 +217,7 @@ $(document).ready(function () {
 
 	// @mentions
     $('#message').keydown(function(e) {
-        if ($('#user-suggestions').css('display') != 'none') {
+        if ($('#mention-suggestions').css('display') != 'none') {
             switch(e.which) {
                 case 27: //ESC
                 case 38: //arrow up
@@ -231,9 +231,9 @@ $(document).ready(function () {
 
 	// upon keyup, the val() would have already been updated
 	$('#message').keyup(function(e) {        
-        var prevSelected = $('#suggestion-list').data('selected');
+        var prevSelected = $('#mention-suggestions-list').data('selected');
         
-        if ($('#user-suggestions').css('display') != 'none') {
+        if ($('#mention-suggestions').css('display') != 'none') {
             switch(e.which) {
                 case 27: //ESC
                     hideMentionSuggestions();
@@ -245,7 +245,7 @@ $(document).ready(function () {
                     setMentionSuggestionSelection(prevSelected + 1);
                     return;
                 case 13: //ENTER
-                    $('#suggestion-list').children().get(prevSelected).children.item(0).click();
+                    $('#mention-suggestions-list').children().get(prevSelected).children.item(0).click();
                     return;
             }
         }
@@ -271,12 +271,12 @@ $(document).ready(function () {
 			$(this).data('prevFilter', filter);
 			
 			// clear suggestions box to be repopulated
-			$('#suggestion-list').empty();
+			$('#mention-suggestions-list').empty();
             
             var displayLoading = setTimeout(function() {
-				$('#suggestion-list').empty();
-                $('#suggestion-list').append($('<div class="suggestion-hint">').text('Loading...'));
-                $('#user-suggestions').show();
+				$('#mention-suggestions-list').empty();
+                $('#mention-suggestions-list').append($('<div class="suggestion-hint">').text('Loading...'));
+                $('#mention-suggestions').show();
             }, 1000);
 
 			socket.emit('get users', current, filter, function(users, online, offline) {
@@ -286,7 +286,7 @@ $(document).ready(function () {
 				
 				clearTimeout(displayLoading);
 				$('.suggestion-hint').remove();
-				$('#suggestion-list').empty();
+				$('#mention-suggestions-list').empty();
 				
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
@@ -295,7 +295,7 @@ $(document).ready(function () {
 					var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
 					var suggestionItem = $('<li>').data('suggestion-index', i).append('<a href="javascript:void(0)" id="user'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+user+'</a>');
 					
-					$('#suggestion-list').append(suggestionItem);
+					$('#mention-suggestions-list').append(suggestionItem);
 					$('#user'+id).data('id', id);
 					$('#user'+id).click(function(){
 						// get id of clicked suggestion
@@ -321,7 +321,7 @@ $(document).ready(function () {
 				}
                 
                 if (ids.length) {
-                    $('#user-suggestions').show();
+                    $('#mention-suggestions').show();
                 } else {
                     hideMentionSuggestions();
                 }
