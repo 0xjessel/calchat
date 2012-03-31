@@ -94,10 +94,9 @@ public class Utils {
 				if (day.equals("")) {
 					continue;
 				}
-				String roomKey = String
-						.format("room:%s:%s:%s:%s", schedule.building,
-								schedule.buildingNumber, day, m.term).replace(
-								" ", "");
+				String roomKey = String.format("room:%s:%s:%s",
+						schedule.building, schedule.buildingNumber, day)
+						.replace(" ", "");
 				String field = schedule.time.replace(" ", "");
 
 				synchronized (pipeline) {
@@ -108,8 +107,7 @@ public class Utils {
 	}
 
 	public static String getClassId(ClassModel m) {
-		return String.format("%s:%s:%s", m.department, m.number, m.term)
-				.replace(" ", "");
+		return String.format("%s:%s", m.department, m.number).replace(" ", "");
 	}
 
 	public static boolean connect() {

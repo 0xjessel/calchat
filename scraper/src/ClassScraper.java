@@ -22,33 +22,28 @@ public class ClassScraper {
 	public static void main(String args[]) {
 		boolean error = false;
 
-		String terms = null;
-		if (args.length == 1) {
+		int termIndex = -1;
+		if (args.length != 1)
+			error = true;
+		else {
 			String term = args[0];
-			boolean found = false;
+
 			for (int i = 0; i < Utils.TERMS.length; i++) {
 				if (term.toUpperCase().equals(Utils.TERMS[i].toUpperCase())
 						|| term.toUpperCase().equals(
 								Utils.TERMS_STRINGS[i].toUpperCase())) {
-					// Get terms
-					terms = getTerms(i);
-					found = true;
+					termIndex = i;
 					break;
 				}
 			}
-			if (!found) {
+			if (termIndex == -1) {
 				error = true;
 			}
-		} else if (args.length == 0) {
-			// Get terms
-			terms = getTerms(-1);
-		} else {
-			error = true;
 		}
 
 		if (error) {
 			StringBuilder msg = new StringBuilder();
-			msg.append("Error. This program expects 0 or 1 arguments. Provide an argument if you want a particular semester. The argument can be:");
+			msg.append("Error. This program expects 1 argument. The argument can be:");
 			for (String s : Utils.TERMS_STRINGS) {
 				msg.append(" ");
 				msg.append(s);
@@ -59,6 +54,7 @@ public class ClassScraper {
 			System.exit(1);
 		}
 
+		String terms = getTerm(termIndex);
 		if (terms == null) {
 			System.err.println("An error has occurred.");
 			System.exit(1);
@@ -67,7 +63,7 @@ public class ClassScraper {
 		System.out.println(terms);
 	}
 
-	public static String getTerms(int termIndex) {
+	public static String getTerm(int termIndex) {
 		boolean connected = Utils.connect();
 
 		if (!connected) {
@@ -75,107 +71,93 @@ public class ClassScraper {
 			return null;
 		}
 
-		if (termIndex == -1)
-			System.err.println("Connected to Redis server. Parsing...");
-		else
+		if (termIndex >= 0 && termIndex < Utils.TERMS_STRINGS.length) {
 			System.err.println(String.format(
 					"Connected to Redis server. Parsing term %s...",
 					Utils.TERMS_STRINGS[termIndex]));
 
-		TermModel[] terms = parseTerms(termIndex);
-		Gson gson = new Gson();
+			TermModel term = parseTerm(termIndex);
+			Gson gson = new Gson();
 
-		String result = null;
-		if (termIndex == -1)
-			result = gson.toJson(terms);
-		else
-			result = gson.toJson(terms[termIndex]);
+			String result = gson.toJson(term);
 
-		Utils.disconnect();
+			Utils.disconnect();
 
-		return result;
+			return result;
+		} else {
+			return null;
+		}
 	}
 
-	private static TermModel[] parseTerms(int termIndex) {
-		TermModel[] terms = new TermModel[Utils.TERMS.length];
+	private static TermModel parseTerm(int termIndex) {
+		try {
+			String term = Utils.TERMS[termIndex];
+			String url = String.format(URL, URLEncoder.encode(term, "UTF-8"));
 
-		for (int i = 0; i < Utils.TERMS.length; i++) {
-			if (termIndex != -1 && termIndex != i)
-				continue; // skip this term if we specified another term
+			Document doc = Jsoup.connect(url).get();
 
-			try {
-				String url = String.format(URL,
-						URLEncoder.encode(Utils.TERMS[i], "UTF-8"));
+			Element row = doc.select("input[name=p_list_all] + FONT").first();
+			String data = row.text();
+			String[] dataPieces = data.split("[, ]");
+			String updated = Utils.trim(dataPieces[0]);
+			String year = Utils.trim(dataPieces[dataPieces.length - 1]);
 
-				Document doc = Jsoup.connect(url).get();
+			Elements classRows = doc
+					.select("label[class=buttonlink b listbtn]");
 
-				Element row = doc.select("input[name=p_list_all] + FONT")
-						.first();
-				String data = row.text();
-				String[] dataPieces = data.split("[, ]");
-				String updated = Utils.trim(dataPieces[0]);
-				String year = Utils.trim(dataPieces[dataPieces.length - 1]);
+			ArrayList<ClassModel> classModels = new ArrayList<ClassModel>();
 
-				Elements classRows = doc
-						.select("label[class=buttonlink b listbtn]");
+			String previousPercentString = null;
+			int retry = 0;
 
-				ArrayList<ClassModel> classModels = new ArrayList<ClassModel>();
+			int numRows = classRows.size();
+			for (int j = 0; j + 2 < numRows; j += 3) {
+				if (j + 3 > numRows) {
+					System.err.println("break");
+				}
+				String department = Utils.trim(classRows.get(j + 0).text());
+				String number = Utils.trim(classRows.get(j + 1).text());
+				String title = Utils.trim(classRows.get(j + 2).text());
 
-				String previousPercentString = null;
-				int retry = 0;
+				float percent = 0;
+				percent = (float) j / numRows * 100;
+				String percentString = String.format("%.1f%%", percent);
 
-				int numRows = classRows.size();
-				for (int j = 0; j < numRows; j += 3) {
-					String department = Utils.trim(classRows.get(j + 0).text());
-					String number = Utils.trim(classRows.get(j + 1).text());
-					String title = Utils.trim(classRows.get(j + 2).text());
+				if (!percentString.equals(previousPercentString)) {
+					System.err.println(percentString);
+					previousPercentString = percentString;
+				}
 
-					float percent = 0;
-					if (termIndex == -1) {
-						percent = (float) (i * numRows + j)
-								/ (Utils.TERMS.length * numRows) * 100;
+				try {
+					ClassModel classModel = DetailsScraper.getClassModel(term,
+							department, number, title);
+
+					retry = 0;
+					classModels.add(classModel);
+					Utils.save(classModel);
+				} catch (IOException e) {
+					if (retry < RETRY_LIMIT) {
+						j--; // retry
+						retry++;
+						System.err
+								.println("Encountered a problem with your internet. Retrying...");
+						continue;
 					} else {
-						percent = (float) j / numRows * 100;
-					}
-					String percentString = String.format("%.1f%%", percent);
-
-					if (!percentString.equals(previousPercentString)) {
-						System.err.println(percentString);
-						previousPercentString = percentString;
-					}
-
-					try {
-						ClassModel classModel = DetailsScraper.getClassModel(
-								Utils.TERMS[i], department, number, title);
-
-						retry = 0;
-						classModels.add(classModel);
-						Utils.save(classModel);
-					} catch (IOException e) {
-						if (retry < RETRY_LIMIT) {
-							j--; // retry
-							retry++;
-							System.err
-									.println("Encountered a problem with your internet. Retrying...");
-							continue;
-						} else {
-							throw e;
-						}
+						throw e;
 					}
 				}
-				TermModel term = new TermModel(Utils.TERMS_STRINGS[i], year,
-						updated, classModels.toArray(new ClassModel[] {}));
-				terms[i] = term;
-			} catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
-				return null;
-			} catch (IOException e) {
-				e.printStackTrace();
-				System.err
-						.println("Encountered unrecoverable error. Check your internet connection.");
-				return null;
 			}
+			TermModel termModel = new TermModel(Utils.TERMS_STRINGS[termIndex],
+					year, updated, classModels.toArray(new ClassModel[] {}));
+			return termModel;
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.err
+					.println("Encountered unrecoverable error. Check your internet connection.");
+			return null;
 		}
-		return terms;
 	}
 }
