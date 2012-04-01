@@ -2,10 +2,14 @@ var socket = io.connect();
 
 socket.on('nearest buildings', function(buildings) {
 	console.log("got nearest buildings");
-	for (key in buildings) {
-		console.log(key + ": " + buildings[key]);
+	var buildingRow = $('.suggestions')
+	if (buildingRow.length) {
+		buildingRow.empty();
+		for (key in buildings) {
+			// need friendly key text translation
+			buildingRow.append('<a class="btn" href="/chat/'+key+'">'+key+'</button>');
+		}
 	}
-	// do stuff to DOM in dashboard.jade and layout-index.jade
 });
 
 if (navigator.geolocation) {

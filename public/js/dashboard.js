@@ -1,4 +1,4 @@
-var socket = io.connect();
+// socket variable already instantiated via geo.js
 
 $(document).ready(function () {
 	if (rooms.length == 1 && rooms[0] == "") {
