@@ -12,7 +12,7 @@ socket.on('nearest buildings', function(buildings) {
 	}
 });
 
-if (navigator.geolocation) {
+if (Modernizr.geolocation) {
 	navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
 } else {
 	yqlgeo.get('visitor', normalize_yql_response);
