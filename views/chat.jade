@@ -16,15 +16,20 @@ div.container-fluid
       // sidebar content
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar.unstyled#chats
-          li.nav-header Chatrooms
+          li.nav-header 
+            | Chatrooms
+            img(src='/img/loading.gif').loading
 
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar.unstyled#online
-          li.nav-header Online
+          li.nav-header 
+            | Online
+            img(src='/img/loading.gif').loading
 
     div.span9
       div.hero-unit#body-content
         div.chat-header
+          img(src='/img/loading.gif', style='float:right').loading
           div.chat-title
             h2 chatroom
           div.actions

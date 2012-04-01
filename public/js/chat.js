@@ -39,6 +39,7 @@ socket.on('online', function(room, nicknames) {
 			var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
 			onlineSidebar.append('<li><a '+ getUserLinkAttributes(id) +'><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
 		}
+		$('#online .loading').addClass('hidden');
 	}
 });
 
@@ -48,11 +49,13 @@ socket.on('reconnect', function () {
 	$('#lines').empty();
 	message(current, 'System', 'Reconnected to the server');
 	// $('#message').prop('disabled', false);
+	$('.chat-header .loading').removeClass('hidden');
 });
 
 socket.on('reconnecting', function () {
 	message(current, 'System', 'Attempting to re-connect to the server');
 	// $('#message').prop('disabled', true);
+	$('.chat-header .loading').removeClass('hidden');
 });
 
 socket.on('error', function (e) {
@@ -94,6 +97,7 @@ function renderChatlogs (logs, mentions) {
 	chatDiv.scrollTop(chatDiv[0].scrollHeight);
 	
 	$('#message').prop('disabled', false);
+	$('.chat-header .loading').addClass('hidden');
 	clear();
 }
 
@@ -169,6 +173,7 @@ $(document).ready(function () {
 			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
+	$('#chats .loading').addClass('hidden');
     
     // set suggestions box width
     $('#mention-suggestions').width($('#message').outerWidth()).hide();
@@ -196,6 +201,7 @@ $(document).ready(function () {
 			socket.emit('get chatlog', current, renderChatlogs);
 			socket.emit('get online', current);
 		}
+		$('.loading:not(#chats .loading)').removeClass('hidden');
 		return false;
 	});
 
