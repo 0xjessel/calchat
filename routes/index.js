@@ -110,6 +110,10 @@ exports.archives = function(req, res) {
 	}
 }
 
+exports.404 = function(req, res) {
+	res.send('what you say??', 404);
+}
+
 // query db to see if room is valid
 function isValid(room) {
 	return true;
