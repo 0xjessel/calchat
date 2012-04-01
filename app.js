@@ -255,6 +255,20 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
+	// remove room from the dashboard
+	socket.on('remove room', function (uid, room) {
+		// remove room from user's list of chatrooms
+		client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
+			var rooms = chatrooms.split(',');
+			
+			//remove room from rooms
+			rooms.splice(rooms.indexOf(room), 1);
+			
+			var newRooms = rooms.join();
+			client2.hset('user:'+uid, 'chatrooms', newRooms);
+		});	
+	});
+	
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(room, callback) {
 		// get last 30 messages

@@ -1,9 +1,5 @@
 - var name = user.firstname + ' ' + user.lastname
 
-script(src='js/dashboard.js')
-script
-  var rooms = !{JSON.stringify(rooms)}
-
 include includes/navbar
 
 div.container-fluid
@@ -42,17 +38,11 @@ div.container-fluid
         div.span4
           h2 Chatrooms
           hr
-          ul.nav.nav-list.unstyled
-            li  
-              a(href='#') CS188
-            li
-              a(href='#') EE40
-            li 
-              a(href='#') calchat
+          ul.nav.nav-list.unstyled#chatrooms
         div.span4
           h2 Private Chats
           hr
-          ul.nav.nav-list.unstyled
+          ul.nav.nav-list.unstyled#privatechats
             li  
               a(href='#') Mark W
             li

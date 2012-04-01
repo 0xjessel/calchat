@@ -9,5 +9,11 @@ html(lang='en')
   script
     if (window.location.hash == '#_=_')
       window.location.hash = '';
+    var rooms = !{JSON.stringify(rooms)};
+    var uid = #{user.id};
+
+  script(src='/socket.io/socket.io.js')
+  script(src='js/dashboard.js')
+
   include includes/footer
   script(src='/js/libs/bootstrap/alert.js')
