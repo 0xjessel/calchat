@@ -18,4 +18,10 @@ $(document).ready(function () {
 		$(this).parent().parent().remove();
 		return false;
 	})
+	
+	$('.form-search').submit(function () {
+		// no validation on text input, needs to be done on server side
+		window.location.href = '/chat/'+$('.form-search .search-query').val();
+		return false;
+	});
 });
