@@ -4,7 +4,7 @@ $(document).ready(function () {
 	if (rooms.length == 1 && rooms[0] == "") {
 		var alert = $('.alert');
 		alert.removeClass('hidden');
-		alert.html('<a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Add a new chatroom in the navbar above or in the Add Chatroom section below.');
+		alert.html('<a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.');
 	} else {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
