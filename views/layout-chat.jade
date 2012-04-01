@@ -7,5 +7,12 @@ html(lang='en')
 
   body!= body
 
-  script(src='js/libs/bootstrap/tooltip.js')
   include includes/footer  
+  script(src='js/libs/bootstrap/tooltip.js')
+  script
+    var uid = #{user.id};
+    var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
+    var rooms = !{JSON.stringify(rooms)}
+  script(src='js/chat.js')
+  script(src='js/libs/linkify.min.js')
+

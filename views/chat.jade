@@ -1,13 +1,5 @@
 - var name = user.firstname + ' ' + user.lastname.charAt(0)
 
-script
-  var uid = #{user.id};
-  var name = '#{name}';
-  var rooms = !{JSON.stringify(rooms)}
-script(src='/socket.io/socket.io.js')
-script(src='js/libs/linkify.min.js')
-script(src='js/chat.js')
-
 include includes/navbar
 
 div.container-fluid
