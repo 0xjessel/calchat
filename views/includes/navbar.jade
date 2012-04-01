@@ -32,9 +32,7 @@ div.navbar.navbar-fixed-top
             li.divider-vertical
             form.navbar-search.pull-left
               div
-                input(type='text', placeholder='Add Chatroom', autocomplete='off', name='room-search').search-query#search
-                div.dropdown-menu#search-suggestions
-                  ul#search-suggestions-list
+                input(type='text', placeholder='Add Chatroom', data-provide='typeahead').search-query
         if loggedIn
           ul.nav.pull-right
             li.dropdown
