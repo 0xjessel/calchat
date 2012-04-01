@@ -15,8 +15,6 @@
 ### github.com/h5bp/server-configs
 ###
 
-RewriteRule ^ http://127.0.0.1:3000%{REQUEST_URI} [P,QSA,L]
-
 # ----------------------------------------------------------------------
 # Better website experience for IE users
 # ----------------------------------------------------------------------
@@ -323,8 +321,10 @@ FileETag None
 # FollowSymLinks must be enabled for this to work.
 
 <IfModule mod_rewrite.c>
-  Options +FollowSymlinks
+  Options +FollowSymlinks -Indexes -MultiViews
   RewriteEngine On
+  RewriteCond %{SERVER_PORT} !^3000$
+  RewriteRule ^ http://%{HTTP_HOST}:3000%{REQUEST_URI} [P,QSA,L]
 </IfModule>
 
 

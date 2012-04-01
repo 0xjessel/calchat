@@ -110,7 +110,7 @@ exports.archives = function(req, res) {
 	}
 }
 
-exports.404 = function(req, res) {
+exports.invalid = function(req, res) {
 	res.send('what you say??', 404);
 }
 
