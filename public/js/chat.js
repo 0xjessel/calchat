@@ -19,7 +19,7 @@ socket.on('connect', function () {
 
 socket.on('announcement', function (to, msg) {
 	if (to == current) {
-		$('#lines').append($('<p>').append($('<em>').text(msg)));
+		message(current, 'System', msg);
 		
 		scrollToBottom();
 	}
@@ -101,13 +101,20 @@ function renderChatMessage(fromUid, msg, mentions) {
 	msg = linkify(msg);
 	msg = mentionize(msg, mentions);
 	
-	var from = mentions[fromUid];
+	var from = fromUid;
+	if (mentions && fromUid in mentions) {
+		from = mentions[fromUid];
+	}
+	
+	if (from == 'System') {
+		return $('<p class="system-message">').append(msg);
+	} else {
+		var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
+		var msgElement = $('<span class="text">').append(msg);
 
-	var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
-	var msgElement = $('<span class="text">').append(msg);
-
-	var element = $('<p class="message">').append(fromElement, msgElement);
-	return element;
+		var element = $('<p class="message">').append(fromElement, msgElement);
+		return element;
+	}
 }
 
 function mentionize(msg, mentions) {

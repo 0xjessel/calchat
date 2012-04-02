@@ -71,3 +71,7 @@ a.from:hover {
 	width:105px;
 	background: url('../img/fb-connect-small.png');
 }
+
+.system-message {
+	font-style:italic;
+}
