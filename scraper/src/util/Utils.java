@@ -61,6 +61,8 @@ public class Utils {
 	}
 
 	public static boolean beginWith(String s, String q) {
+		s = s.toUpperCase();
+		q = q.toUpperCase();
 		double sHash = stringScore(s);
 		double qHash = stringScore(q);
 
@@ -114,11 +116,13 @@ public class Utils {
 			e.printStackTrace();
 		}
 
-		// departments
-		String departmentKey = "departments";
+		// courses
+		String courseKey = "courses";
+		String department = strip(m.department);
+		String number = strip(m.number);
+		String combine = department + number;
 		synchronized (pipeline) {
-			String department = strip(m.department);
-			pipeline.zadd(departmentKey, stringScore(department), department);
+			pipeline.zadd(courseKey, stringScore(combine), id);
 		}
 
 		for (Schedule schedule : m.schedules) {

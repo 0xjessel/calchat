@@ -192,6 +192,10 @@ io.sockets.on('connection', function (socket) {
 		console.log('Error: '+err);
 	}
 	
+	function strip(string) {
+		return string.replace('/[^A-Za-z0-9:-]/g', '').toUpperCase();
+	}
+	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
 		if (uid != null && nick != null) {
 			socket.nickname = nick;
@@ -491,7 +495,40 @@ io.sockets.on('connection', function (socket) {
 			} else {
 				callback();
 			}
-        });
+		});
+	});
+	
+	socket.on('get courses', function(query, limit, callback) {
+		function stringScore(string) {
+			string = string.toUpperCase();
+			var hash = 0;
+
+			for (var i = 0; i < string.length; i++) {
+				hash += (string.charCodeAt(i) - 'A'.charCodeAt()) / Math.pow(26, i);
+			}
+			return hash;
+		}
+		function capStringScore(string) {
+			string = string.toUpperCase();
+			var last = string.charAt(string.length - 1);
+			var next = String.fromCharCode(last.charCodeAt() + 1);
+			if (last == 'Z') {
+				next = 'A';
+			}
+			
+			var cap = string.substring(0, string.length - 1) + next;
+			return stringScore(cap);
+		}
+		
+		query = strip(query);				
+		
+		if (!query || !limit) {
+			callback([]);
+		} else {
+			client0.zrangebyscore('courses', stringScore(query), '('+capStringScore(query), 'limit', 0, limit, function(err, departments) {
+				callback(departments);
+			});
+		}
 	});
 
 	socket.on('disconnect', function () {
