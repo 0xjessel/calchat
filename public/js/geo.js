@@ -2,13 +2,17 @@ var socket = io.connect();
 
 socket.on('nearest buildings', function(buildings) {
 	console.log("got nearest buildings");
-	for (key in buildings) {
-		console.log(key + ": " + buildings[key]);
+	var buildingRow = $('.suggestions')
+	if (buildingRow.length) {
+		buildingRow.empty();
+		for (key in buildings) {
+			// need friendly key text translation
+			buildingRow.append('<a class="btn" href="/chat/'+key+'">'+key+'</button>');
+		}
 	}
-	// do stuff to DOM in dashboard.jade and layout-index.jade
 });
 
-if (navigator.geolocation) {
+if (Modernizr.geolocation) {
 	navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
 } else {
 	yqlgeo.get('visitor', normalize_yql_response);
@@ -16,16 +20,16 @@ if (navigator.geolocation) {
 
 function handle_errors(error) {
 	switch(error.code) {
-		case error.PERMISSION_DENIED: alert("user did not share geolocation data");
+		case error.PERMISSION_DENIED: console.log("user did not share geolocation data");
 		break;
 
-		case error.POSITION_UNAVAILABLE: alert("could not detect current position");
+		case error.POSITION_UNAVAILABLE: console.log("could not detect current position");
 		break;
 
-		case error.TIMEOUT: alert("retrieving position timedout");
+		case error.TIMEOUT: console.log("retrieving position timedout");
 		break;
 
-		default: alert("unknown error");
+		default: console.log("unknown error");
 		break;
 	}
 }

@@ -22,10 +22,8 @@ div.container-fluid
         div.nearby
           dl.dl-horizontal 
             dt Nearby Rooms
-            dd
-              button.btn 306 Soda
-              button.btn Cory
-              button.btn Etcheverry
+            dd.suggestions
+              | Allow CalChat to get your current location to find chatrooms near you.	 
             dt Search for rooms:
             dd
               form.form-search.form-inline
@@ -59,6 +57,3 @@ div.container-fluid
               a(href='#') Feedback
             li
               a(href='#') Contact Us
-
-script(src='/socket.io/socket.io.js')
-script(src='/js/geo.js')

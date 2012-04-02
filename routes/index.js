@@ -39,7 +39,7 @@ exports.chat = function(req, res) {
 	if (req.loggedIn) {		
 		if (req.user.chatrooms === '') {
 			// redirect to dashboard to add some classes to favorites or select a class
-			return res.redirect('/dashboard?error=newbie'); // add some query param to indicate error
+			return res.redirect('/dashboard');
 		}
 
 		// convert string to array
@@ -108,6 +108,10 @@ exports.archives = function(req, res) {
 	} else {
 		res.redirect('home');
 	}
+}
+
+exports.invalid = function(req, res) {
+	res.send('what you say??', 404);
 }
 
 // query db to see if room is valid
