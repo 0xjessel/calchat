@@ -104,9 +104,9 @@ function renderChatMessage(fromUid, msg, mentions) {
 	var from = mentions[fromUid];
 
 	var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
-	var msgElement = $('<span class="message">').append(msg);
+	var msgElement = $('<span class="text">').append(msg);
 
-	var element = $('<p>').append(fromElement, msgElement);
+	var element = $('<p class="message">').append(fromElement, msgElement);
 	return element;
 }
 
@@ -216,7 +216,7 @@ $(document).ready(function () {
 			});
 		},
 		
-		items: 4,
+		items: 5,
 		
 		matcher: function(item) {
 			var msg = this.query;

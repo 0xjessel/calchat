@@ -49,6 +49,43 @@ public class Utils {
 		}
 	}
 
+	public static double stringScore(String s) {
+		s = s.toUpperCase();
+		double hash = 0;
+		char[] chars = s.toCharArray();
+
+		for (int i = 0; i < chars.length; i++) {
+			hash += (chars[i] - 'A') / Math.pow(26, i);
+		}
+		return hash;
+	}
+
+	public static boolean beginWith(String s, String q) {
+		double sHash = stringScore(s);
+		double qHash = stringScore(q);
+
+		if (qHash == sHash)
+			return true;
+		else if (qHash > sHash)
+			return false;
+		else {
+			char last = q.charAt(q.length() - 1);
+			char next = (char) (last + 1);
+			if (last == 'Z') {
+				next = 'A';
+			}
+
+			System.out.println(last);
+			System.out.println(next);
+			String cap = q.substring(0, q.length() - 1) + next;
+			return sHash < stringScore(cap);
+		}
+	}
+
+	public static String strip(String s) {
+		return s.replaceAll("[^A-Za-z0-9:-]", "").toUpperCase();
+	}
+
 	private static final String REDIS_URL = "db.calchat.net";
 
 	private static Jedis jedis; // used to make the pipeline for async calls
@@ -77,8 +114,15 @@ public class Utils {
 			e.printStackTrace();
 		}
 
-		// locations
+		// departments
+		String departmentKey = "departments";
+		synchronized (pipeline) {
+			String department = strip(m.department);
+			pipeline.zadd(departmentKey, stringScore(department), department);
+		}
+
 		for (Schedule schedule : m.schedules) {
+			// locations
 			synchronized (buildings) {
 				if (!savedBuildings.contains(schedule.building)
 						&& buildings.add(schedule.building)) {
@@ -95,9 +139,8 @@ public class Utils {
 					continue;
 				}
 				String roomKey = String.format("room:%s:%s:%s",
-						schedule.building, schedule.buildingNumber, day)
-						.replace(" ", "");
-				String field = schedule.time.replace(" ", "");
+						strip(schedule.building), schedule.buildingNumber, day);
+				String field = strip(schedule.time);
 
 				synchronized (pipeline) {
 					pipeline.hset(roomKey, field, id);
@@ -107,7 +150,7 @@ public class Utils {
 	}
 
 	public static String getClassId(ClassModel m) {
-		return String.format("%s:%s", m.department, m.number).replace(" ", "");
+		return strip(String.format("%s:%s", m.department, m.number));
 	}
 
 	public static boolean connect() {
@@ -215,11 +258,9 @@ public class Utils {
 		HttpURLConnection connection = null;
 		JSONObject json = null;
 		try {
-			String key = String
-					.format("location:%s", building.replace(" ", ""));
+			String key = String.format("location:%s", strip(building));
 			String hkey = "location:all";
-			String renameKey = String.format("rename:%s",
-					building.replace(" ", ""));
+			String renameKey = String.format("rename:%s", strip(building));
 
 			String lat = null, lng = null, location = null;
 			try {
@@ -312,5 +353,6 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
+		System.out.println(strip("BAR,ROWS 170:w-t"));
 	}
 }
