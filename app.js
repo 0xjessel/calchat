@@ -187,6 +187,10 @@ io.sockets.on('connection', function (socket) {
         });
     }
 	
+	function error(err, socket) {
+		
+	}
+	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
 		if (uid != null && nick != null) {
 			socket.nickname = nick;
@@ -381,7 +385,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
-	socket.on('get nearest buildings', function (lat, lng, num) {
+	socket.on('get nearest buildings', function (lat, lng, num, callback) {
 		client0.hgetall("location:all", function (err, replies) {
 			var locations = new Array(replies.length);
 			for (var key in replies) {
@@ -407,8 +411,8 @@ io.sockets.on('connection', function (socket) {
 				var lng2 = location.split(",")[1];
 				buildings[replies[location]] = dist(lat,lng,lat2,lng2);
 			}
-
-			socket.emit('nearest buildings', buildings);
+			
+			callback(buildings);
 		});
 		
 		function dist (lat1, lng1, lat2, lng2) {

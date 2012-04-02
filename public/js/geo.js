@@ -1,17 +1,5 @@
 var socket = io.connect();
 
-socket.on('nearest buildings', function(buildings) {
-	console.log("got nearest buildings");
-	var buildingRow = $('.suggestions')
-	if (buildingRow.length) {
-		buildingRow.empty();
-		for (key in buildings) {
-			// need friendly key text translation
-			buildingRow.append('<a class="btn" href="/chat/'+key+'">'+key+'</button>');
-		}
-	}
-});
-
 if (Modernizr.geolocation) {
 	navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
 } else {
@@ -58,5 +46,15 @@ function normalize_yql_response(response) {
 function handle_geolocation_query(position) {
 	console.log('Lat: ' + position.coords.latitude +  
 	' Lon: ' + position.coords.longitude);
-	socket.emit('get nearest buildings', position.coords.latitude, position.coords.longitude, 3);
+	socket.emit('get nearest buildings', position.coords.latitude, position.coords.longitude, 3, function(buildings) {
+		console.log("got nearest buildings");
+		var buildingRow = $('.suggestions')
+		if (buildingRow.length) {
+			buildingRow.empty();
+			for (key in buildings) {
+				// need friendly key text translation
+				buildingRow.append('<a class="btn" href="/chat/'+key+'">'+key+'</button>');
+			}
+		}
+	});
 }
