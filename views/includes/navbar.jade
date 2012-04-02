@@ -27,6 +27,14 @@ div.navbar.navbar-fixed-top
             else 
               li
                 a(href='/chat') Chat
+          else 
+            if showChatTab
+              if index == 2
+                li.active
+                  a(href='/chat') Chat
+              else 
+                li
+                  a(href='/chat') Chat  
           li.divider-vertical
           form.navbar-search.pull-left
             div

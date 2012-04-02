@@ -14,6 +14,7 @@ exports.index = function(req, res) {
 		title: 'CalChat', 
 		layout: 'layout-index', 
 		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
 		index: 0
 	});
 };
@@ -27,11 +28,12 @@ exports.dashboard = function(req, res) {
 			title: 'CalChat',
 			layout: 'layout-dashboard',
 			loggedIn: req.loggedIn,
+			showChatTab: true,
 			rooms: rooms,
 			index: 1
 		});
 	} else {
-		res.redirect('home');
+		res.redirect('/?error=0');
 	}
 };
 
@@ -53,11 +55,12 @@ exports.chat = function(req, res) {
 			title: 'CalChat', 
 			layout: 'layout-chat',
 			loggedIn: req.loggedIn,
+			showChatTab: true,
 			rooms: rooms,
 			index: 2
 		});
 	} else {
-		return res.redirect('home');
+		return res.redirect('/?error=1');
 	}
 };
 
