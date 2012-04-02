@@ -20,12 +20,8 @@ socket.on('connect', function () {
 socket.on('announcement', function (to, msg) {
 	if (to == current) {
 		$('#lines').append($('<p>').append($('<em>').text(msg)));
-		if (!selfAnnounced) {
-			// scroll chat to bottom after chatlog and this announcement 
-			// only once (in the beginning)
-			selfAnnounced = true;
-		}
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+		
+		scrollToBottom();
 	}
 });
 
@@ -132,31 +128,17 @@ function clear () {
 };
 
 function scrollToBottom () {
-	// scroll to bottom only if already scrolled to bottom
-	if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 80 <= chatDiv.outerHeight()) {
-		chatDiv.scrollTop(chatDiv[0].scrollHeight);	
-	}
+	// uset setTimeout to give layout time to append
+	setTimeout(function() {
+		// scroll to bottom only if already scrolled to bottom
+		if (chatDiv[0].scrollHeight - chatDiv.scrollTop() - 80 <= chatDiv.outerHeight()) {
+			chatDiv.scrollTop(chatDiv[0].scrollHeight);	
+		}
+	}, 100);
 }
 
-function hideMentionSuggestions() {
-	$('#mention-suggestions').hide();
-	$('#message').data('prevFilter', null);
-	$('#mention-suggestions-list').data('selected', 0);
-}
-        
-function setMentionSuggestionSelection(selection) {
-	selection = Math.max(0, Math.min($('#mention-suggestions-list').children().length-1, selection));
-	$('#mention-suggestions-list').data('selected', selection);
-            
-	// figure out which suggestion is highlighted
-	$('#mention-suggestions-list').children().each(function() {
-		var suggestionIndex = $(this).data('suggestion-index');
-		if (selection == suggestionIndex && !$(this).hasClass('suggestion-hint')) {
-			$(this).addClass('suggestion-selected');
-		} else {
-			$(this).removeClass('suggestion-selected');
-		}
-	});
+function getUsers(room, callback) {
+	socket.emit('get users', current, callback);
 }
 
 // dom manipulation
@@ -174,15 +156,6 @@ $(document).ready(function () {
 		}
 	}
 	$('#chats .loading').addClass('hidden');
-    
-    // set suggestions box width
-    $('#mention-suggestions').width($('#message').outerWidth()).hide();
-    // first suggestion highlighted first
-    $('#mention-suggestions-list').data('selected', 0);
-	
-	$(document).click(function() {
-		hideMentionSuggestions();
-	});
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
@@ -208,126 +181,85 @@ $(document).ready(function () {
 	$('#send-message').submit(function () {
 		// TODO: since we are sending the message to the server and waiting for the reply
 		//       we should display some kind of 'Sending…' text
-
-		socket.emit('message', current, $('#message').val());
-		clear();
-		scrollToBottom();
+		if ($('#message').val()) {
+			socket.emit('message', current, $('#message').val());
+			clear();
+			scrollToBottom();
+		}
 		return false;
 	});
-
-	// @mentions
-    $('#message').keydown(function(e) {
-        if ($('#mention-suggestions').css('display') != 'none') {
-            switch(e.which) {
-                case 27: //ESC
-                case 38: //arrow up
-                case 40: //arrow down
-                case 13: //ENTER
-                    e.preventDefault();
-                    break;
-            }
-        }
-    });
-
-	// upon keyup, the val() would have already been updated
-	$('#message').keyup(function(e) {        
-        var prevSelected = $('#mention-suggestions-list').data('selected');
-        
-        if ($('#mention-suggestions').css('display') != 'none') {
-            switch(e.which) {
-                case 27: //ESC
-                    hideMentionSuggestions();
-                    return;
-                case 38: //arrow up
-                    setMentionSuggestionSelection(prevSelected - 1);
-                    return;
-                case 40: //arrow down
-                    setMentionSuggestionSelection(prevSelected + 1);
-                    return;
-                case 13: //ENTER
-                    $('#mention-suggestions-list').children().get(prevSelected).children.item(0).click();
-                    return;
-            }
-        }
-
-		// filter suggestions
-		var msg = $(this).val();
-		// get caret position
-		var end = $(this).get(0).selectionStart;
-		// get position of '@'
-		var start = msg.substring(0, end).lastIndexOf('@');
-
-		// did user delete '@'?
-		if (start == -1) {
-			hideMentionSuggestions();
-			return;
-		}
-
-		// the text in between '@' and caret position
-		var filter = msg.substring(start+1, end);
-        
-		// recalculate if filter has been changed
-		if (filter != $(this).data('prevFilter')) {
-			$(this).data('prevFilter', filter);
-			
-			// clear suggestions box to be repopulated
-			$('#mention-suggestions-list').empty();
-            
-            var displayLoading = setTimeout(function() {
-				$('#mention-suggestions-list').empty();
-                $('#mention-suggestions-list').append($('<div class="suggestion-hint">').text('Loading...'));
-                $('#mention-suggestions').show();
-            }, 1000);
-
-			socket.emit('get users', current, filter, function(users, online, offline) {
+	
+	$('#message').typeahead({
+		source: function(typeahead, query) {			
+			getUsers(current, function(mapping, online, offline) {
 				online.sort();
 				offline.sort();
 				var ids = online.concat(offline);
-				
-				clearTimeout(displayLoading);
-				$('.suggestion-hint').remove();
-				$('#mention-suggestions-list').empty();
-				
+					
+				var users = [];
+					
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
-					var user = users[id];
-                    
+					var name = mapping[id];
 					var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
-					var suggestionItem = $('<li>').data('suggestion-index', i).append('<a href="javascript:void(0)" id="user'+id+'"><img class="avatar" width="30px" height="30px" src='+pic+'>'+user+'</a>');
+					var html = $('<div>').append($('<img class="avatar" width="30px" height="30px" src='+pic+'>')).append(name);
 					
-					$('#mention-suggestions-list').append(suggestionItem);
-					$('#user'+id).data('id', id);
-					$('#user'+id).click(function(){
-						// get id of clicked suggestion
-						var id = $(this).data('id');
-						// get text after the caret position
-						var after = msg.substring(end);
-							
-						// turn the '@filter' into '#id ' and keep the before and after text the same
-						var transformedMsg = msg.substring(0, start) + '#' + id + '$' + after;
-
-						// calculate the new caret position
-						var caretPosition = transformedMsg.length - after.length;
-
-						// hide suggestions box
-						hideMentionSuggestions();
-
-						// set new value for input
-						$('#message')
-						.val(transformedMsg)
-						.focus()
-						.get(0).setSelectionRange(caretPosition,caretPosition);
+					users.push({
+						id:		id,
+						value:	html.html(),
+						name:	name,
 					});
 				}
-                
-                if (ids.length) {
-                    $('#mention-suggestions').show();
-                } else {
-                    hideMentionSuggestions();
-                }
-                
-                setMentionSuggestionSelection(0);
+				
+				typeahead.process(users);
 			});
+		},
+		
+		items: 4,
+		
+		matcher: function(item) {
+			var msg = this.query;
+			// get caret position
+			var end = $('#message').get(0).selectionStart;
+			$('#message').data('selectionStart', end);
+			// get position of '@'
+			var start = msg.substring(0, end).lastIndexOf('@');
+
+			// did user delete '@'?
+			if (start == -1) {
+				return false;
+			}
+
+			// the text in between '@' and caret position
+			var filter = msg.substring(start+1, end).toUpperCase();
+			
+			// remove html stuff
+			item = item.substring(item.lastIndexOf('>') + 1).toUpperCase();
+			
+			// is what the user entered the start of this item?
+			return item.indexOf(filter) == 0;
+		},
+		
+		onselect: function(item) {			
+			var msg = this.query;
+			// get caret position
+			// for some reason $('#message').get(0).selectionStart becomes all screwed up
+			var end = $('#message').data('selectionStart');
+			// get position of '@'
+			var start = msg.substring(0, end).lastIndexOf('@');
+			
+			var replacement = '#'+item.id+'$';
+			
+			var transformedMsg = msg.substring(0, start) + replacement + msg.substring(end);
+
+			// calculate the new caret position
+			var caretPosition = start + replacement.length;
+
+			// set new value for input
+			$('#message')
+			.val(transformedMsg)
+			.focus()
+			.get(0).setSelectionRange(caretPosition,caretPosition);
 		}
 	});
 

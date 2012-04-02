@@ -64,18 +64,3 @@ a.from:hover {
 	color:dimgrey;
 	font-weight:bold;
 }
-
-div.suggestions {
-    background-color:aliceblue;
-    position:static;
-}
-
-ul.suggestions-list {
-	list-style-type: none;
-	padding: 0;
-	margin-left: 0;
-}
-
-.suggestion-selected {
-    background-color:lightskyblue;
-}

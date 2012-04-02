@@ -37,7 +37,5 @@ div.container-fluid
         hr
         form.form-inline#send-message
           div.input-append
-            input(type='text', size='16', disabled='true', autocomplete='off', name='input-message').span7#message< 
+            input(type='text', size='16', disabled='true', autocomplete='off', name='input-message', data-provide='typeahead').span7#message< 
             button(type='submit').btn Send
-          div.dropdown-menu.suggestions#mention-suggestions
-            ul.suggestions-list#mention-suggestions-list

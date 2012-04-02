@@ -414,25 +414,20 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
     
-    socket.on('get users', function(room, filter, callback) {
+    socket.on('get users', function(room, callback) {
         client2.smembers('users:'+room, function(err, ids) {
             getUsers(ids, function(users) {
             	var online = [];
 				var offline = [];
-				var filteredUsers = {};
 				
-				for (id in users) {
-					var user = users[id];
-					if (!filter || user.toUpperCase().indexOf(filter.toUpperCase()) == 0) {
-						filteredUsers[id] = user;
-						if (nicknames[room][id]) {
-							online.push(id);
-						} else {
-							offline.push(id);
-						}
+				for (id in users) {					
+					if (nicknames[room][id]) {
+						online.push(id);
+					} else {
+						offline.push(id);
 					}
 				}
-				callback(filteredUsers, online, offline);
+				callback(users, online, offline);
             });
         });
     });
