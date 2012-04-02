@@ -90,7 +90,7 @@ function renderChatlogs (logs, mentions) {
 		var element = renderChatMessage(from, text, mentions);
 		$('#lines').append(element);
 	}
-	chatDiv.scrollTop(chatDiv[0].scrollHeight);
+	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
 	
 	$('#message').prop('disabled', false);
 	$('.chat-header .loading').addClass('hidden');
@@ -155,6 +155,7 @@ $(document).ready(function () {
 			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
 		}
 	}
+	
 	$('#chats .loading').addClass('hidden');
 
 	$('#chats a').click(function () {

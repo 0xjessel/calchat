@@ -187,49 +187,56 @@ io.sockets.on('connection', function (socket) {
         });
     }
 	
-	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
-		socket.nickname = nick;
-		socket.set('uid', uid);
+		if (uid != null && nick != null) {
+			socket.nickname = nick;
+			socket.set('uid', uid);
 		
-		joinRooms(rooms);
+			joinRooms(rooms);
 		
-		getChatlog(current, function(logs, mentions) {			
-			client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-				if (reply) {
-					var rooms = reply.split(',');
-					for (var i = 0; i < rooms.length; i++) {
-						var room = rooms[i];
-						nicknames[room][uid] = socket.nickname;
-	                    client2.sadd('users:'+room, uid);
+			getChatlog(current, function(logs, mentions) {			
+				client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
+					if (reply) {
+						var rooms = reply.split(',');
+						for (var i = 0; i < rooms.length; i++) {
+							var room = rooms[i];
+							nicknames[room][uid] = socket.nickname;
+							client2.sadd('users:'+room, uid);
             
-						if (room != current) {
-							io.sockets.in(room).emit('announcement', room, nick + ' connected');
-							io.sockets.in(room).emit('online', room, nicknames[room]);
+							if (room != current) {
+								io.sockets.in(room).emit('announcement', room, nick + ' connected');
+								io.sockets.in(room).emit('online', room, nicknames[room]);
+							}
 						}
-					}
 
-					callback(logs, mentions);
+						callback(logs, mentions);
 					
-					io.sockets.in(current).emit('announcement', current, nick + ' connected');
-					io.sockets.in(current).emit('online', current, nicknames[current]);
-				}
+						// TODO: can we just get rid of that if check on line 213 so we don't need this? 
+						io.sockets.in(current).emit('announcement', current, nick + ' connected');
+						io.sockets.in(current).emit('online', current, nicknames[current]);
+					}
+				});
 			});
-		});
-	});
-	
-	socket.on('join room', function (room) {
-		joinRooms([room]);
-	});
-	function joinRooms(rooms) {
-		for (var i = 0; i < rooms.length; i++) {
-			var room = rooms[i];
-			if (!nicknames[room]) {
-				nicknames[room] = {};
-			}
-			socket.join(room);
+		} else {
+			joinRooms(rooms);
+
+			getChatlog(current, function(logs, mentions) {
+				callback(logs, mentions);
+			});
+
+			io.sockets.in(current).emit('online', current, nicknames[current]);
 		}
-	}
+		
+		function joinRooms(rooms) {
+			for (var i = 0; i < rooms.length; i++) {
+				var room = rooms[i];
+				if (!nicknames[room]) {
+					nicknames[room] = {};
+				}
+				socket.join(room);
+			}
+		}
+	});
 	
 	socket.on('leave room', function (room, callback) {
 		socket.get('uid', function (err, uid) {
@@ -320,20 +327,23 @@ io.sockets.on('connection', function (socket) {
 		});
 	}
 
+	// emit online users as well as update user's chatroom list
 	socket.on('get online', function (room) {
 		socket.get('uid', function(err, uid) {
-			// make this chatroom most recent in user's list
-			client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
-				var rooms = chatrooms.split(',');
+			if (uid != null) {
+				// make this chatroom most recent in user's list
+				client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
+					var rooms = chatrooms.split(',');
 				
-				// move room to front of rooms
-				rooms.unshift(rooms.splice(rooms.indexOf(room), 1));
+					// move room to front of rooms
+					rooms.unshift(rooms.splice(rooms.indexOf(room), 1));
 				
-				var newChatrooms = rooms.join();
-				console.log('get online');
-				console.log(newChatrooms);
-				client2.hset('user:'+uid, 'chatrooms', newChatrooms);
-			});
+					var newChatrooms = rooms.join();
+					console.log('get online');
+					console.log(newChatrooms);
+					client2.hset('user:'+uid, 'chatrooms', newChatrooms);
+				});
+			}
 		});
 		
 		// send updated online users list

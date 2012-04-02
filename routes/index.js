@@ -44,7 +44,11 @@ exports.chat = function(req, res) {
 
 		// convert string to array
 		var rooms = req.user.chatrooms.split(',');
-
+	} else {
+		// guest user
+		var rooms = req.session.rooms;
+	}
+	if (rooms && rooms.length) {
 		res.render('chat', { 
 			title: 'CalChat', 
 			layout: 'layout-chat',
@@ -53,15 +57,16 @@ exports.chat = function(req, res) {
 			index: 2
 		});
 	} else {
-		res.redirect('home');
+		return res.redirect('home');
 	}
 };
 
 exports.chatroom = function(req, res) {
+	var room = req.params.room;
+	
 	if (req.loggedIn) {
 		// convert string to array
 		var rooms = req.user.chatrooms.split(',');
-		var room = req.params.room;
 		if (room != undefined && isValid(room)) {
 			if (!req.user.chatrooms) {
 				// first time, set rooms to be a new array with just the room
@@ -88,10 +93,17 @@ exports.chatroom = function(req, res) {
 			});
 			return;
 		} else {
-			// room is invalid/error
+			// room is invalid
 		}
+	} else {
+		if (req.session.rooms && req.session.rooms.length) {
+			var rooms = req.session.rooms;
+			rooms.unshift(room);
+		} else {
+			req.session.rooms = [room];
+		}
+		return res.redirect('/chat');
 	}
-	res.redirect('home');
 }
 
 exports.archives = function(req, res) {
