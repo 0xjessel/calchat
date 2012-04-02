@@ -64,3 +64,10 @@ a.from:hover {
 	color:dimgrey;
 	font-weight:bold;
 }
+
+#login {
+	display: inline-block;
+	height:27px;
+	width:105px;
+	background: url('../img/fb-connect-small.png');
+}
