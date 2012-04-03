@@ -66,38 +66,41 @@ exports.chat = function(req, res) {
 
 exports.chatroom = function(req, res) {
 	var room = req.params.room;
+	room = room.toUpperCase();
 	
 	if (req.loggedIn) {
 		// convert string to array
 		var rooms = req.user.chatrooms.split(',');
-		if (room != undefined && isValid(room)) {
-			if (!req.user.chatrooms) {
-				// first time, set rooms to be a new array with just the room
-				rooms = [room];
-			} else {
-				var found = false;
-				// check if room already exists inside rooms
-				for (var i = 0; i < rooms.length; i++) {
-					if (rooms[i] == room) {
-						// move room to front of array and return
-						rooms.unshift(rooms.splice(i, 1).join());
-						found = true;
+		isValid(room, function(valid) {
+			if (room != undefined && isValid(room)) {
+				if (!req.user.chatrooms) {
+					// first time, set rooms to be a new array with just the room
+					rooms = [room];
+				} else {
+					var found = false;
+					// check if room already exists inside rooms
+					for (var i = 0; i < rooms.length; i++) {
+						if (rooms[i] == room) {
+							// move room to front of array and return
+							rooms.unshift(rooms.splice(i, 1).join());
+							found = true;
+						}
 					}
-				}
 
-				if (!found) {
-					// prepend room to rooms, client-side will connect to the first room in rooms
-					rooms.unshift(room);
-				}
-			} 
-			// update db
-			client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
-				return res.redirect('/chat');
-			});
-			return;
-		} else {
-			// room is invalid
-		}
+					if (!found) {
+						// prepend room to rooms, client-side will connect to the first room in rooms
+						rooms.unshift(room);
+					}
+				} 
+				// update db
+				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
+					return res.redirect('/chat');
+				});
+				return;
+			} else {
+				// room is invalid
+			}
+		});
 	} else {
 		if (req.session.rooms && req.session.rooms.length) {
 			var rooms = req.session.rooms;
@@ -130,6 +133,15 @@ exports.invalid = function(req, res) {
 }
 
 // query db to see if room is valid
-function isValid(room) {
-	return true;
+function isValid(room, callback) {
+	console.log('testttt');
+	if (!room) {
+		callback(false);
+	} else {
+		var score = stringScore(room);
+		client2.zcount('courses', score, score, function(err, count) {
+			console.log('room: '+room+' is '+!err&&count);
+			callback(!err && count);
+		});
+	}
 }

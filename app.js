@@ -193,7 +193,7 @@ io.sockets.on('connection', function (socket) {
 	}
 	
 	function strip(string) {
-		return string.replace('/[^A-Za-z0-9:-]/g', '').toUpperCase();
+		return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 	}
 	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
@@ -514,13 +514,18 @@ io.sockets.on('connection', function (socket) {
 			return stringScore(cap);
 		}
 		
-		query = strip(query);				
+		query = strip(query);
 		
 		if (!query || !limit) {
 			callback([]);
 		} else {
 			client0.zrangebyscore('courses', stringScore(query), '('+capStringScore(query), 'limit', 0, limit, function(err, ids) {
 				if (!err) {
+					if (ids.length == 0) {
+						callback([]);
+						return;
+					}
+
 					var courses = [];
 					var added = 0;
 					for (var i = 0; i < ids.length; i++) {
