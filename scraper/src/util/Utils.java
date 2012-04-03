@@ -55,33 +55,9 @@ public class Utils {
 		char[] chars = s.toCharArray();
 
 		for (int i = 0; i < chars.length; i++) {
-			hash += (chars[i] - 'A') / Math.pow(26, i);
+			hash += (chars[i] - '0') / Math.pow('Z' - '0' + 1, i);
 		}
 		return hash;
-	}
-
-	public static boolean beginWith(String s, String q) {
-		s = s.toUpperCase();
-		q = q.toUpperCase();
-		double sHash = stringScore(s);
-		double qHash = stringScore(q);
-
-		if (qHash == sHash)
-			return true;
-		else if (qHash > sHash)
-			return false;
-		else {
-			char last = q.charAt(q.length() - 1);
-			char next = (char) (last + 1);
-			if (last == 'Z') {
-				next = 'A';
-			}
-
-			System.out.println(last);
-			System.out.println(next);
-			String cap = q.substring(0, q.length() - 1) + next;
-			return sHash < stringScore(cap);
-		}
 	}
 
 	public static String strip(String s) {
@@ -357,6 +333,9 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(strip("BAR,ROWS 170:w-t"));
+		System.out.println("E" + (char)((int)'Z' + 1));
+		System.out.println(stringScore("EZ"));
+		System.out.println(stringScore("E" + (char)(((int)'Z') + 1)));
+		System.out.println(stringScore("F0"));
 	}
 }
