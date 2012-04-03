@@ -9,11 +9,11 @@ $(document).ready(function () {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i];
-			chatroomsList.append('<li><a href="/chat/'+room+'">'+room+'<span id="'+room+'" class="close">x</span></a></li>');
+			chatroomsList.append('<li><a href="/chat/'+room+'">'+room+'<span id="'+room+'" class="close close-chat">x</span></a></li>');
 		}
 	}
 	
-	$('.close').click(function () {
+	$('.close-chat').click(function () {
 		socket.emit('remove room', uid, $(this).attr('id'));
 		$(this).parent().parent().remove();
 		return false;
