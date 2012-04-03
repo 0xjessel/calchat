@@ -3,6 +3,8 @@ var util = require('util')
 , redis = require('redis');
 
 var redisUrl = 'db.calchat.net';
+var client0 = redis.createClient(null, redisUrl);
+client0.select(0);
 var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
@@ -154,7 +156,7 @@ function isValid(room, callback) {
 			return hash;
 		}
 		var score = stringScore(room);
-		client2.zcount('courses', score, score, function(err, count) {
+		client0.zcount('courses', score, score, function(err, count) {
 			console.log('room: '+room+' is '+!err&&count);
 			callback(!err && count);
 		});
