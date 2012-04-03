@@ -319,6 +319,7 @@ io.sockets.on('connection', function (socket) {
 				for (var i = 0; i < chatlog.length; i++) {
 					var mid = chatlog[i];
 					client2.hmget('message:'+mid, 'timestamp', 'from', 'text', function(err, messageReplies) {
+						added++;
 						if (!err){
 							var timestamp = messageReplies[0];
 							var fromUid = messageReplies[1];
@@ -338,21 +339,18 @@ io.sockets.on('connection', function (socket) {
 									mentions[mention] = mention;
 								}
 							}
-						
-							added++;
-						
-							if (added == chatlog.length) {
-								var ids = [];
-								for (id in mentions) {
-									ids.push(id);
-								}
-								getUsers(ids, function(mapping) {
-									callback(logs, mapping);
-								});
-							}
 						} else {
 							error(err, socket);
-							callback();
+						}
+						
+						if (added == chatlog.length) {
+							var ids = [];
+							for (id in mentions) {
+								ids.push(id);
+							}
+							getUsers(ids, function(mapping) {
+								callback(logs, mapping);
+							});
 						}
 					});
 				}
@@ -521,8 +519,33 @@ io.sockets.on('connection', function (socket) {
 		if (!query || !limit) {
 			callback([]);
 		} else {
-			client0.zrangebyscore('courses', stringScore(query), '('+capStringScore(query), 'limit', 0, limit, function(err, departments) {
-				callback(departments);
+			client0.zrangebyscore('courses', stringScore(query), '('+capStringScore(query), 'limit', 0, limit, function(err, ids) {
+				if (!err) {
+					var courses = [];
+					var added = 0;
+					for (var i = 0; i < ids.length; i++) {
+						var id = ids[i];
+						client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
+							added++;
+							if (!err) {
+								courses.push({
+									'department': course[0], 
+									'number': course[1],
+									'title': course[2],
+								});
+							} else {
+								error(err, socket);
+							}
+
+							if (added == ids.length) {
+								callback(courses);
+							}
+						});
+					}
+				} else {
+					error(err, socket);
+					callback();
+				}
 			});
 		}
 	});

@@ -1,11 +1,11 @@
 /* CSS Document */
 body {
-   padding-top:60px;
-   padding-bottom:40px;
+	padding-top:60px;
+	padding-bottom:40px;
 }
 
 .sidebar-nav {
-  padding: 9px 0;
+	padding: 9px 0;
 }
 
 .hidden {
@@ -13,8 +13,8 @@ body {
 }
 
 .avatar {
-	        border-radius:5px;
-	   -moz-border-radius:5px;
+	border-radius:5px;
+	-moz-border-radius:5px;
 	-webkit-border-radius:5px;
 	margin-right:10px;
 }
@@ -22,4 +22,12 @@ body {
 .loading {
 	margin-left:5px;
 	vertical-align:initial;
+}
+
+.course-department {
+	font-weight: bold;
+}
+
+.course-number {
+	font-weight: bold;
 }
