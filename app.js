@@ -206,19 +206,23 @@ io.sockets.on('connection', function (socket) {
 			getChatlog(current, function(logs, mentions) {			
 				client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 					if (!err) {
-						var rooms = reply.split(',');
-						for (var i = 0; i < rooms.length; i++) {
-							var room = rooms[i];
-							nicknames[room][uid] = socket.nickname;
-							client2.sadd('users:'+room, uid);
-            
-							if (room != current) {
-								io.sockets.in(room).emit('announcement', room, nick + ' connected');
-								io.sockets.in(room).emit('online', room, nicknames[room]);
-							}
-						}
+						if (reply) {
+							var rooms = reply.split(',');
+							for (var i = 0; i < rooms.length; i++) {
+								var room = rooms[i];
+								nicknames[room][uid] = socket.nickname;
+								client2.sadd('users:'+room, uid);
 
-						callback(logs, mentions);
+								if (room != current) {
+									io.sockets.in(room).emit('announcement', room, nick + ' connected');
+									io.sockets.in(room).emit('online', room, nicknames[room]);
+								}
+							}
+
+							callback(logs, mentions);
+						} else {
+							callback();
+						}
 					
 						// TODO: can we just get rid of that if check on line 213 so we don't need this? 
 						io.sockets.in(current).emit('announcement', current, nick + ' connected');

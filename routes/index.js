@@ -68,11 +68,14 @@ exports.chatroom = function(req, res) {
 	var room = req.params.room;
 	room = room.toUpperCase();
 	
-	if (req.loggedIn) {
-		// convert string to array
-		var rooms = req.user.chatrooms.split(',');
-		isValid(room, function(valid) {
-			if (room != undefined && isValid(room)) {
+	isValid(room, function(valid) {
+		console.log('valid: '+valid);
+
+		if (valid) {		
+			if (req.loggedIn) {
+				// convert string to array
+				var rooms = req.user.chatrooms.split(',');
+
 				if (!req.user.chatrooms) {
 					// first time, set rooms to be a new array with just the room
 					rooms = [room];
@@ -98,18 +101,22 @@ exports.chatroom = function(req, res) {
 				});
 				return;
 			} else {
-				// room is invalid
+				if (req.session.rooms && req.session.rooms.length) {
+					var rooms = req.session.rooms;
+					rooms.unshift(room);
+				} else {
+					req.session.rooms = [room];
+				}
+				return res.redirect('/chat');
 			}
-		});
-	} else {
-		if (req.session.rooms && req.session.rooms.length) {
-			var rooms = req.session.rooms;
-			rooms.unshift(room);
 		} else {
-			req.session.rooms = [room];
+			if (req.loggedIn) {
+				return res.redirect('/dashboard?error=2');
+			} else {
+				return res.redirect('/?error=2');
+			}
 		}
-		return res.redirect('/chat');
-	}
+	});
 }
 
 exports.archives = function(req, res) {
@@ -134,10 +141,18 @@ exports.invalid = function(req, res) {
 
 // query db to see if room is valid
 function isValid(room, callback) {
-	console.log('testttt');
 	if (!room) {
 		callback(false);
 	} else {
+		function stringScore(string) {
+			string = string.toUpperCase();
+			var hash = 0;
+
+			for (var i = 0; i < string.length; i++) {
+				hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
+			}
+			return hash;
+		}
 		var score = stringScore(room);
 		client2.zcount('courses', score, score, function(err, count) {
 			console.log('room: '+room+' is '+!err&&count);
