@@ -11,7 +11,7 @@ client2.select(2);
 */
 exports.index = function(req, res) {
 	res.render('index', { 
-		title: 'CalChat', 
+		title: 'CalChat - Connecting Students On Campus', 
 		layout: 'layout-index', 
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
@@ -25,7 +25,7 @@ exports.dashboard = function(req, res) {
 		var rooms = req.user.chatrooms.split(',');
 
 		res.render('dashboard', {
-			title: 'CalChat',
+			title: 'CalChat - Dashboard',
 			layout: 'layout-dashboard',
 			loggedIn: req.loggedIn,
 			showChatTab: true,
@@ -52,7 +52,7 @@ exports.chat = function(req, res) {
 	}
 	if (rooms && rooms.length) {
 		res.render('chat', { 
-			title: 'CalChat', 
+			title: 'CalChat - Chat', 
 			layout: 'layout-chat',
 			loggedIn: req.loggedIn,
 			showChatTab: true,
@@ -124,7 +124,7 @@ exports.archives = function(req, res) {
 		var room = req.params.room;
 
 		res.render('archives', { 
-			title: 'CalChat', 
+			title: 'CalChat - '+room+' Archives', 
 			layout: 'layout-archives',
 			loggedIn: req.loggedIn,
 			room: room,
@@ -136,7 +136,7 @@ exports.archives = function(req, res) {
 }
 
 exports.invalid = function(req, res) {
-	res.send('what you say??', 404);
+	res.send('Error: Page Not Found', 404);
 }
 
 // query db to see if room is valid
