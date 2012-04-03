@@ -504,7 +504,7 @@ io.sockets.on('connection', function (socket) {
 			var hash = 0;
 
 			for (var i = 0; i < string.length; i++) {
-				hash += (string.charCodeAt(i) - 'A'.charCodeAt()) / Math.pow(26, i);
+				hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
 			}
 			return hash;
 		}
@@ -512,10 +512,6 @@ io.sockets.on('connection', function (socket) {
 			string = string.toUpperCase();
 			var last = string.charAt(string.length - 1);
 			var next = String.fromCharCode(last.charCodeAt() + 1);
-			if (last == 'Z') {
-				next = 'A';
-			}
-			
 			var cap = string.substring(0, string.length - 1) + next;
 			return stringScore(cap);
 		}
