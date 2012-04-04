@@ -2,25 +2,36 @@ var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
 client0.select(0);
+var client1 = redis.createClient(null, redisUrl);
+client1.select(1);
 
 
-exports.getPrettyTitle = function(room, callback) {
+function getPrettyTitle(room, callback) {
 	isValid(room, function(valid, suggestion) {
 		if (valid) {
 			client0.hgetall('class:'+room, function(err, reply) {
-				console.log(Object.keys(reply).length);
 				if (!err && Object.keys(reply).length) {
-					callback(reply['department'] + ' ' + reply['number']);
+					var department = reply.department;
+					var number = reply.number;
+					client1.hget('abbreviations', strip(department), function(err, abbreviation) {
+						if (!err && abbreviation) {
+							callback(abbreviation + ' ' + number, 'abbreviation');
+						} else {
+							callback(department + ' ' + number, 'no abbreviation');
+						}
+					});
 				} else {
-					callback(room);
+					callback(room, 'err');
 				}
 			});
+		} else {
+			callback(room, 'invalid');
 		}
 	});
 }
 
 // prepends room to rooms (use this only if rooms exists!)
-exports.prependRoom = function(room, rooms) {
+function prependRoom(room, rooms) {
 	var index = -1;
 	for (var i = 0; i < rooms.length; i++) {
 		if (rooms[i] == room) {
@@ -36,7 +47,7 @@ exports.prependRoom = function(room, rooms) {
 }
 
 // query db to see if room is valid
-var isValid = function(room, callback) {
+function isValid(room, callback) {
 	if (!room) {
 		callback(false);
 		return;
@@ -69,4 +80,12 @@ var isValid = function(room, callback) {
 	}
 }
 
+function strip(string) {
+	return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+
+exports.getPrettyTitle = getPrettyTitle;
+exports.prependRoom = prependRoom;
 exports.isValid = isValid;
+exports.strip = strip;
