@@ -59,10 +59,7 @@ everyauth.facebook
 				});
 			} else { 
 				promise.fulfill(reply);
-			}			
-			/*	Object.keys(reply).forEach(function(val) {
-			console.log(val+ ' '+reply[val]);
-			})*/
+			}
 		} else {
 			promise.fail(err);
 			console.log('Error: '+err);
@@ -200,54 +197,6 @@ io.sockets.on('connection', function (socket) {
 	}
 	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
-		if (uid != null && nick != null) {
-			socket.nickname = nick;
-			socket.set('uid', uid);
-		
-			joinRooms(rooms);
-		
-			getChatlog(current, function(logs, mentions) {			
-				client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-					if (!err) {
-						if (reply) {
-							var rooms = reply.split(',');
-							for (var i = 0; i < rooms.length; i++) {
-								var room = rooms[i];
-								nicknames[room][uid] = socket.nickname;
-								client2.sadd('users:'+room, uid);
-
-								if (room != current) {
-									io.sockets.in(room).emit('announcement', room, nick + ' connected');
-									io.sockets.in(room).emit('online', room, nicknames[room]);
-								}
-							}
-
-							helper.getPrettyTitle(current, function(title) {
-								callback(logs, mentions, title);
-							});
-						} else {
-							callback();
-						}
-					
-						// TODO: can we just get rid of that if check on line 213 so we don't need this? 
-						io.sockets.in(current).emit('announcement', current, nick + ' connected');
-						io.sockets.in(current).emit('online', current, nicknames[current]);
-					} else {
-						error(err, socket);
-						callback();
-					}
-				});
-			});
-		} else {
-			joinRooms(rooms);
-
-			getChatlog(current, function(logs, mentions) {
-				callback(logs, mentions);
-			});
-
-			io.sockets.in(current).emit('online', current, nicknames[current]);
-		}
-		
 		function joinRooms(rooms) {
 			for (var i = 0; i < rooms.length; i++) {
 				var room = rooms[i];
@@ -257,6 +206,54 @@ io.sockets.on('connection', function (socket) {
 				socket.join(room);
 			}
 		}
+
+		helper.getPrettyTitle(current, function(title) {
+			if (uid != null && nick != null) {
+				socket.nickname = nick;
+				socket.set('uid', uid);
+			
+				joinRooms(rooms);
+			
+				getChatlog(current, function(logs, mentions) {			
+					client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
+						if (!err) {
+							if (reply) {
+								var rooms = reply.split(',');
+								for (var i = 0; i < rooms.length; i++) {
+									var room = rooms[i];
+									nicknames[room][uid] = socket.nickname;
+									client2.sadd('users:'+room, uid);
+
+									if (room != current) {
+										io.sockets.in(room).emit('announcement', room, nick + ' connected');
+										io.sockets.in(room).emit('online', room, nicknames[room]);
+									}
+								}
+
+								callback(logs, mentions, title);
+							} else {
+								callback();
+							}
+						
+							// TODO: can we just get rid of that if check on line 213 so we don't need this? 
+							io.sockets.in(current).emit('announcement', current, nick + ' connected');
+							io.sockets.in(current).emit('online', current, nicknames[current]);
+						} else {
+							error(err, socket);
+							callback();
+						}
+					});
+				});
+			} else {
+				joinRooms(rooms);
+
+				getChatlog(current, function(logs, mentions) {
+					callback(logs, mentions, title);
+				});
+
+				io.sockets.in(current).emit('online', current, nicknames[current]);
+			}
+		});
 	});
 	
 	socket.on('leave room', function (room, callback) {
@@ -361,7 +358,7 @@ io.sockets.on('connection', function (socket) {
 									ids.push(id);
 								}
 								getUsers(ids, function(mapping) {
-										callback(logs, mapping, title);
+									callback(logs, mapping, title);
 								});
 							}
 						});
@@ -387,8 +384,6 @@ io.sockets.on('connection', function (socket) {
 						rooms.unshift(rooms.splice(rooms.indexOf(room), 1));
 				
 						var newChatrooms = rooms.join();
-						console.log('get online');
-						console.log(newChatrooms);
 						client2.hset('user:'+uid, 'chatrooms', newChatrooms);
 					} else {
 						error(err, socket);
