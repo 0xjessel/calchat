@@ -1,6 +1,7 @@
 var util = require('util')
 , everyauth = require('everyauth')
-, redis = require('redis');
+, redis = require('redis')
+, sanitize = require('validator').sanitize;
 
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
@@ -75,7 +76,8 @@ exports.chatroom = function(req, res) {
 
 	var room = req.params.room;
 	// sanitize too maybe just in case?  if invalid, we send the room string back to client
-	room = strip(room);
+	room = sanitize(room).xss();
+	room = sanitize(room).entityEncode();
 	
 	isValid(room, function(valid, suggestion) {
 		if (valid) {		
