@@ -77,7 +77,7 @@ exports.chatroom = function(req, res) {
 	// sanitize too maybe just in case?  if invalid, we send the room string back to client
 	room = strip(room);
 	
-	isValid(room, function(valid) {
+	isValid(room, function(valid, suggestion) {
 		if (valid) {		
 			if (req.loggedIn) {
 				// convert string to array
@@ -104,10 +104,15 @@ exports.chatroom = function(req, res) {
 			}
 		} else {
 			// error: invalid chatroom
-			if (req.loggedIn) {
-				return res.redirect('/dashboard?invalid='+room);
+
+			if (suggestion) {
+				return res.redirect('/chat/'+suggestion);
 			} else {
-				return res.redirect('/?error=2');
+				if (req.loggedIn) {
+					return res.redirect('/dashboard?invalid='+room);
+				} else {
+					return res.redirect('/?error=2');
+				}
 			}
 		}
 	});
@@ -164,9 +169,8 @@ function isValid(room, callback) {
 			return hash;
 		}
 		var score = stringScore(room);
-		client0.zcount('courses', score, score, function(err, count) {
-			console.log('room: '+room+' is '+!err&&count);
-			callback(!err && count);
+		client0.zrangebyscore('courses', score, score, 'limit', 0, 1, function(err, courses) {
+			callback(!err && courses.length && courses[0].charAt(courses[0].length - 1) != '#', courses[0]);
 		});
 	}
 }
