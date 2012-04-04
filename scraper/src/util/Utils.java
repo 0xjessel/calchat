@@ -193,7 +193,7 @@ public class Utils {
 	}
 
 	public static String getClassId(ClassModel m) {
-		return strip(String.format("%s:%s", m.department, m.number));
+		return String.format("%s%s", strip(m.department), strip(m.number));
 	}
 
 	public static void disconnect() {

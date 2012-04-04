@@ -78,7 +78,7 @@ function message (to, from, msg, mentions) {
 	}
 }
 
-function renderChatlogs (logs, mentions) {
+function renderChatlogs (logs, mentions, title) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
 
@@ -94,6 +94,9 @@ function renderChatlogs (logs, mentions) {
 	
 	$('#message').prop('disabled', false);
 	$('.chat-header .loading').addClass('hidden');
+
+	$('.chat-title h2').text(title);
+	console.log('renderChatLogs: '+title);
 	clear();
 }
 
@@ -150,7 +153,9 @@ function getUsers(room, callback) {
 
 // dom manipulation
 $(document).ready(function () {
-	$('.chat-title h2').text(current);
+	$('.chat-title h2').text('Loading...');
+	console.log('ready: '+'Loading...');
+
 	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar
@@ -167,6 +172,9 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
+			$('.chat-title h2').text('Loading...');
+			console.log('click: '+'Loading...');
+
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();
@@ -175,7 +183,6 @@ $(document).ready(function () {
 			$(this).parent().addClass('active');
 
 			current = $(this).text();
-			$('.chat-title h2').text(current);
 			
 			$('#message').prop('disabled', true);
 
@@ -302,6 +309,7 @@ $(document).ready(function () {
 			next.parent().addClass('active');
 			current = next.text();
 			$('.chat-title h2').text('Loading...');
+			console.log('close: '+'Loading...');
 		}
 		
 		$('#message').prop('disabled', true);
@@ -310,7 +318,6 @@ $(document).ready(function () {
 			if (next.length) {
 				socket.emit('get chatlog', current, renderChatlogs);
 				socket.emit('get online', current);
-				$('.chat-title h2').text(current);
 			}
 		});
 		

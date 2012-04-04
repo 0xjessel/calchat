@@ -311,6 +311,8 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(room, callback) {
+		room = strip(room);
+
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (!err) {
@@ -355,7 +357,9 @@ io.sockets.on('connection', function (socket) {
 								ids.push(id);
 							}
 							getUsers(ids, function(mapping) {
-								callback(logs, mapping);
+								getPrettyTitle(room, function(title) {
+									callback(logs, mapping, title);
+								});
 							});
 						}
 					});
