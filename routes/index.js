@@ -143,7 +143,7 @@ function prependRoom(room, rooms) {
 	if (index == -1) {
 		rooms.unshift(room);
 	} else {
-		rooms.unshift(rooms.splice(index, 1));
+		rooms.unshift(rooms.splice(index, 1)[0]);
 	}
 	return rooms;
 }
