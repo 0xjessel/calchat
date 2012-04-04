@@ -170,7 +170,8 @@ $(document).ready(function () {
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();
-
+			
+			$('.loading:not(#chats .loading)').removeClass('hidden');
 			$('#chats .active').removeClass('active');
 			$(this).parent().addClass('active');
 
@@ -180,9 +181,8 @@ $(document).ready(function () {
 			$('#message').prop('disabled', true);
 
 			socket.emit('get chatlog', current, renderChatlogs);
-			socket.emit('get online', current);
+			socket.emit('get online', current);			
 		}
-		$('.loading:not(#chats .loading)').removeClass('hidden');
 		return false;
 	});
 
