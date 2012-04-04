@@ -198,7 +198,20 @@ $(document).ready(function () {
 	});
 	
 	$('#message').typeahead({
-		source: function(typeahead, query) {			
+		source: function(typeahead, query) {
+			var msg = this.query;
+			// get caret position
+			var end = $('#message').get(0).selectionStart;
+			$('#message').data('selectionStart', end);
+			// get position of '@'
+			var start = msg.substring(0, end).lastIndexOf('@');
+
+			// quit if no '@'
+			if (start == -1) {
+				typeahead.process([]);
+				return;
+			}
+
 			getUsers(current, function(mapping, online, offline) {
 				online.sort();
 				offline.sort();

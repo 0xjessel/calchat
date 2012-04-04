@@ -79,6 +79,8 @@ exports.chatroom = function(req, res) {
 	room = sanitize(room).entityEncode();
 	
 	isValid(room, function(valid, suggestion) {
+		room = room.toUpperCase();
+		
 		if (valid) {		
 			if (req.loggedIn) {
 				// convert string to array
@@ -173,7 +175,15 @@ function prependRoom(room, rooms) {
 function isValid(room, callback) {
 	if (!room) {
 		callback(false);
+		return;
 	} else {
+		room = room.toUpperCase();
+
+		if (room == 'CALCHAT') {
+			callback(true);
+			return;
+		}
+
 		function stringScore(string) {
 			string = string.toUpperCase();
 			var hash = 0;
