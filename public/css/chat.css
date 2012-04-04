@@ -71,6 +71,7 @@ a.from:hover {
 	width:105px;
 	background:url('../img/fb-connect-small.png');
 	vertical-align:top;
+    margin-left:10px;
 }
 
 .system-message {
