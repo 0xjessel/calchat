@@ -195,6 +195,28 @@ io.sockets.on('connection', function (socket) {
 	function strip(string) {
 		return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 	}
+
+	function stringScore(string) {
+		if (!string) return '-inf';
+
+		string = strip(string);
+		var hash = 0;
+
+		for (var i = 0; i < string.length; i++) {
+			hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
+		}
+		return hash;
+	}
+
+	function capStringScore(string) {
+		if (!string) return '+inf';
+
+		string = strip(string);
+		var last = string.charAt(string.length - 1);
+		var next = String.fromCharCode(last.charCodeAt() + 1);
+		var cap = string.substring(0, string.length - 1) + next;
+		return '('+stringScore(cap);
+	}
 	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
 		function joinRooms(rooms) {
@@ -208,13 +230,15 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		helper.getPrettyTitle(current, function(title) {
+			console.log(title);
 			if (uid != null && nick != null) {
 				socket.nickname = nick;
 				socket.set('uid', uid);
 			
 				joinRooms(rooms);
 			
-				getChatlog(current, function(logs, mentions) {			
+				getChatlog(current, function(logs, mentions) {	
+					console.log(logs);
 					client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 						if (!err) {
 							if (reply) {
@@ -222,7 +246,7 @@ io.sockets.on('connection', function (socket) {
 								for (var i = 0; i < rooms.length; i++) {
 									var room = rooms[i];
 									nicknames[room][uid] = socket.nickname;
-									client2.sadd('users:'+room, uid);
+									client2.zadd('users:'+room, stringScore(socket.nickname), uid);
 
 									if (room != current) {
 										io.sockets.in(room).emit('announcement', room, nick + ' connected');
@@ -280,7 +304,7 @@ io.sockets.on('connection', function (socket) {
 				});
 
 				// remove user from chatroom's list of users
-				client2.srem('users:'+room, uid);
+				client2.zrem('users:'+room, uid);
             
 				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
 				io.sockets.in(room).emit('online', room, nicknames[room]);
@@ -485,8 +509,8 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
     
-	socket.on('get users', function(room, callback) {
-		client2.smembers('users:'+room, function(err, ids) {
+	socket.on('get users', function(room, filter, limit, callback) {
+		client2.zrangebyscore('users:'+room, stringScore(filter), capStringScore(filter), 'limit', 0, limit, function(err, ids) {
 			if (!err) {
 				getUsers(ids, function(users) {
 					var online = [];
@@ -507,30 +531,13 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-	socket.on('get courses', function(query, limit, callback) {
-		function stringScore(string) {
-			string = string.toUpperCase();
-			var hash = 0;
-
-			for (var i = 0; i < string.length; i++) {
-				hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
-			}
-			return hash;
-		}
-		function capStringScore(string) {
-			string = string.toUpperCase();
-			var last = string.charAt(string.length - 1);
-			var next = String.fromCharCode(last.charCodeAt() + 1);
-			var cap = string.substring(0, string.length - 1) + next;
-			return stringScore(cap);
-		}
-		
+	socket.on('get courses', function(query, limit, callback) {		
 		query = strip(query);
 		
 		if (!query || !limit) {
 			callback([]);
 		} else {
-			client0.zrangebyscore('courses', stringScore(query), '('+capStringScore(query), 'limit', 0, limit, function(err, ids) {
+			client0.zrangebyscore('courses', stringScore(query), capStringScore(query), 'limit', 0, limit, function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {
 						callback([]);
@@ -591,11 +598,13 @@ io.sockets.on('connection', function (socket) {
             
 				client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 					if (!err) {
-						var rooms = reply.split(',');
-						for (var i = 0; i < rooms.length; i++) {
-							var room = rooms[i];
-							io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-							io.sockets.in(room).emit('online', room, nicknames[room]);
+						if (reply) {
+							var rooms = reply.split(',');
+							for (var i = 0; i < rooms.length; i++) {
+								var room = rooms[i];
+								io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+								io.sockets.in(room).emit('online', room, nicknames[room]);
+							}
 						}
 					} else {
 						error(err, socket);

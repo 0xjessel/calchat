@@ -12,6 +12,7 @@ for (var i = 0; i < rooms.length; i++) {
 
 socket.on('connect', function () {
 	// join all rooms, set uid and nick, get chatlog
+	console.log('init');
 	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions, title) {
 		renderChatlogs(logs, mentions, title);
 	});
@@ -146,8 +147,8 @@ function scrollToBottom () {
 	}, 100);
 }
 
-function getUsers(room, callback) {
-	socket.emit('get users', current, callback);
+function getUsers(room, filter, limit, callback) {
+	socket.emit('get users', current, filter, limit, callback);
 }
 
 // dom manipulation
@@ -201,6 +202,7 @@ $(document).ready(function () {
 		return false;
 	});
 	
+	var limit = 5;
 	$('#message').typeahead({
 		source: function(typeahead, query) {
 			var msg = this.query;
@@ -216,10 +218,24 @@ $(document).ready(function () {
 				return;
 			}
 
-			getUsers(current, function(mapping, online, offline) {
+			// the text in between '@' and caret position
+			var filter = msg.substring(start+1, end).toUpperCase();
+
+			if (filter.indexOf($('#message').data('filter-empty')) == 0) {
+				typeahead.process([]);
+				return;
+			}
+
+			getUsers(current, filter, limit, function(mapping, online, offline) {
 				online.sort();
 				offline.sort();
 				var ids = online.concat(offline);
+
+				if (!ids.length) {
+					$('#message').data('filter-empty', filter);
+				} else {
+					$('#message').data('filter-empty', null);
+				}
 					
 				var users = [];
 					
@@ -240,29 +256,10 @@ $(document).ready(function () {
 			});
 		},
 		
-		items: 5,
+		items: limit,
 		
 		matcher: function(item) {
-			var msg = this.query;
-			// get caret position
-			var end = $('#message').get(0).selectionStart;
-			$('#message').data('selectionStart', end);
-			// get position of '@'
-			var start = msg.substring(0, end).lastIndexOf('@');
-
-			// did user delete '@'?
-			if (start == -1) {
-				return false;
-			}
-
-			// the text in between '@' and caret position
-			var filter = msg.substring(start+1, end).toUpperCase();
-			
-			// remove html stuff
-			item = item.substring(item.lastIndexOf('>') + 1).toUpperCase();
-			
-			// is what the user entered the start of this item?
-			return item.indexOf(filter) == 0;
+			return true;
 		},
 		
 		onselect: function(item) {			
