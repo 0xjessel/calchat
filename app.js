@@ -531,26 +531,41 @@ io.sockets.on('connection', function (socket) {
 						return;
 					}
 
-					var courses = [];
+					var courses = {};
 					var added = 0;
 					for (var i = 0; i < ids.length; i++) {
-						var id = ids[i];
-						client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
-							added++;
-							if (!err) {
-								courses.push({
-									'department': course[0], 
-									'number': course[1],
-									'title': course[2],
-								});
-							} else {
-								error(err, socket);
+						// use closure so var id isn't changed by next loop iteration before callback
+						var closure = function() {
+							var id = ids[i];
+							console.log(id);
+
+							// check if id is an abbreviation
+							if (id.charAt(id.length - 1) == '#') {
+								id = id.substring(0, id.length - 1);
 							}
 
-							if (added == ids.length) {
-								callback(courses);
-							}
-						});
+								client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
+									added++;
+									if (!err) {
+										courses[id] = {
+											'department': course[0], 
+											'number': course[1],
+											'title': course[2],
+										};
+									} else {
+										error(err, socket);
+									}
+
+									if (added == ids.length) {
+										var objects = [];
+										for (id in courses) {
+											objects.push(courses[id]);
+										}
+										callback(objects);
+									}
+								});
+						}
+						closure();
 					}
 				} else {
 					error(err, socket);
