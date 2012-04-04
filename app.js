@@ -537,7 +537,6 @@ io.sockets.on('connection', function (socket) {
 						// use closure so var id isn't changed by next loop iteration before callback
 						var closure = function() {
 							var id = ids[i];
-							console.log(id);
 
 							// check if id is an abbreviation
 							if (id.charAt(id.length - 1) == '#') {

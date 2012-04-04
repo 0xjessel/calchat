@@ -35,6 +35,7 @@ exports.dashboard = function(req, res) {
 			index: 1
 		});
 	} else {
+		// error: cannot access /dashboard if not logged in
 		res.redirect('/?error=0');
 	}
 };
@@ -62,6 +63,7 @@ exports.chat = function(req, res) {
 			index: 2
 		});
 	} else {
+		// error: guest did not add any chats yet
 		return res.redirect('/?error=1');
 	}
 };
@@ -86,7 +88,7 @@ exports.chatroom = function(req, res) {
 				} else {
 					rooms = prependRoom(room, rooms);
 				} 
-				// update db
+				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
 					return res.redirect('/chat');
 				});
@@ -100,6 +102,7 @@ exports.chatroom = function(req, res) {
 				return res.redirect('/chat');
 			}
 		} else {
+			// error: invalid chatroom
 			if (req.loggedIn) {
 				return res.redirect('/dashboard?error=2');
 			} else {
