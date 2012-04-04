@@ -285,6 +285,7 @@ $(document).ready(function () {
 	});
 
 	$('#archives').attr('href', '/chat/'+current+'/archives');
+	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL+'/'+current));
 
 	$('#close').click(function () {
 		// remove chatroom from sidebar
