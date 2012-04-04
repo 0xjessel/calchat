@@ -19,6 +19,8 @@ var app = module.exports = express.createServer();
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
 client0.select(0);
+var client1 = redis.createClient(null, redisUrl);
+client1.select(1);
 var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 redis.debug_mode = false;
@@ -191,15 +193,11 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('error', err);
 		console.log('Error: '+err);
 	}
-	
-	function strip(string) {
-		return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-	}
 
 	function stringScore(string) {
 		if (!string) return '-inf';
 
-		string = strip(string);
+		string = helper.strip(string);
 		var hash = 0;
 
 		for (var i = 0; i < string.length; i++) {
@@ -211,7 +209,7 @@ io.sockets.on('connection', function (socket) {
 	function capStringScore(string) {
 		if (!string) return '+inf';
 
-		string = strip(string);
+		string = helper.strip(string);
 		var last = string.charAt(string.length - 1);
 		var next = String.fromCharCode(last.charCodeAt() + 1);
 		var cap = string.substring(0, string.length - 1) + next;
@@ -335,7 +333,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(room, callback) {
-		room = strip(room);
+		room = helper.strip(room);
 
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
@@ -532,7 +530,7 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get courses', function(query, limit, callback) {		
-		query = strip(query);
+		query = helper.strip(query);
 		
 		if (!query || !limit) {
 			callback([]);
@@ -557,24 +555,29 @@ io.sockets.on('connection', function (socket) {
 							}
 
 								client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
-									added++;
-									if (!err) {
-										courses[id] = {
-											'department': course[0], 
-											'number': course[1],
-											'title': course[2],
-										};
-									} else {
-										error(err, socket);
-									}
-
-									if (added == ids.length) {
-										var objects = [];
-										for (id in courses) {
-											objects.push(courses[id]);
+									var department = course[0];
+									var number = course[1];
+									helper.getPrettyTitle(helper.strip(department+number), function(pretty) {
+										added++;
+										if (!err) {
+											courses[id] = {
+												'department': department, 
+												'number': number,
+												'title': course[2],
+												'pretty': pretty,
+											};
+										} else {
+											error(err, socket);
 										}
-										callback(objects);
-									}
+
+										if (added == ids.length) {
+											var objects = [];
+											for (id in courses) {
+												objects.push(courses[id]);
+											}
+											callback(objects);
+										}
+									});
 								});
 						}
 						closure();

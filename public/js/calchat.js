@@ -29,11 +29,17 @@ $(document).ready(function () {
 				for (var i = 0; i < courses.length; i++) {
 					var course = courses[i];
 
+					var firstLine = $('<div>').append(
+						$('<span>').append('<p>').addClass('course-pretty').text(course.pretty));
+
+					var name = course.department+' '+course.number;
+					if (course.pretty != name) {
+						firstLine.append(
+							$('<span>').append('<p>').addClass('course-name').text(' ('+name+')'));
+					}
+
 					var html = $('<div>').append(
-						$('<div>').append(
-							$('<span>').append('<p>').addClass('course-department').text(course.department),
-							$('<span>').text(' '),
-							$('<span>').append('<p>').addClass('course-number').text(course.number)),
+						firstLine,
 						$('<div>').append('<p>').addClass('course-title').text(course.title));
 
 					course.value = html.html();
