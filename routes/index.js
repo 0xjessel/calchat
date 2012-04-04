@@ -1,4 +1,5 @@
 var util = require('util')
+, helper = require('./util.js')
 , everyauth = require('everyauth')
 , redis = require('redis')
 , sanitize = require('validator').sanitize;
@@ -78,7 +79,7 @@ exports.chatroom = function(req, res) {
 	room = sanitize(room).xss();
 	room = sanitize(room).entityEncode();
 	
-	isValid(room, function(valid, suggestion) {
+	helper.isValid(room, function(valid, suggestion) {
 		room = room.toUpperCase();
 		
 		if (valid) {		
@@ -90,7 +91,7 @@ exports.chatroom = function(req, res) {
 					// first time, set rooms to be a new array with just the room
 					rooms = [room];
 				} else {
-					rooms = prependRoom(room, rooms);
+					rooms = helper.prependRoom(room, rooms);
 				} 
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
@@ -106,7 +107,7 @@ exports.chatroom = function(req, res) {
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					req.session.rooms = prependRoom(room, req.session.rooms);
+					req.session.rooms = helper.prependRoom(room, req.session.rooms);
 				} else {
 					req.session.rooms = [room];
 				}
@@ -136,66 +137,24 @@ exports.chatroom = function(req, res) {
 }
 
 exports.archives = function(req, res) {
-	if (req.loggedIn) {
-		var room = req.params.room;
-
-		res.render('archives', { 
-			title: 'CalChat - '+room+' Archives', 
-			layout: 'layout-archives',
-			loggedIn: req.loggedIn,
-			room: room,
-			index: 3 //wtf should this be
+	var room = req.params.room;
+	// hgetall class:_rawid_, db 0
+	helper.isValid(room, function(valid, suggestion) {
+		helper.getPrettyTitle(suggestion, function(pretty) {
+			room = pretty;
+			res.render('archives', { 
+				title: 'CalChat - '+room+' Archives', 
+				layout: 'layout-archives',
+				loggedIn: req.loggedIn,
+				showChatTab: true,
+				room: room,
+				today: new Date().toDateString(),
+				index: 3 //wtf should this be
+			});
 		});
-	} else {
-		res.redirect('home');
-	}
+	});
 }
 
 exports.invalid = function(req, res) {
 	res.send('Error: Page Not Found', 404);
-}
-
-// prepends room to rooms (use this only if rooms exists!)
-function prependRoom(room, rooms) {
-	var index = -1;
-	for (var i = 0; i < rooms.length; i++) {
-		if (rooms[i] == room) {
-			index = i;
-		}
-	}
-	if (index == -1) {
-		rooms.unshift(room);
-	} else {
-		rooms.unshift(rooms.splice(index, 1)[0]);
-	}
-	return rooms;
-}
-
-// query db to see if room is valid
-function isValid(room, callback) {
-	if (!room) {
-		callback(false);
-		return;
-	} else {
-		room = room.toUpperCase();
-
-		if (room == 'CALCHAT') {
-			callback(true);
-			return;
-		}
-
-		function stringScore(string) {
-			string = string.toUpperCase();
-			var hash = 0;
-
-			for (var i = 0; i < string.length; i++) {
-				hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
-			}
-			return hash;
-		}
-		var score = stringScore(room);
-		client0.zrangebyscore('courses', score, score, 'limit', 0, 1, function(err, courses) {
-			callback(!err && courses.length && courses[0].charAt(courses[0].length - 1) != '#', courses[0]);
-		});
-	}
 }
