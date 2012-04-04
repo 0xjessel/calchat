@@ -67,8 +67,8 @@ public class Utils {
 	private static final String REDIS_URL = "db.calchat.net";
 
 	private static Jedis jedis; // used to make the pipeline for async calls
-	private static Jedis syncJedis; // for synchronous calls
-	private static Pipeline pipeline;
+	private static Jedis syncJedis1; // for synchronous calls
+	private static Pipeline pipeline0;
 
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
@@ -83,8 +83,8 @@ public class Utils {
 				mapping.put(field.getName(), value);
 			}
 
-			synchronized (pipeline) {
-				pipeline.hmset(key, mapping);
+			synchronized (pipeline0) {
+				pipeline0.hmset(key, mapping);
 			}
 		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
@@ -93,12 +93,24 @@ public class Utils {
 		}
 
 		// courses
-		String courseKey = "courses";
 		String department = strip(m.department);
 		String number = strip(m.number);
 		String combine = department + number;
-		synchronized (pipeline) {
-			pipeline.zadd(courseKey, stringScore(combine), id);
+		synchronized (pipeline0) {
+			pipeline0.zadd("courses", stringScore(combine), id);
+		}
+
+		// abbreviated courses
+		String abbreviations = null;
+		synchronized (syncJedis1) {
+			abbreviations = syncJedis1.hget("abbreviations", department);
+		}
+		if (abbreviations != null) {
+			// assume there's at most 1 abbreviation
+			String combine2 = abbreviations + number;
+			synchronized (pipeline0) {
+				pipeline0.zadd("courses", stringScore(combine2), id+"#");
+			}
 		}
 
 		for (Schedule schedule : m.schedules) {
@@ -122,8 +134,8 @@ public class Utils {
 						strip(schedule.building), schedule.buildingNumber, day);
 				String field = strip(schedule.time);
 
-				synchronized (pipeline) {
-					pipeline.hset(roomKey, field, id);
+				synchronized (pipeline0) {
+					pipeline0.hset(roomKey, field, id);
 				}
 			}
 		}
@@ -140,11 +152,11 @@ public class Utils {
 			jedis.select(0);
 			jedis.flushDB();
 
-			syncJedis = new Jedis(REDIS_URL);
-			syncJedis.connect();
-			syncJedis.select(1);
+			syncJedis1 = new Jedis(REDIS_URL);
+			syncJedis1.connect();
+			syncJedis1.select(1);
 
-			pipeline = jedis.pipelined();
+			pipeline0 = jedis.pipelined();
 
 			buildings = new HashSet<String>();
 			savedBuildings = new HashSet<String>();
@@ -178,15 +190,15 @@ public class Utils {
 	private static void disconnectHelper() {
 		System.err.println("Disconnecting from Redis server...");
 
-		synchronized (pipeline) {
-			pipeline.sync();
+		synchronized (pipeline0) {
+			pipeline0.sync();
 		}
-		pipeline = null;
+		pipeline0 = null;
 		jedis.disconnect();
 		jedis = null;
 
-		syncJedis.disconnect();
-		syncJedis = null;
+		syncJedis1.disconnect();
+		syncJedis1 = null;
 
 		buildings = null;
 		savedBuildings = null;
@@ -244,14 +256,20 @@ public class Utils {
 
 			String lat = null, lng = null, location = null;
 			try {
-				Map<String, String> latlng = syncJedis.hgetAll(key);
+				Map<String, String> latlng = null;
+				synchronized (syncJedis1) {
+					latlng = syncJedis1.hgetAll(key);
+				}
 				if (!latlng.isEmpty()) {
 					location = String.format("%s,%s", latlng.get("lat"),
 							latlng.get("lng"));
 				}
 			} catch (JedisConnectionException e) {
 				// try again
-				Map<String, String> latlng = syncJedis.hgetAll(key);
+				Map<String, String> latlng = null;
+				synchronized (syncJedis1) {
+					latlng = syncJedis1.hgetAll(key);
+				}
 				if (latlng != null) {
 					location = String.format("%f,%f", latlng.get("lat"),
 							latlng.get("lng"));
@@ -262,9 +280,13 @@ public class Utils {
 				String name = null;
 
 				try {
-					name = syncJedis.get(renameKey);
+					synchronized (syncJedis1) {
+						name = syncJedis1.get(renameKey);
+					}
 				} catch (JedisConnectionException e) {
-					syncJedis.get(renameKey); // try again
+					synchronized (syncJedis1) {
+						syncJedis1.get(renameKey); // try again
+					}
 				}
 
 				if (name == null)
@@ -306,11 +328,11 @@ public class Utils {
 				lng = location.split(",")[1];
 			}
 
-			synchronized (pipeline) {
-				pipeline.hset(key, "lat", lat);
-				pipeline.hset(key, "lng", lng);
+			synchronized (pipeline0) {
+				pipeline0.hset(key, "lat", lat);
+				pipeline0.hset(key, "lng", lng);
 
-				pipeline.hset(hkey, location, building);
+				pipeline0.hset(hkey, location, building);
 			}
 
 			System.err.println(String.format("Found location for: %s (%s)",
@@ -333,9 +355,9 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("E" + (char)((int)'Z' + 1));
+		System.out.println("E" + (char) ((int) 'Z' + 1));
 		System.out.println(stringScore("EZ"));
-		System.out.println(stringScore("E" + (char)(((int)'Z') + 1)));
+		System.out.println(stringScore("E" + (char) (((int) 'Z') + 1)));
 		System.out.println(stringScore("F0"));
 	}
 }
