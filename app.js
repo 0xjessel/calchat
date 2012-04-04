@@ -6,6 +6,7 @@ var express = require('express')
 , sio = require('socket.io')
 , everyauth = require('everyauth')
 , redis = require('redis')
+, sanitize = require('validator').sanitize
 , util = require('util')
 , routes = require('./routes');
 
@@ -394,6 +395,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('message', function (room, text) {
+		var text = sanitize(text).xss();
 		socket.get('uid', function(err, uid) {
 			if (!err){
 				var timestamp = new Date().getTime();
