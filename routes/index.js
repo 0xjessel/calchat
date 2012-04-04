@@ -74,6 +74,7 @@ exports.chatroom = function(req, res) {
 	}
 
 	var room = req.params.room;
+	// sanitize too maybe just in case?  if invalid, we send the room string back to client
 	room = strip(room);
 	
 	isValid(room, function(valid) {
@@ -104,7 +105,7 @@ exports.chatroom = function(req, res) {
 		} else {
 			// error: invalid chatroom
 			if (req.loggedIn) {
-				return res.redirect('/dashboard?error=2');
+				return res.redirect('/dashboard?invalid='+room);
 			} else {
 				return res.redirect('/?error=2');
 			}
