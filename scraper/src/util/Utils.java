@@ -18,11 +18,71 @@ import org.json.JSONObject;
 
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 public class Utils {
 	public static final String[] TERMS = { "SP", "SU", "FL" };
 	public static final String[] TERMS_STRINGS = { "spring", "summer", "fall" };
+
+	private static final String REDIS_URL = "db.calchat.net";
+	private static final String MAPS_URL = "http://maps.google.com/maps/api/geocode/json?address=%s,Berkeley,CA&sensor=false";
+
+	private static Set<String> buildings;
+	private static Set<String> savedBuildings;
+
+	private static Map<String, String> abbreviations;
+	private static Map<String, String> locations;
+	private static Map<String, String> renames;
+
+	private static Thread saveLocationsThread;
+	private static boolean saveLocationsAlive;
+
+	private static Jedis jedis; // used to make the pipeline for async calls
+	private static Jedis syncJedis1; // for synchronous calls
+	private static Pipeline pipeline0;
+
+	public static boolean connect() {
+		try {
+			jedis = new Jedis(REDIS_URL);
+			jedis.connect();
+			jedis.select(0);
+
+			System.err.println("Connected to Redis db 0. Flushing db...");
+
+			jedis.flushDB();
+
+			syncJedis1 = new Jedis(REDIS_URL);
+			syncJedis1.connect();
+			syncJedis1.select(1);
+
+			pipeline0 = jedis.pipelined();
+
+			buildings = new HashSet<String>();
+			savedBuildings = new HashSet<String>();
+
+			System.err
+					.println("Connected to Redis db 1. Fetching manual input data...");
+
+			synchronized (syncJedis1) {
+				abbreviations = syncJedis1.hgetAll("abbreviations");
+				locations = syncJedis1.hgetAll("locations");
+				renames = syncJedis1.hgetAll("renames");
+			}
+
+			saveLocationsThread = new Thread(new Runnable() {
+
+				@Override
+				public void run() {
+					saveLocations();
+				}
+			});
+			saveLocationsAlive = true;
+			saveLocationsThread.start();
+
+			return true;
+		} catch (Exception exception) {
+			return false;
+		}
+	}
 
 	public static String trim(String text) {
 		int start = text.length(), end = text.length();
@@ -64,12 +124,6 @@ public class Utils {
 		return s.replaceAll("[^A-Za-z0-9:-]", "").toUpperCase();
 	}
 
-	private static final String REDIS_URL = "db.calchat.net";
-
-	private static Jedis jedis; // used to make the pipeline for async calls
-	private static Jedis syncJedis1; // for synchronous calls
-	private static Pipeline pipeline0;
-
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
 		String key = String.format("class:%s", id);
@@ -101,15 +155,12 @@ public class Utils {
 		}
 
 		// abbreviated courses
-		String abbreviations = null;
-		synchronized (syncJedis1) {
-			abbreviations = syncJedis1.hget("abbreviations", department);
-		}
-		if (abbreviations != null) {
+		String abbreviation = abbreviations.get(department);
+		if (abbreviation != null) {
 			// assume there's at most 1 abbreviation
-			String combine2 = abbreviations + number;
+			String combine2 = abbreviation + number;
 			synchronized (pipeline0) {
-				pipeline0.zadd("courses", stringScore(combine2), id+"#");
+				pipeline0.zadd("courses", stringScore(combine2), id + "#");
 			}
 		}
 
@@ -145,38 +196,6 @@ public class Utils {
 		return strip(String.format("%s:%s", m.department, m.number));
 	}
 
-	public static boolean connect() {
-		try {
-			jedis = new Jedis(REDIS_URL);
-			jedis.connect();
-			jedis.select(0);
-			jedis.flushDB();
-
-			syncJedis1 = new Jedis(REDIS_URL);
-			syncJedis1.connect();
-			syncJedis1.select(1);
-
-			pipeline0 = jedis.pipelined();
-
-			buildings = new HashSet<String>();
-			savedBuildings = new HashSet<String>();
-
-			saveLocationsThread = new Thread(new Runnable() {
-
-				@Override
-				public void run() {
-					saveLocations();
-				}
-			});
-			saveLocationsAlive = true;
-			saveLocationsThread.start();
-
-			return true;
-		} catch (Exception exception) {
-			return false;
-		}
-	}
-
 	public static void disconnect() {
 		// wait for saveLocationsThread to finish
 		System.err.println("Waiting for locations to be saved...");
@@ -203,14 +222,6 @@ public class Utils {
 		buildings = null;
 		savedBuildings = null;
 	}
-
-	private static final String MAPS_URL = "http://maps.google.com/maps/api/geocode/json?address=%s,Berkeley,CA&sensor=false";
-
-	private static Set<String> buildings;
-	private static Set<String> savedBuildings;
-
-	private static Thread saveLocationsThread;
-	private static boolean saveLocationsAlive;
 
 	public static void saveLocations() {
 		while (true) {
@@ -252,42 +263,14 @@ public class Utils {
 		try {
 			String key = String.format("location:%s", strip(building));
 			String hkey = "location:all";
-			String renameKey = String.format("rename:%s", strip(building));
 
 			String lat = null, lng = null, location = null;
-			try {
-				Map<String, String> latlng = null;
-				synchronized (syncJedis1) {
-					latlng = syncJedis1.hgetAll(key);
-				}
-				if (!latlng.isEmpty()) {
-					location = String.format("%s,%s", latlng.get("lat"),
-							latlng.get("lng"));
-				}
-			} catch (JedisConnectionException e) {
-				// try again
-				Map<String, String> latlng = null;
-				synchronized (syncJedis1) {
-					latlng = syncJedis1.hgetAll(key);
-				}
-				if (latlng != null) {
-					location = String.format("%f,%f", latlng.get("lat"),
-							latlng.get("lng"));
-				}
-			}
+			location = locations.get(strip(building));
 
 			if (location == null) {
 				String name = null;
 
-				try {
-					synchronized (syncJedis1) {
-						name = syncJedis1.get(renameKey);
-					}
-				} catch (JedisConnectionException e) {
-					synchronized (syncJedis1) {
-						syncJedis1.get(renameKey); // try again
-					}
-				}
+				name = renames.get(strip(building));
 
 				if (name == null)
 					name = building;

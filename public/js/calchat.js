@@ -39,6 +39,7 @@ $(document).ready(function () {
 		onselect: function(item) {
 			var course = item;
 			addChatInput.val(course.department + course.number);
+			addChatForm.submit();
 		},
 	});
 	
