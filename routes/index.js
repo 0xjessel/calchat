@@ -75,7 +75,6 @@ exports.chatroom = function(req, res) {
 	}
 
 	var room = req.params.room;
-	// sanitize too maybe just in case?  if invalid, we send the room string back to client
 	room = sanitize(room).xss();
 	room = sanitize(room).entityEncode();
 	
@@ -93,7 +92,14 @@ exports.chatroom = function(req, res) {
 				} 
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
-					return res.redirect('/chat');
+					res.render('chat', { 
+						title: 'CalChat - Chat', 
+						layout: 'layout-chat',
+						loggedIn: req.loggedIn,
+						showChatTab: true,
+						rooms: rooms,
+						index: 2
+					});
 				});
 				return;
 			} else {
@@ -102,7 +108,14 @@ exports.chatroom = function(req, res) {
 				} else {
 					req.session.rooms = [room];
 				}
-				return res.redirect('/chat');
+				res.render('chat', { 
+					title: 'CalChat - Chat', 
+					layout: 'layout-chat',
+					loggedIn: req.loggedIn,
+					showChatTab: true,
+					rooms: rooms,
+					index: 2
+				});
 			}
 		} else {
 			// error: invalid chatroom
