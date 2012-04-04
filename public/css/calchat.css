@@ -4,6 +4,10 @@ body {
 	padding-bottom:40px;
 }
 
+h1, h2, h3 {
+        text-shadow: 0 1px 0 white;
+}
+
 .sidebar-nav {
 	padding: 9px 0;
 }
