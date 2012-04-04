@@ -67,8 +67,12 @@ exports.chat = function(req, res) {
 };
 
 exports.chatroom = function(req, res) {
+	function strip(string) {
+		return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+	}
+
 	var room = req.params.room;
-	room = room.toUpperCase();
+	room = strip(room);
 	
 	isValid(room, function(valid) {
 		console.log('valid: '+valid);
