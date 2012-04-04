@@ -8,7 +8,8 @@ var express = require('express')
 , redis = require('redis')
 , sanitize = require('validator').sanitize
 , util = require('util')
-, routes = require('./routes');
+, routes = require('./routes')
+, helper = require('./util.js');
 
 var app = module.exports = express.createServer();
 
@@ -221,7 +222,9 @@ io.sockets.on('connection', function (socket) {
 								}
 							}
 
-							callback(logs, mentions);
+							helper.getPrettyTitle(current, function(title) {
+								callback(logs, mentions, title);
+							});
 						} else {
 							callback();
 						}
@@ -316,54 +319,54 @@ io.sockets.on('connection', function (socket) {
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (!err) {
-				if (chatlog.length == 0) {
-					callback({}, {});
-					return;
-				}
-			
-				var logs = {};
-				var mentions = {};
-				var added = 0;
-				for (var i = 0; i < chatlog.length; i++) {
-					var mid = chatlog[i];
-					client2.hmget('message:'+mid, 'timestamp', 'from', 'text', function(err, messageReplies) {
-						added++;
-						if (!err){
-							var timestamp = messageReplies[0];
-							var fromUid = messageReplies[1];
-							var text = messageReplies[2];
-						
-							var entry = {
-								'from'	: fromUid,
-								'text'	: text,
-							};
-							logs[timestamp] = entry;
-						
-							var messageMentions = getMentions([text], [fromUid]);
-							for (var i = 0; i < messageMentions.length; i++) {
-								var mention = messageMentions[i];
-								if (mention != '') {
-									// de-duplicate
-									mentions[mention] = mention;
+				helper.getPrettyTitle(room, function(title) {
+					if (chatlog.length == 0) {
+						callback({}, {}, title);
+						return;
+					}
+				
+					var logs = {};
+					var mentions = {};
+					var added = 0;
+					for (var i = 0; i < chatlog.length; i++) {
+						var mid = chatlog[i];
+						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', function(err, messageReplies) {
+							added++;
+							if (!err){
+								var timestamp = messageReplies[0];
+								var fromUid = messageReplies[1];
+								var text = messageReplies[2];
+							
+								var entry = {
+									'from'	: fromUid,
+									'text'	: text,
+								};
+								logs[timestamp] = entry;
+							
+								var messageMentions = getMentions([text], [fromUid]);
+								for (var i = 0; i < messageMentions.length; i++) {
+									var mention = messageMentions[i];
+									if (mention != '') {
+										// de-duplicate
+										mentions[mention] = mention;
+									}
 								}
+							} else {
+								error(err, socket);
 							}
-						} else {
-							error(err, socket);
-						}
-						
-						if (added == chatlog.length) {
-							var ids = [];
-							for (id in mentions) {
-								ids.push(id);
-							}
-							getUsers(ids, function(mapping) {
-								getPrettyTitle(room, function(title) {
-									callback(logs, mapping, title);
+							
+							if (added == chatlog.length) {
+								var ids = [];
+								for (id in mentions) {
+									ids.push(id);
+								}
+								getUsers(ids, function(mapping) {
+										callback(logs, mapping, title);
 								});
-							});
-						}
-					});
-				}
+							}
+						});
+					}
+				});
 			} else {
 				error(err, socket);
 				callback();

@@ -8,8 +8,11 @@ exports.getPrettyTitle = function(room, callback) {
 	isValid(room, function(valid, suggestion) {
 		if (valid) {
 			client0.hgetall('class:'+room, function(err, reply) {
-				if (err == null) {
+				console.log(Object.keys(reply).length);
+				if (!err && Object.keys(reply).length) {
 					callback(reply['department'] + ' ' + reply['number']);
+				} else {
+					callback(room);
 				}
 			});
 		}

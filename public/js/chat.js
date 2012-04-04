@@ -12,8 +12,8 @@ for (var i = 0; i < rooms.length; i++) {
 
 socket.on('connect', function () {
 	// join all rooms, set uid and nick, get chatlog
-	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions) {
-		renderChatlogs(logs, mentions);
+	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions, title) {
+		renderChatlogs(logs, mentions, title);
 	});
 });
 
@@ -96,7 +96,6 @@ function renderChatlogs (logs, mentions, title) {
 	$('.chat-header .loading').addClass('hidden');
 
 	$('.chat-title h2').text(title);
-	console.log('renderChatLogs: '+title);
 	clear();
 }
 
@@ -154,7 +153,6 @@ function getUsers(room, callback) {
 // dom manipulation
 $(document).ready(function () {
 	$('.chat-title h2').text('Loading...');
-	console.log('ready: '+'Loading...');
 
 	chatDiv = $('#chat');
 
@@ -173,7 +171,6 @@ $(document).ready(function () {
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
 			$('.chat-title h2').text('Loading...');
-			console.log('click: '+'Loading...');
 
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
@@ -309,7 +306,6 @@ $(document).ready(function () {
 			next.parent().addClass('active');
 			current = next.text();
 			$('.chat-title h2').text('Loading...');
-			console.log('close: '+'Loading...');
 		}
 		
 		$('#message').prop('disabled', true);

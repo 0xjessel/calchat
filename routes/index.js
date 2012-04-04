@@ -1,5 +1,5 @@
 var util = require('util')
-, helper = require('./util.js')
+, helper = require('../util.js')
 , everyauth = require('everyauth')
 , redis = require('redis')
 , sanitize = require('validator').sanitize;
