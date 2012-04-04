@@ -9,7 +9,23 @@ $(document).ready(function () {
 	var limit = 8;
 	addChatInput.typeahead({
 		source: function(typeahead, query) {
+			if (!query) {
+				typeahead.process([]);
+				return;
+			}
+
+			if (query.indexOf(addChatInput.data('filter-empty')) == 0) {
+				typeahead.process([]);
+				return;
+			}
+
 			socket.emit('get courses', query, limit, function(courses) {
+				if (!courses.length) {
+					addChatInput.data('filter-empty', query);
+				} else {
+					addChatInput.data('filter-empty', null);
+				}
+
 				for (var i = 0; i < courses.length; i++) {
 					var course = courses[i];
 
