@@ -41,5 +41,5 @@ div.container-fluid
               button(type='submit').btn Send
         else 
           div.fake-input
-            input(type='text', size='16', disabled='true').span6
-            a(href='/auth/facebook')#login
+            input(type='text', size='16', disabled='true', title='login with facebook to participate!').span6
+            a(href='/auth/facebook', rel='tooltip', title='login with facebook to participate!')#login
