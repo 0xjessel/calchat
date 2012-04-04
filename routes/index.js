@@ -86,20 +86,7 @@ exports.chatroom = function(req, res) {
 					// first time, set rooms to be a new array with just the room
 					rooms = [room];
 				} else {
-					var found = false;
-					// check if room already exists inside rooms
-					for (var i = 0; i < rooms.length; i++) {
-						if (rooms[i] == room) {
-							// move room to front of array and return
-							rooms.unshift(rooms.splice(i, 1).join());
-							found = true;
-						}
-					}
-
-					if (!found) {
-						// prepend room to rooms, client-side will connect to the first room in rooms
-						rooms.unshift(room);
-					}
+					rooms = prependRoom(room, rooms);
 				} 
 				// update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
@@ -108,8 +95,7 @@ exports.chatroom = function(req, res) {
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					var rooms = req.session.rooms;
-					rooms.unshift(room);
+					req.session.rooms = prependRoom(room, req.session.rooms);
 				} else {
 					req.session.rooms = [room];
 				}
@@ -143,6 +129,25 @@ exports.archives = function(req, res) {
 
 exports.invalid = function(req, res) {
 	res.send('Error: Page Not Found', 404);
+}
+
+// prepends room to rooms (use this only if rooms exists!)
+function prependRoom(room, rooms) {
+	var index = -1;
+	for (var i = 0; i < rooms.length; i++) {
+		if (rooms[i] == room) {
+			index = i;
+		}
+	}
+	console.log('room: '+room);
+	console.log('index found: '+index);
+	console.log('before: '+rooms);
+	if (index == -1) {
+		rooms.unshift(room);
+	} else {
+		rooms.unshift(rooms.splice(index, 1));
+	}
+	return rooms;
 }
 
 // query db to see if room is valid
