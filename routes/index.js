@@ -75,8 +75,6 @@ exports.chatroom = function(req, res) {
 	room = strip(room);
 	
 	isValid(room, function(valid) {
-		console.log('valid: '+valid);
-
 		if (valid) {		
 			if (req.loggedIn) {
 				// convert string to array
@@ -139,9 +137,6 @@ function prependRoom(room, rooms) {
 			index = i;
 		}
 	}
-	console.log('room: '+room);
-	console.log('index found: '+index);
-	console.log('before: '+rooms);
 	if (index == -1) {
 		rooms.unshift(room);
 	} else {
