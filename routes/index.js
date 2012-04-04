@@ -116,7 +116,7 @@ exports.chatroom = function(req, res) {
 					layout: 'layout-chat',
 					loggedIn: req.loggedIn,
 					showChatTab: true,
-					rooms: rooms,
+					rooms: req.session.rooms,
 					index: 2
 				});
 			}
