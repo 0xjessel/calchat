@@ -394,8 +394,10 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('online', room, nicknames[room]);
 	});
 
-	socket.on('message', function (room, text) {
-		var text = sanitize(text).xss();
+	socket.on('message', function (room, msg) {
+		var text = msg;
+		text = sanitize(text).xss();
+		text = sanitize(text).entityEncode();
 		socket.get('uid', function(err, uid) {
 			if (!err){
 				var timestamp = new Date().getTime();
