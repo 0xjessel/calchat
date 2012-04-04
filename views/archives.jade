@@ -1,3 +1,16 @@
 include includes/navbar
 
-div.container
+div.container-fluid
+  div.alert.alert-error.hidden
+  div.row-fluid
+    div.span12
+      div.hero-unit
+        ul.breadcrumb
+          li
+            a(href='#') #{room}
+            span.divider
+              | /
+          li Archives
+            span.divider
+              | /
+          li.active #{today}
