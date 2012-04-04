@@ -69,7 +69,8 @@ a.from:hover {
 	display: inline-block;
 	height:27px;
 	width:105px;
-	background: url('../img/fb-connect-small.png');
+	background:url('../img/fb-connect-small.png');
+	vertical-align:top;
 }
 
 .system-message {
