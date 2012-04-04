@@ -6,6 +6,7 @@ var express = require('express')
 , sio = require('socket.io')
 , everyauth = require('everyauth')
 , redis = require('redis')
+, sanitize = require('validator').sanitize
 , util = require('util')
 , routes = require('./routes');
 
@@ -393,7 +394,10 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('online', room, nicknames[room]);
 	});
 
-	socket.on('message', function (room, text) {
+	socket.on('message', function (room, msg) {
+		var text = msg;
+		text = sanitize(text).xss();
+		text = sanitize(text).entityEncode();
 		socket.get('uid', function(err, uid) {
 			if (!err){
 				var timestamp = new Date().getTime();
@@ -537,7 +541,6 @@ io.sockets.on('connection', function (socket) {
 						// use closure so var id isn't changed by next loop iteration before callback
 						var closure = function() {
 							var id = ids[i];
-							console.log(id);
 
 							// check if id is an abbreviation
 							if (id.charAt(id.length - 1) == '#') {

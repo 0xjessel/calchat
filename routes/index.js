@@ -35,6 +35,7 @@ exports.dashboard = function(req, res) {
 			index: 1
 		});
 	} else {
+		// error: cannot access /dashboard if not logged in
 		res.redirect('/?error=0');
 	}
 };
@@ -62,6 +63,7 @@ exports.chat = function(req, res) {
 			index: 2
 		});
 	} else {
+		// error: guest did not add any chats yet
 		return res.redirect('/?error=1');
 	}
 };
@@ -72,11 +74,10 @@ exports.chatroom = function(req, res) {
 	}
 
 	var room = req.params.room;
+	// sanitize too maybe just in case?  if invalid, we send the room string back to client
 	room = strip(room);
 	
 	isValid(room, function(valid) {
-		console.log('valid: '+valid);
-
 		if (valid) {		
 			if (req.loggedIn) {
 				// convert string to array
@@ -86,38 +87,25 @@ exports.chatroom = function(req, res) {
 					// first time, set rooms to be a new array with just the room
 					rooms = [room];
 				} else {
-					var found = false;
-					// check if room already exists inside rooms
-					for (var i = 0; i < rooms.length; i++) {
-						if (rooms[i] == room) {
-							// move room to front of array and return
-							rooms.unshift(rooms.splice(i, 1).join());
-							found = true;
-						}
-					}
-
-					if (!found) {
-						// prepend room to rooms, client-side will connect to the first room in rooms
-						rooms.unshift(room);
-					}
+					rooms = prependRoom(room, rooms);
 				} 
-				// update db
+				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
 					return res.redirect('/chat');
 				});
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					var rooms = req.session.rooms;
-					rooms.unshift(room);
+					req.session.rooms = prependRoom(room, req.session.rooms);
 				} else {
 					req.session.rooms = [room];
 				}
 				return res.redirect('/chat');
 			}
 		} else {
+			// error: invalid chatroom
 			if (req.loggedIn) {
-				return res.redirect('/dashboard?error=2');
+				return res.redirect('/dashboard?invalid='+room);
 			} else {
 				return res.redirect('/?error=2');
 			}
@@ -143,6 +131,22 @@ exports.archives = function(req, res) {
 
 exports.invalid = function(req, res) {
 	res.send('Error: Page Not Found', 404);
+}
+
+// prepends room to rooms (use this only if rooms exists!)
+function prependRoom(room, rooms) {
+	var index = -1;
+	for (var i = 0; i < rooms.length; i++) {
+		if (rooms[i] == room) {
+			index = i;
+		}
+	}
+	if (index == -1) {
+		rooms.unshift(room);
+	} else {
+		rooms.unshift(rooms.splice(index, 1)[0]);
+	}
+	return rooms;
 }
 
 // query db to see if room is valid

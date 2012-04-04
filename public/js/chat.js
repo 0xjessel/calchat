@@ -45,7 +45,7 @@ socket.on('reconnect', function () {
 	$('#lines').empty();
 	message(current, 'System', 'Reconnected to the server');
 	// $('#message').prop('disabled', false);
-	$('.chat-header .loading').removeClass('hidden');
+	$('.chat-header .loading').addClass('hidden');
 });
 
 socket.on('reconnecting', function () {
