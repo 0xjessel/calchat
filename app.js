@@ -420,7 +420,6 @@ io.sockets.on('connection', function (socket) {
 				var timestamp = new Date().getTime();
 
 				var temp = {};
-				temp[uid] = null;
 				for (var i = 0; i < mentions.length; i++) {
 					temp[mentions[i]] = null;
 				};

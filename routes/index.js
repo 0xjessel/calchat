@@ -73,14 +73,13 @@ exports.chatroom = function(req, res) {
 	helper.isValid(room, function(valid, suggestion) {
 		if (valid) {		
 			if (req.loggedIn) {
-				// convert string to array
-				var rooms = req.user.chatrooms.split(',');
-
+				var rooms = null;
 				if (!req.user.chatrooms) {
 					// first time, set rooms to be a new array with just the room
 					rooms = [room];
 				} else {
-					rooms = helper.prependRoom(room, rooms);
+					// convert string to array
+					rooms = helper.prependRoom(room, req.user.chatrooms.split(','));
 				} 
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {

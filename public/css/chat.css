@@ -43,28 +43,6 @@ ul#online {
     font-size:1.2em;
 }
 
-a.mention {
-	color:dimgrey;
-	font-weight:bold;
-}
-
-a.mention:hover {
-	text-decoration:none;
-	color:darkgrey;
-	font-weight:bold;
-}
-
-a.from {
-	color:black;
-	font-weight:bold;
-}
-
-a.from:hover {
-	text-decoration:none;
-	color:dimgrey;
-	font-weight:bold;
-}
-
 #login {
 	display: inline-block;
 	height:27px;
@@ -76,4 +54,30 @@ a.from:hover {
 
 .system-message {
 	font-style:italic;
+}
+
+p.message a.from {
+	color:black;
+	font-weight:bold;
+}
+
+p.message a.from:hover {
+	text-decoration:none;
+	color:dimgrey;
+	font-weight:bold;
+}
+
+p.message > span.mentions {
+	float: right;
+}
+
+a.mention {
+	color:dimgrey;
+	font-weight:bold;
+}
+
+a.mention:hover {
+	text-decoration:none;
+	color:darkgrey;
+	font-weight:bold;
 }

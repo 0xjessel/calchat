@@ -33,7 +33,9 @@ socket.on('online', function(room, nicknames) {
 
 		for (var id in nicknames) {
 			var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
-			onlineSidebar.append('<li><a '+ getUserLinkAttributes(id) +'><img class="avatar" width="30px" height="30px" src='+pic+'>'+nicknames[id]+'</a></li>');
+			onlineSidebar.append($('<li>').append(getUserLink(id).append(
+				$('<img class="avatar" width="30px" height="30px" src='+pic+'>'),
+				nicknames[id])));
 		}
 		$('#online .loading').addClass('hidden');
 	}
@@ -112,25 +114,15 @@ function renderChatMessage(fromUid, msg, mentions, mapping) {
 	if (from == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
-		var fromElement = $('<span class="from">').append($('<a '+ getUserLinkAttributes(fromUid) +' class="from">').append(from), ': ');
-		var msgElement = $('<span class="text">').append(msg);
-
-		var element = $('<p class="message">').append(fromElement, msgElement);
-		return element;
+		return $('<p>').addClass('message').append(
+			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
+			$('<span>').addClass('text').append(msg),
+			$('<span>').addClass('mentions').append(mentions.join()));
 	}
 }
 
-function mentionize(msg, mentions) {
-	for (id in mentions) {
-		var text = '@'+mentions[id];
-		msg = msg.replace('#'+id+'$', '<a '+ getUserLinkAttributes(id) +' class="mention">'+text+'</a>');
-		// TODO: make the link actually do something
-	}
-	return msg;
-}
-
-function getUserLinkAttributes(id) {
-	return 'target="_blank" href="http://www.facebook.com/'+ id +'" ';
+function getUserLink(id) {
+	return $('<a>').attr('target', '_blank').attr('href', 'http://www.facebook.com/'+id);
 }
 
 function clear () {
@@ -202,6 +194,7 @@ $(document).ready(function () {
 		//       we should display some kind of 'Sending...' text
 		if ($('#message').val()) {
 			socket.emit('message', current, $('#message').val(), Object.keys($('#message').data('mentions')));
+			$('#message').data('mentions', {});
 			clear();
 			scrollToBottom();
 		}
