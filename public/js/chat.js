@@ -111,6 +111,13 @@ function message (entry, mapping) {
 
 function renderChatlogs (logs, mapping, title) {
 	debug('renderChatlogs');
+	if (!Object.keys(logs).length) {
+		logs[new Date().getTime()] = {
+			'from'	: 'System',
+			'to'	: current.id,
+			'text'	: 'First!! Say something to get this room started.',
+		};
+	}
 	for (timestamp in logs) {
 		// not showing timestamp for now
 
