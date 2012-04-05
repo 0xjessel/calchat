@@ -228,7 +228,6 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		helper.getPrettyTitle(current, function(title) {
-			console.log(title);
 			if (uid != null && nick != null) {
 				socket.nickname = nick;
 				socket.set('uid', uid);
@@ -236,7 +235,6 @@ io.sockets.on('connection', function (socket) {
 				joinRooms(rooms);
 			
 				getChatlog(current, function(logs, mentions) {	
-					console.log(logs);
 					client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
 						if (!err) {
 							if (reply) {

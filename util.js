@@ -30,6 +30,30 @@ function getPrettyTitle(room, callback) {
 	});
 }
 
+function getPrettyTitles(rooms, callback) {
+	if (!rooms.length) {
+		callback([]);
+	}
+
+	var added = 0;
+	var titles = [];
+	for (var i = 0; i < rooms.length; i++) {
+		var room = rooms[i];
+		getPrettyTitle(room, function(title) {
+			added++;
+
+			titles.push({
+				id: room,
+				title: title,
+			});
+
+			if (added == rooms.length) {
+				callback(titles);
+			}
+		});
+	};
+}
+
 // prepends room to rooms (use this only if rooms exists!)
 function prependRoom(room, rooms) {
 	var index = -1;
@@ -86,6 +110,7 @@ function strip(string) {
 
 
 exports.getPrettyTitle = getPrettyTitle;
+exports.getPrettyTitles = getPrettyTitles;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
 exports.strip = strip;
