@@ -357,7 +357,13 @@ io.sockets.on('connection', function (socket) {
 								var timestamp = message[0];
 								var fromUid = message[1];
 								var text = message[2];
-								var mentions = message[3].split();
+								var mentions = message[3]; // turn into array later
+
+								if (mentions) {
+									mentions = mentions.split();
+								} else {
+									mentions = [];
+								}
 
 								allMentions = allMentions.concat(mentions, fromUid);
 							

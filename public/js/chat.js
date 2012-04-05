@@ -114,10 +114,17 @@ function renderChatMessage(fromUid, msg, mentions, mapping) {
 	if (from == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
+		var mentionsElement = $('<div>').addClass('message-mentions');
+
+		for (var i = 0; i < mentions.length; i++) {
+			var id = mentions[i];
+			mentionsElement.append(getUserLink(id).addClass('mention').text('@'+mapping[id]));
+		}
+
 		return $('<p>').addClass('message').append(
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
 			$('<span>').addClass('text').append(msg),
-			$('<span>').addClass('mentions').append(mentions.join()));
+			$('<span>').addClass('mentions').append(mentionsElement));
 	}
 }
 

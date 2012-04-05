@@ -71,13 +71,15 @@ p.message > span.mentions {
 	float: right;
 }
 
-a.mention {
-	color:dimgrey;
-	font-weight:bold;
+div.message-mentions > a.mention {
+	color: dimgrey;
+	font-weight: bold;
+	font-size: 75%;
 }
 
-a.mention:hover {
-	text-decoration:none;
-	color:darkgrey;
-	font-weight:bold;
+div.message-mentions > a.mention:hover {
+	text-decoration: none;
+	color: darkgrey;
+	font-weight: bold;
+	font-size: 75%;
 }
