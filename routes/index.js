@@ -92,6 +92,7 @@ exports.chatroom = function(req, res) {
 						for (var i = 0; i < sessionRooms.length; i++) {
 							rooms = helper.prependRoom(sessionRooms[i], rooms);
 						}
+						req.session.rooms = null;
 					// logging in from /chat, first time
 					} else {
 						rooms = sessionRooms;

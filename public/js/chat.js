@@ -100,6 +100,8 @@ function renderChatlogs (logs, mapping, title) {
 	$('.chat-header .loading').addClass('hidden');
 
 	$('.chat-title h2').text(title);
+	History.pushState(null, null, strip(title));
+
 	clear();
 }
 
@@ -181,7 +183,6 @@ $(document).ready(function () {
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
 			current = $(this).text();
-			History.pushState(null, null, strip(current));
 			
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
