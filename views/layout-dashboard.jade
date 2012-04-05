@@ -6,6 +6,7 @@ html(lang='en')
 
   body!= body
 
+  include includes/footer
   script
     if (Modernizr.history) {
       history.pushState("", document.title, window.location.pathname + window.location.search);
@@ -14,8 +15,6 @@ html(lang='en')
     }
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
-
-  include includes/footer
   script(src='/js/geo.js')
   script(src='/js/dashboard.js')
   script(src='/js/libs/bootstrap/alert.js')
