@@ -355,41 +355,44 @@ io.sockets.on('connection', function (socket) {
 					var allMentions = [];
 					var added = 0;
 					for (var i = 0; i < chatlog.length; i++) {
-						var mid = chatlog[i];
-						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
-							added++;
-							if (!err){
-								var timestamp = message[0];
-								var fromUid = message[1];
-								var text = message[2];
-								var mentions = message[3]; // turn into array later
+						function closure() {
+							var mid = chatlog[i];
+							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
+								added++;
+								if (!err){
+									var timestamp = message[0];
+									var fromUid = message[1];
+									var text = message[2];
+									var mentions = message[3]; // turn into array later
 
-								if (mentions) {
-									mentions = mentions.split();
+									if (mentions) {
+										mentions = mentions.split();
+									} else {
+										mentions = [];
+									}
+
+									allMentions = allMentions.concat(mentions, fromUid);
+								
+									var entry = {
+										'from'		: fromUid,
+										'to'		: room,
+										'text'		: text,
+										'mentions'	: mentions,
+										'id'		: mid,
+									};
+									logs[timestamp] = entry;
 								} else {
-									mentions = [];
+									error(err, socket);
 								}
-
-								allMentions = allMentions.concat(mentions, fromUid);
-							
-								var entry = {
-									'from'		: fromUid,
-									'to'		: room,
-									'text'		: text,
-									'mentions'	: mentions,
-									'id'		: mid,
-								};
-								logs[timestamp] = entry;
-							} else {
-								error(err, socket);
-							}
-							
-							if (added == chatlog.length) {
-								getUsers(allMentions, function(mapping) {
-									callback(logs, mapping, title);
-								});
-							}
-						});
+								
+								if (added == chatlog.length) {
+									getUsers(allMentions, function(mapping) {
+										callback(logs, mapping, title);
+									});
+								}
+							});
+						}
+						closure();
 					}
 				});
 			} else {

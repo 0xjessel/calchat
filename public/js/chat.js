@@ -131,9 +131,7 @@ function renderChatMessage(entry, mapping) {
 	var fromUid = entry.from;
 	var msg = entry.text;
 	var mentions = entry.mentions;
-	var id = entry.id;
-
-	console.log(mentions);
+	var mid = entry.id;
 
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
@@ -146,13 +144,13 @@ function renderChatMessage(entry, mapping) {
 	if (from == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
-		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+id);
+		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+mid);
 
 		var totalWidth = 0;
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
 
-			var element = $('<span>').addClass('mention').attr('id', id).append(getUserLink(id).addClass('mention').text('@'+mapping[id]+' '));
+			var element = $('<span>').addClass('mention').attr('id', id).append(getUserLink(id).addClass('mention').text(' @'+mapping[id]+' '));
 
 			totalWidth += $('#'+id).outerWidth();
 			if (i == 0) {
@@ -165,7 +163,11 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
-			$('<span>').addClass('text').append(msg).attr('id', 'text'+id),
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).mouseenter(function() {
+				$('#mentions'+mid).stop().fadeOut();
+			}).mouseleave(function() {
+				$('#mentions'+mid).stop().show();
+			}),
 			$('<span>').addClass('mentions').append(mentionsElement));
 
 		return element;
