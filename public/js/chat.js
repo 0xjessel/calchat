@@ -152,6 +152,10 @@ function getUsers(room, filter, limit, callback) {
 	socket.emit('get users', current, filter, limit, callback);
 }
 
+function strip(string) {
+	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+}
+
 // dom manipulation
 $(document).ready(function () {
 	$('.chat-title h2').text('Loading...');
@@ -174,8 +178,8 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
-			$('.chat-title h2').text('Loading...');
-
+			history.pushState(null, null, strip($(this).text()));
+			
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();

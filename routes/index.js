@@ -56,14 +56,7 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
-		res.render('chat', { 
-			title: 'CalChat - Chat', 
-			layout: 'layout-chat',
-			loggedIn: req.loggedIn,
-			showChatTab: true,
-			rooms: rooms,
-			index: 2
-		});
+		res.redirect('/chat/'+rooms[0]);
 	} else {
 		// error: guest did not add any chats yet
 		return res.redirect('/?error=1');
@@ -115,6 +108,7 @@ exports.chatroom = function(req, res) {
 					rooms: req.session.rooms,
 					index: 2
 				});
+				return;
 			}
 		} else {
 			// error: invalid chatroom
@@ -147,6 +141,9 @@ exports.archives = function(req, res) {
 					today: new Date().toDateString(),
 					index: 3 //wtf should this be
 				});
+			} else {
+				console.log('archives failed to get pretty title');
+				res.redirect('home');
 			}
 		});
 	});
