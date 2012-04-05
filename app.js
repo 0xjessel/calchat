@@ -231,7 +231,7 @@ io.sockets.on('connection', function (socket) {
 			}
 		}
 
-		helper.getPrettyTitle(current, function(title) {
+		helper.getAbbreviatedTitle(current, function(title) {
 			if (uid != null && nick != null) {
 				socket.nickname = nick;
 				socket.set('uid', uid);
@@ -340,7 +340,7 @@ io.sockets.on('connection', function (socket) {
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (!err) {
-				helper.getPrettyTitle(room, function(title) {
+				helper.getAbbreviatedTitle(room, function(title) {
 					if (chatlog.length == 0) {
 						callback({}, {}, title);
 						return;
@@ -562,7 +562,7 @@ io.sockets.on('connection', function (socket) {
 								client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
 									var department = course[0];
 									var number = course[1];
-									helper.getPrettyTitle(helper.strip(department+number), function(pretty) {
+									helper.getAbbreviatedTitle(helper.strip(department+number), function(pretty) {
 										added++;
 										if (!err) {
 											courses[id] = {

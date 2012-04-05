@@ -118,7 +118,10 @@ function renderChatMessage(fromUid, msg, mentions, mapping) {
 
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
-			mentionsElement.append(getUserLink(id).addClass('mention').text('@'+mapping[id]));
+			// for (var i = 0; i < 4; i++) {
+			// 	mentionsElement.append($('<div>').addClass('mention-first').append(getUserLink(id).addClass('mention').text('@'+mapping[id])));
+			// };
+				// mentionsElement.append($('<div>').addClass('mention').append(getUserLink(id).addClass('mention').text('@'+mapping[id])));
 		}
 
 		return $('<p>').addClass('message').append(

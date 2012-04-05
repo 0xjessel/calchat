@@ -65,39 +65,38 @@ exports.chat = function(req, res) {
 
 exports.chatroom = function(req, res) {
 	var room = req.params.room;
-	room = helper.strip(room);
-	
+
 	room = sanitize(room).xss();
 	room = sanitize(room).entityEncode();
 	
-	helper.isValid(room, function(valid, suggestion) {
-		if (valid) {		
+	helper.isValid(room, function(valid, rawId) {
+		if (valid) {
 			if (req.loggedIn) {
 				var rooms = null;
 				if (!req.user.chatrooms) {
 					// first time, set rooms to be a new array with just the room
-					rooms = [room];
+					rooms = [rawId];
 				} else {
 					// convert string to array
-					rooms = helper.prependRoom(room, req.user.chatrooms.split(','));
+					rooms = helper.prependRoom(rawId, req.user.chatrooms.split(','));
 				} 
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
-					res.render('chat', { 
-						title: 'CalChat - Chat', 
+					res.render('chat', {
+						title: 'CalChat - Chat',
 						layout: 'layout-chat',
 						loggedIn: req.loggedIn,
 						showChatTab: true,
 						rooms: rooms,
-						index: 2
+						index: 2,
 					});
 				});
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					req.session.rooms = helper.prependRoom(room, req.session.rooms);
+					req.session.rooms = helper.prependRoom(rawId, req.session.rooms);
 				} else {
-					req.session.rooms = [room];
+					req.session.rooms = [rawId];
 				}
 				res.render('chat', { 
 					title: 'CalChat - Chat', 
@@ -111,14 +110,10 @@ exports.chatroom = function(req, res) {
 			}
 		} else {
 			// error: invalid chatroom
-			if (suggestion) {
-				return res.redirect('/chat/'+suggestion);
+			if (req.loggedIn) {
+				return res.redirect('/dashboard?invalid='+room);
 			} else {
-				if (req.loggedIn) {
-					return res.redirect('/dashboard?invalid='+room);
-				} else {
-					return res.redirect('/?error=2');
-				}
+				return res.redirect('/?error=2');
 			}
 		}
 	});
@@ -127,16 +122,16 @@ exports.chatroom = function(req, res) {
 exports.archives = function(req, res) {
 	var room = req.params.room;
 	// hgetall class:_rawid_, db 0
-	helper.isValid(room, function(valid, suggestion) {
-		helper.getPrettyTitle(suggestion, function(pretty, err) {
-			if (!err) {
-				room = pretty;
-				res.render('archives', { 
-					title: 'CalChat - '+room+' Archives', 
+	helper.isValid(room, function(valid, rawId) {
+		helper.getAbbreviatedTitle(rawId, function(pretty) {
+			if (pretty) {
+				res.render('archives', {
+					title: 'CalChat - '+pretty+' Archives',
 					layout: 'layout-archives',
 					loggedIn: req.loggedIn,
 					showChatTab: true,
-					room: room,
+					room: rawId,
+					title: pretty,
 					today: new Date().toDateString(),
 					index: 3 //wtf should this be
 				});

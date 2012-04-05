@@ -6,31 +6,36 @@ var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
 
 
-function getPrettyTitle(room, callback) {
-	isValid(room, function(valid, suggestion) {
+function getAbbreviatedTitle(room, callback) {
+	isValid(room, function(valid, rawId) {
 		if (valid) {
-			client0.hgetall('class:'+room, function(err, reply) {
+			room = rawId;
+			client0.hgetall('class:'+rawId, function(err, reply) {
 				if (!err && Object.keys(reply).length) {
 					var department = reply.department;
 					var number = reply.number;
 					client1.hget('abbreviations', strip(department), function(err, abbreviation) {
 						if (!err && abbreviation) {
-							callback(abbreviation + ' ' + number, err);
+							// for example, ELENG40 -> EE 40
+							callback(abbreviation + ' ' + number);
 						} else {
-							callback(department + ' ' + number, err);
+							// for example, ANTHRO1 -> ANTHRO 1
+							callback(department + ' ' + number);
 						}
 					});
 				} else {
-					callback(room, false);
+					// for example, CALCHAT
+					callback(room);
 				}
 			});
 		} else {
-			callback(room, false);
+			// for example, POOL
+			callback(null);
 		}
 	});
 }
 
-function getPrettyTitles(rooms, callback) {
+function getAbbreviatedTitles(rooms, callback) {
 	if (!rooms.length) {
 		callback([]);
 	}
@@ -39,7 +44,7 @@ function getPrettyTitles(rooms, callback) {
 	var titles = [];
 	for (var i = 0; i < rooms.length; i++) {
 		var room = rooms[i];
-		getPrettyTitle(room, function(title) {
+		getAbbreviatedTitle(room, function(title) {
 			added++;
 
 			titles.push({
@@ -70,15 +75,17 @@ function prependRoom(room, rooms) {
 	return rooms;
 }
 
-// query db to see if room is valid
-// returns true if its the raw id, else false and a suggestion
+// return true if any form of room is valid
+// return false if room cannot possibly be valid
+// if true, then you must use rawId, which contains the raw id
 function isValid(room, callback) {
 	if (!room) {
 		callback(false);
 		return;
 	} else {
-		room = room.toUpperCase();
+		room = strip(room);
 
+		// CALCHAT is a special case
 		if (room == 'CALCHAT') {
 			callback(true, room);
 			return;
@@ -93,14 +100,27 @@ function isValid(room, callback) {
 			}
 			return hash;
 		}
+
+		// try to find room in the database
 		var score = stringScore(room);
 		client0.zrangebyscore('courses', score, score, 'limit', 0, 1, function(err, courses) {
-			var valid = !err && courses.length && courses[0].charAt(courses[0].length - 1) != '#';
-			var suggestion = room;
-			if (!valid && courses.length) {
-				suggestion = courses[0].substring(0, courses[0].length-1);
+			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
+			var valid = !err && courses.length;
+			if (valid) {
+				// set suggestion to the RAW ID (sometimes followed by # if the input room was an abbreviation)
+				var suggestion = courses[0];
+
+				// remove # at the end
+				if (suggestion.charAt(suggestion.length - 1) == '#') {
+					suggestion = suggestion.substring(0, suggestion.length - 1);
+				}
+
+				// suggestion will always be the RAW ID
+				callback(true, suggestion);
+			} else {
+				// not valid
+				callback(false);
 			}
-			callback(valid, suggestion);
 		});
 	}
 }
@@ -110,8 +130,8 @@ function strip(string) {
 }
 
 
-exports.getPrettyTitle = getPrettyTitle;
-exports.getPrettyTitles = getPrettyTitles;
+exports.getAbbreviatedTitle = getAbbreviatedTitle;
+exports.getAbbreviatedTitles = getAbbreviatedTitles;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
 exports.strip = strip;
