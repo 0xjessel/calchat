@@ -45,7 +45,7 @@ everyauth.facebook
 .scope('email, user_about_me, read_friendlists')
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
-	var timeStamp = new Date();
+	var timeStamp = new Date().getTime();
 	client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 		if (err == null) { // no errors
 			if (Object.keys(reply).length == 0) { 
