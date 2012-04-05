@@ -120,6 +120,7 @@ var io = sio.listen(app);
 var nicknames = {};
 
 io.sockets.on('connection', function (socket) {
+	helper.debug('connect');
 	// msgs: list of messages to parse for ids. uids: list of ids to include
     function getMentions(msgs, uids) {
         var ids = {};
@@ -154,6 +155,7 @@ io.sockets.on('connection', function (socket) {
     }
     
     function getUsers(ids, callback) {
+		helper.debug('getUsers');
     	if (!ids) {
     		callback({});
     	}
@@ -203,7 +205,7 @@ io.sockets.on('connection', function (socket) {
 	
 	function error(err, socket) {
 		socket.emit('error', err);
-		console.log('Error: '+err);
+		helper.debug('Error: '+err);
 	}
 
 	function stringScore(string) {
@@ -229,6 +231,7 @@ io.sockets.on('connection', function (socket) {
 	}
 	
 	socket.on('initialize', function(uid, nick, rooms, current, callback) {
+		helper.debug('initialize');
 		function joinRooms(rooms) {
 			for (var i = 0; i < rooms.length; i++) {
 				var room = rooms[i];
@@ -289,6 +292,7 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('leave room', function (room, callback) {
+		helper.debug('leave room');
 		socket.get('uid', function (err, uid) {
 			if (!err){
 				delete nicknames[room][uid];
@@ -325,6 +329,7 @@ io.sockets.on('connection', function (socket) {
 	
 	// remove room from the dashboard
 	socket.on('remove room', function (uid, room) {
+		helper.debug('remove room');
 		// remove room from user's list of chatrooms
 		client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
 			if (!err) {
@@ -343,6 +348,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(room, callback) {
+		helper.debug('get chatlog');
 		room = helper.strip(room);
 
 		// get last 30 messages
@@ -407,6 +413,7 @@ io.sockets.on('connection', function (socket) {
 
 	// emit online users as well as update user's chatroom list
 	socket.on('get online', function (room) {
+		helper.debug('get online');
 		socket.get('uid', function(err, uid) {
 			if (uid != null) {
 				// make this chatroom most recent in user's list
@@ -431,6 +438,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('message', function (room, msg, mentions) {
+		helper.debug('message');
 		var text = msg;
 		text = sanitize(text).xss();
 		text = sanitize(text).entityEncode();
@@ -486,6 +494,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('get nearest buildings', function (lat, lng, num, callback) {
+		helper.debug('get nearest buildings');
 		client0.hgetall("location:all", function (err, replies) {
 			if (!err) {
 				var locations = new Array(replies.length);
@@ -534,6 +543,7 @@ io.sockets.on('connection', function (socket) {
 	});
     
 	socket.on('get users', function(room, filter, limit, callback) {
+		helper.debug('get users');
 		client2.zrangebyscore('users:'+room, stringScore(filter), capStringScore(filter), 'limit', 0, limit, function(err, ids) {
 			if (!err) {
 				getUsers(ids, function(users) {
@@ -556,6 +566,7 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get courses', function(query, limit, callback) {		
+		helper.debug('get courses');
 		query = helper.strip(query);
 		
 		if (!query || !limit) {
@@ -617,6 +628,7 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('disconnect', function () {
+		helper.debug('disconnect');
 		if (!socket.nickname) return;
         
 		socket.get('uid', function (err, uid) {

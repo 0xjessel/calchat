@@ -11,7 +11,12 @@ for (var i = 0; i < rooms.length; i++) {
 }
 var History = window.History;
 
+function debug(msg) {
+	console.log(msg);
+}
+
 socket.on('connect', function () {
+	debug('connect');
 	// join all rooms, set uid and nick, get chatlog
 	var roomIds = [];
 	for (var i = 0; i < rooms.length; i++) {
@@ -23,6 +28,7 @@ socket.on('connect', function () {
 });
 
 socket.on('announcement', function (to, msg) {
+	debug('announcement');
 	if (to == current.id) {
 		message({
 			'from'	: 'System',
@@ -35,7 +41,8 @@ socket.on('announcement', function (to, msg) {
 });
 
 socket.on('online', function(room, nicknames) {
-	if (room == current.id) {        
+	debug('online');
+	if (room == current.id) {
 		// empty out sidebar, repopulate with online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
@@ -50,9 +57,8 @@ socket.on('online', function(room, nicknames) {
 	}
 });
 
-socket.on('message', message);
-
 socket.on('reconnect', function () {
+	debug('reconnect');
 	$('#lines').empty();
 	message({
 		'from'	: 'System',
@@ -63,6 +69,7 @@ socket.on('reconnect', function () {
 });
 
 socket.on('reconnecting', function () {
+	debug('reconnecting');
 	message({
 		'from'	: 'System',
 		'to'	: current.id,
@@ -72,6 +79,7 @@ socket.on('reconnecting', function () {
 });
 
 socket.on('error', function (e) {
+	debug('Error: '+e);
 	message({
 		'from'	: 'System',
 		'to'	: current.id,
@@ -79,7 +87,9 @@ socket.on('error', function (e) {
 	});
 });
 
+socket.on('message', message);
 function message (entry, mapping) {
+	debug('message');
 	if (entry.to == current.id) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(entry, mapping);
@@ -100,6 +110,7 @@ function message (entry, mapping) {
 }
 
 function renderChatlogs (logs, mapping, title) {
+	debug('renderChatlogs');
 	for (timestamp in logs) {
 		// not showing timestamp for now
 

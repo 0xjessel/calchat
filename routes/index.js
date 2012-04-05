@@ -14,6 +14,7 @@ client2.select(2);
 * GET home page.
 */
 exports.index = function(req, res) {
+	helper.debug('index');
 	res.render('index', { 
 		title: 'CalChat - Connecting Students On Campus', 
 		layout: 'layout-index', 
@@ -24,6 +25,7 @@ exports.index = function(req, res) {
 };
 
 exports.dashboard = function(req, res) {
+	helper.debug('dashboard');
 	if (req.loggedIn) {
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
@@ -45,6 +47,7 @@ exports.dashboard = function(req, res) {
 };
 
 exports.chat = function(req, res) {
+	helper.debug('chat');
 	if (req.loggedIn) {		
 		if (req.user.chatrooms === '') {
 			// redirect to dashboard to add some classes to favorites or select a class
@@ -66,6 +69,7 @@ exports.chat = function(req, res) {
 };
 
 exports.chatroom = function(req, res) {
+	helper.debug('chatroom');
 	var room = req.params.room;
 
 	room = sanitize(room).xss();
@@ -147,6 +151,7 @@ exports.chatroom = function(req, res) {
 }
 
 exports.archives = function(req, res) {
+	helper.debug('archives');
 	var room = req.params.room;
 
 	helper.isValid(room, function(valid, rawId) {
@@ -171,6 +176,7 @@ exports.archives = function(req, res) {
 }
 
 exports.authenticate = function (req, res, next) {
+	helper.debug('authenticate');
 	var room = req.params.room;
 	helper.isValid(room, function(valid, rawId) {
 		if (valid) {
@@ -184,5 +190,6 @@ exports.authenticate = function (req, res, next) {
 }
 
 exports.invalid = function(req, res) {
+	helper.debug('invalid');
 	res.send('Error: Page Not Found', 404);
 }

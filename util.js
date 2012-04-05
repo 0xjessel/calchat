@@ -7,6 +7,7 @@ client1.select(1);
 
 
 function getAbbreviatedTitle(room, callback) {
+	debug('getAbbreviatedTitle');
 	isValid(room, function(valid, rawId) {
 		if (valid) {
 			room = rawId;
@@ -36,6 +37,7 @@ function getAbbreviatedTitle(room, callback) {
 }
 
 function getAbbreviatedTitles(rooms, callback) {
+	debug('getAbbreviatedTitles');
 	if (!rooms.length) {
 		callback([]);
 	}
@@ -82,6 +84,7 @@ function prependRoom(room, rooms) {
 // return false if room cannot possibly be valid
 // if true, then you must use rawId, which contains the raw id
 function isValid(room, callback) {
+	debug('isValid');
 	if (!room) {
 		callback(false);
 		return;
@@ -132,9 +135,14 @@ function strip(string) {
 	return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
 
+function debug(msg) {
+	console.log(msg);
+}
+
 
 exports.getAbbreviatedTitle = getAbbreviatedTitle;
 exports.getAbbreviatedTitles = getAbbreviatedTitles;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
 exports.strip = strip;
+exports.debug = debug;
