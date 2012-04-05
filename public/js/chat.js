@@ -58,11 +58,10 @@ socket.on('error', function (e) {
 	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
-function message (to, from, msg, mentions) {   
-	console.log(mentions);
+function message (to, from, msg, mentions, mapping) {
 	if (to == current) {
 		// append incoming msg to the current room
-		var element = renderChatMessage(from, msg, mentions);
+		var element = renderChatMessage(from, msg, mentions, mapping);
 		$('#lines').append(element);
 
 		scrollToBottom();
@@ -200,7 +199,7 @@ $(document).ready(function () {
 
 	$('#send-message').submit(function () {
 		// TODO: since we are sending the message to the server and waiting for the reply
-		//       we should display some kind of 'Sending…' text
+		//       we should display some kind of 'Sending...' text
 		if ($('#message').val()) {
 			socket.emit('message', current, $('#message').val(), Object.keys($('#message').data('mentions')));
 			clear();

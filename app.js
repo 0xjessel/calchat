@@ -341,7 +341,6 @@ io.sockets.on('connection', function (socket) {
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (!err) {
 				helper.getPrettyTitle(room, function(title) {
-					console.log('test: ' + chatlog.length);
 					if (chatlog.length == 0) {
 						callback({}, {}, title);
 						return;
@@ -426,9 +425,9 @@ io.sockets.on('connection', function (socket) {
 					temp[mentions[i]] = null;
 				};
 				mentions = Object.keys(temp);
-			
+
 				getUsers(mentions.concat(uid), function(mapping) {
-					io.sockets.in(room).emit('message', room, uid, text, mapping);
+					io.sockets.in(room).emit('message', room, uid, text, mentions, mapping);
 				});
 				
 				client2.incr('message:id:next', function(err, mid) {
