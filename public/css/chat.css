@@ -67,16 +67,16 @@ p.message a.from:hover {
 	font-weight:bold;
 }
 
+p.message {
+	position: relative;
+}
 p.message > span.mentions {
-	float: right;
+	position: absolute;
+	right: 10px;
 }
 
 div.message-mentions {
-	position: relative;
-}
-
-div.message-mentions div.mention {
-	position: absolute;
+	/*visibility: hidden;*/
 }
 
 div.message-mentions a.mention {

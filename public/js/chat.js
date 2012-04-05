@@ -11,8 +11,6 @@ for (var i = 0; i < rooms.length; i++) {
 }
 var History = window.History;
 
-console.log(rooms);
-
 socket.on('connect', function () {
 	// join all rooms, set uid and nick, get chatlog
 	var roomIds = [];
@@ -26,7 +24,11 @@ socket.on('connect', function () {
 
 socket.on('announcement', function (to, msg) {
 	if (to == current.id) {
-		message(current.id, 'System', msg);
+		message({
+			'from'	: 'System',
+			'to'	: current.id,
+			'text'	: msg,
+		});
 		
 		scrollToBottom();
 	}
@@ -52,25 +54,35 @@ socket.on('message', message);
 
 socket.on('reconnect', function () {
 	$('#lines').empty();
-	message(current.id, 'System', 'Reconnected to the server');
-	// $('#message').prop('disabled', false);
+	message({
+		'from'	: 'System',
+		'to'	: current.id,
+		'text'	: 'Reconnected to the server',
+	});
 	$('.chat-header .loading').addClass('hidden');
 });
 
 socket.on('reconnecting', function () {
-	message(current.id, 'System', 'Attempting to re-connect to the server');
-	// $('#message').prop('disabled', true);
+	message({
+		'from'	: 'System',
+		'to'	: current.id,
+		'text'	: 'Attempting to re-connect to the server',
+	});
 	$('.chat-header .loading').removeClass('hidden');
 });
 
 socket.on('error', function (e) {
-	message(current.id, 'System', e ? e : 'A unknown error occurred');
+	message({
+		'from'	: 'System',
+		'to'	: current.id,
+		'text'	: e ? e : 'A unknown error occurred',
+	});
 });
 
-function message (to, from, msg, mentions, mapping) {
-	if (to == current.id) {
+function message (entry, mapping) {
+	if (entry.to == current.id) {
 		// append incoming msg to the current room
-		var element = renderChatMessage(from, msg, mentions, mapping);
+		var element = renderChatMessage(entry, mapping);
 		$('#lines').append(element);
 
 		scrollToBottom();
@@ -93,11 +105,9 @@ function renderChatlogs (logs, mapping, title) {
 
 		var entry = logs[timestamp];
 		
-		var from = entry.from;
 		var text = entry.text;
-		var mentions = entry.mentions;
 
-		var element = renderChatMessage(from, text, mentions, mapping);
+		var element = renderChatMessage(entry, mapping);
 		$('#lines').append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
@@ -112,13 +122,17 @@ function renderChatlogs (logs, mapping, title) {
 	History.pushState(null, null, strip(title));
 
 	$('#archives').attr('href', '/chat/'+strip(title)+'/archives');
-	console.log(document.URL);
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
 	clear();
 }
 
-function renderChatMessage(fromUid, msg, mentions, mapping) {
+function renderChatMessage(entry, mapping) {
+	var fromUid = entry.from;
+	var msg = entry.text;
+	var mentions = entry.mentions;
+	var id = entry.id;
+
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
@@ -130,20 +144,29 @@ function renderChatMessage(fromUid, msg, mentions, mapping) {
 	if (from == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
-		var mentionsElement = $('<div>').addClass('message-mentions');
+		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+id);
 
+		var totalWidth = 0;
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
-			// for (var i = 0; i < 4; i++) {
-			// 	mentionsElement.append($('<div>').addClass('mention-first').append(getUserLink(id).addClass('mention').text('@'+mapping[id])));
-			// };
-				// mentionsElement.append($('<div>').addClass('mention').append(getUserLink(id).addClass('mention').text('@'+mapping[id])));
+
+			var element = $('<span>').addClass('mention').attr('id', id).append(getUserLink(id).addClass('mention').text('@'+mapping[id]+' '));
+
+			totalWidth += $('#'+id).outerWidth();
+			if (i == 0) {
+				element.addClass('first');
+			}
+
+			mentionsElement.append(element);
 		}
 
-		return $('<p>').addClass('message').append(
+
+		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
 			$('<span>').addClass('text').append(msg),
 			$('<span>').addClass('mentions').append(mentionsElement));
+
+		return element;
 	}
 }
 

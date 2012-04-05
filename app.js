@@ -374,8 +374,10 @@ io.sockets.on('connection', function (socket) {
 							
 								var entry = {
 									'from'		: fromUid,
+									'to'		: room,
 									'text'		: text,
 									'mentions'	: mentions,
+									'id'		: mid,
 								};
 								logs[timestamp] = entry;
 							} else {
@@ -436,11 +438,19 @@ io.sockets.on('connection', function (socket) {
 				};
 				mentions = Object.keys(temp);
 
-				getUsers(mentions.concat(uid), function(mapping) {
-					io.sockets.in(room).emit('message', room, uid, text, mentions, mapping);
-				});
-				
 				client2.incr('message:id:next', function(err, mid) {
+					getUsers(mentions.concat(uid), function(mapping) {
+						var entry = {
+							'from'		: uid,
+							'to'		: room,
+							'text'		: text,
+							'mentions'	: mentions.join(),
+							'id'		: mid,
+						};
+
+						io.sockets.in(room).emit('message', entry, mapping);
+					});
+				
 					if (!err) {
 						client2.hmset('message:'+mid, {
 							'from'		: uid,
