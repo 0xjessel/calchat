@@ -8,7 +8,7 @@ $(document).ready(function () {
 	} else {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
-			var room = rooms[i];
+			var room = rooms[i].title;
 			chatroomsList.append('<li><a href="/chat/'+room+'">'+room+'<span id="'+room+'" class="close close-chat">x</span></a></li>');
 		}
 	}

@@ -94,7 +94,9 @@ exports.chatroom = function(req, res) {
 					req.session.redirectPath = undefined;
 					// logging in from /chat, not first time
 					if (userChatrooms) {
+						sessionRooms.reverse();
 						roomIds = userChatrooms.split(',');
+						console.log(sessionRooms);
 						for (var i = 0; i < sessionRooms.length; i++) {
 							roomIds = helper.prependRoom(sessionRooms[i], roomIds);
 						}
