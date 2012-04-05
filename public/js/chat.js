@@ -9,6 +9,7 @@ var unread = {};
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i]] = 0;
 }
+var History = window.History;
 
 socket.on('connect', function () {
 	// join all rooms, set uid and nick, get chatlog
@@ -156,11 +157,11 @@ function strip(string) {
 
 // dom manipulation
 $(document).ready(function () {
+	chatDiv = $('#chat');
 	$('.chat-title h2').text('Loading...');
-
+	$('#login').attr('href', '/authenticate/'+current);
 	$('#message').data('mentions', {});
 
-	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar
 	var roomsNav = $('#chats');
@@ -176,7 +177,8 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).text() != current) {
-			history.pushState(null, null, strip($(this).text()));
+			current = $(this).text();
+			History.pushState(null, null, strip(current));
 			
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
@@ -186,9 +188,9 @@ $(document).ready(function () {
 			$('#chats .active').removeClass('active');
 			$(this).parent().addClass('active');
 
-			current = $(this).text();
 			
 			$('#message').prop('disabled', true);
+			$('#login').attr('href', '/authenticate/'+current);
 
 			socket.emit('get chatlog', current, renderChatlogs);
 			socket.emit('get online', current);			

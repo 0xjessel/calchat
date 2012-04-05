@@ -73,14 +73,36 @@ exports.chatroom = function(req, res) {
 	helper.isValid(room, function(valid, suggestion) {
 		if (valid) {		
 			if (req.loggedIn) {
+				var sessionRooms = req.session.rooms;
+				var userChatrooms = req.user.chatrooms;
 				var rooms = null;
-				if (!req.user.chatrooms) {
-					// first time, set rooms to be a new array with just the room
-					rooms = [room];
+				console.log(sessionRooms);
+				console.log(userChatrooms);
+
+				if (!sessionRooms) {
+					// logging in from /, not first time
+					if (userChatrooms) {
+						rooms = helper.prependRoom(room, userChatrooms.split(','));
+					// logging in from /, first time
+					} else {
+						rooms = [room];
+					}
 				} else {
-					// convert string to array
-					rooms = helper.prependRoom(room, req.user.chatrooms.split(','));
-				} 
+					req.session.redirectPath = undefined;
+					// logging in from /chat, not first time
+					if (userChatrooms) {
+						rooms = userChatrooms.split(',');
+						for (var i = 0; i < sessionRooms.length; i++) {
+							rooms = helper.prependRoom(sessionRooms[i], rooms);
+						}
+					// logging in from /chat, first time
+					} else {
+						rooms = sessionRooms;
+					}
+
+				}
+				console.log(rooms);
+
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
 					res.render('chat', { 
@@ -99,6 +121,7 @@ exports.chatroom = function(req, res) {
 				} else {
 					req.session.rooms = [room];
 				}
+				req.session.redirectPath = '/chat/'+req.session.rooms[0];
 				res.render('chat', { 
 					title: 'CalChat - Chat', 
 					layout: 'layout-chat',
@@ -126,7 +149,6 @@ exports.chatroom = function(req, res) {
 
 exports.archives = function(req, res) {
 	var room = req.params.room;
-	// hgetall class:_rawid_, db 0
 	helper.isValid(room, function(valid, suggestion) {
 		helper.getPrettyTitle(suggestion, function(pretty, err) {
 			if (!err) {
@@ -145,6 +167,19 @@ exports.archives = function(req, res) {
 				res.redirect('home');
 			}
 		});
+	});
+}
+
+exports.authenticate = function (req, res, next) {
+	var room = req.params.room;
+	helper.isValid(room, function(valid, suggestion) {
+		if (valid) {
+			// mark says to always use suggestion..
+			req.session.redirectPath = '/chat/'+suggestion;
+			return res.redirect('/auth/facebook');
+		} else {
+			next();
+		}
 	});
 }
 

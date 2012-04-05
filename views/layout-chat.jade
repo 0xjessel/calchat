@@ -9,6 +9,11 @@ html(lang='en')
   include includes/footer  
   script(src='/js/libs/bootstrap/tooltip.js')
   script(src='/js/libs/jquery.history.js')
+  script 
+    if (window.location.hash) {
+      window.location.hash = '';
+      window.History.replaceState(null, null, window.location.href.slice(0, -1));
+    }
   if loggedIn
     script
       var uid = #{user.id};
