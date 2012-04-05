@@ -26,15 +26,17 @@ exports.index = function(req, res) {
 exports.dashboard = function(req, res) {
 	if (req.loggedIn) {
 		// convert string to array
-		var rooms = req.user.chatrooms.split(',');
+		var roomIds = req.user.chatrooms.split(',');
 
-		res.render('dashboard', {
-			title: 'CalChat - Dashboard',
-			layout: 'layout-dashboard',
-			loggedIn: req.loggedIn,
-			showChatTab: true,
-			rooms: rooms,
-			index: 1
+		helper.getAbbreviatedTitles(roomIds, function(rooms) {
+			res.render('dashboard', {
+				title: 'CalChat - Dashboard',
+				layout: 'layout-dashboard',
+				loggedIn: req.loggedIn,
+				showChatTab: true,
+				rooms: rooms,
+				index: 1
+			});
 		});
 	} else {
 		// error: cannot access /dashboard if not logged in
@@ -74,41 +76,42 @@ exports.chatroom = function(req, res) {
 			if (req.loggedIn) {
 				var sessionRooms = req.session.rooms;
 				var userChatrooms = req.user.chatrooms;
-				var rooms = null;
+				var roomIds = null;
 
 				if (!sessionRooms) {
 					// logging in from /, not first time
 					if (userChatrooms) {
-						rooms = helper.prependRoom(rawId, userChatrooms.split(','));
+						roomIds = helper.prependRoom(rawId, userChatrooms.split(','));
 					// logging in from /, first time
 					} else {
-						rooms = [rawId];
+						roomIds = [rawId];
 					}
 				} else {
 					req.session.redirectPath = undefined;
 					// logging in from /chat, not first time
 					if (userChatrooms) {
-						rooms = userChatrooms.split(',');
+						roomIds = userChatrooms.split(',');
 						for (var i = 0; i < sessionRooms.length; i++) {
-							rooms = helper.prependRoom(sessionRooms[i], rooms);
+							roomIds = helper.prependRoom(sessionRooms[i], roomIds);
 						}
 						req.session.rooms = null;
 					// logging in from /chat, first time
 					} else {
-						rooms = sessionRooms;
+						roomIds = sessionRooms;
 					}
-
 				}
 
 				// convert array to string, update db
-				client2.hset('user:'+req.user.id, 'chatrooms', rooms.join(), function() {
-					res.render('chat', {
-						title: 'CalChat - Chat',
-						layout: 'layout-chat',
-						loggedIn: req.loggedIn,
-						showChatTab: true,
-						rooms: rooms,
-						index: 2,
+				client2.hset('user:'+req.user.id, 'chatrooms', roomIds.join(), function() {
+					helper.getAbbreviatedTitles(roomIds, function(rooms) {
+						res.render('chat', {
+							title: 'CalChat - Chat',
+							layout: 'layout-chat',
+							loggedIn: req.loggedIn,
+							showChatTab: true,
+							rooms: rooms,
+							index: 2,
+						});
 					});
 				});
 				return;
@@ -119,13 +122,16 @@ exports.chatroom = function(req, res) {
 					req.session.rooms = [rawId];
 				}
 				req.session.redirectPath = '/chat/'+req.session.rooms[0];
-				res.render('chat', { 
-					title: 'CalChat - Chat', 
-					layout: 'layout-chat',
-					loggedIn: req.loggedIn,
-					showChatTab: true,
-					rooms: req.session.rooms,
-					index: 2
+
+				helper.getAbbreviatedTitles(req.session.rooms, function(rooms) {
+					res.render('chat', { 
+						title: 'CalChat - Chat', 
+						layout: 'layout-chat',
+						loggedIn: req.loggedIn,
+						showChatTab: true,
+						rooms: rooms,
+						index: 2,
+					});
 				});
 				return;
 			}
@@ -166,10 +172,10 @@ exports.archives = function(req, res) {
 
 exports.authenticate = function (req, res, next) {
 	var room = req.params.room;
-	helper.isValid(room, function(valid, suggestion) {
+	helper.isValid(room, function(valid, rawId) {
 		if (valid) {
-			// mark says to always use suggestion..
-			req.session.redirectPath = '/chat/'+suggestion;
+			// mark says to always use rawId..
+			req.session.redirectPath = '/chat/'+room;
 			return res.redirect('/auth/facebook');
 		} else {
 			next();

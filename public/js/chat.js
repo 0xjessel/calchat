@@ -7,27 +7,33 @@ var chatDiv;
 var selfAnnounced = false;
 var unread = {};
 for (var i = 0; i < rooms.length; i++) {
-	unread[rooms[i]] = 0;
+	unread[rooms[i].id] = 0;
 }
 var History = window.History;
 
+console.log(rooms);
+
 socket.on('connect', function () {
 	// join all rooms, set uid and nick, get chatlog
-	socket.emit('initialize', uid, name, rooms, current, function(logs, mentions, title) {
+	var roomIds = [];
+	for (var i = 0; i < rooms.length; i++) {
+		roomIds.push(rooms[i].id);
+	};
+	socket.emit('initialize', uid, name, roomIds, current.id, function(logs, mentions, title) {
 		renderChatlogs(logs, mentions, title);
 	});
 });
 
 socket.on('announcement', function (to, msg) {
-	if (to == current) {
-		message(current, 'System', msg);
+	if (to == current.id) {
+		message(current.id, 'System', msg);
 		
 		scrollToBottom();
 	}
 });
 
 socket.on('online', function(room, nicknames) {
-	if (room == current) {        
+	if (room == current.id) {        
 		// empty out sidebar, repopulate with online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
@@ -46,23 +52,23 @@ socket.on('message', message);
 
 socket.on('reconnect', function () {
 	$('#lines').empty();
-	message(current, 'System', 'Reconnected to the server');
+	message(current.id, 'System', 'Reconnected to the server');
 	// $('#message').prop('disabled', false);
 	$('.chat-header .loading').addClass('hidden');
 });
 
 socket.on('reconnecting', function () {
-	message(current, 'System', 'Attempting to re-connect to the server');
+	message(current.id, 'System', 'Attempting to re-connect to the server');
 	// $('#message').prop('disabled', true);
 	$('.chat-header .loading').removeClass('hidden');
 });
 
 socket.on('error', function (e) {
-	message(current, 'System', e ? e : 'A unknown error occurred');
+	message(current.id, 'System', e ? e : 'A unknown error occurred');
 });
 
 function message (to, from, msg, mentions, mapping) {
-	if (to == current) {
+	if (to == current.id) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(from, msg, mentions, mapping);
 		$('#lines').append(element);
@@ -96,11 +102,18 @@ function renderChatlogs (logs, mapping, title) {
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
 	
-	$('#message').prop('disabled', false);
 	$('.chat-header .loading').addClass('hidden');
+	$('#message').prop('disabled', false);
+	$('#message').data('mentions', {});
+
+	$('#login').attr('href', '/authenticate/'+strip(title));
 
 	$('.chat-title h2').text(title);
 	History.pushState(null, null, strip(title));
+
+	$('#archives').attr('href', '/chat/'+strip(title)+'/archives');
+	console.log(document.URL);
+	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
 	clear();
 }
@@ -153,7 +166,7 @@ function scrollToBottom () {
 }
 
 function getUsers(room, filter, limit, callback) {
-	socket.emit('get users', current, filter, limit, callback);
+	socket.emit('get users', current.id, filter, limit, callback);
 }
 
 function strip(string) {
@@ -164,25 +177,25 @@ function strip(string) {
 $(document).ready(function () {
 	chatDiv = $('#chat');
 	$('.chat-title h2').text('Loading...');
-	$('#login').attr('href', '/authenticate/'+current);
-	$('#message').data('mentions', {});
-
 
 	// setup chats in left nav sidebar
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
+		var room = rooms[i];
+		var element = $('<li>');
 		if (i == 0) {
-			roomsNav.append('<li class="active"><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');	
-		} else {
-			roomsNav.append('<li><a href="javascript:void(0)" id="'+rooms[i]+'">'+rooms[i]+'</a></li>');
+			element.addClass('active');
 		}
+
+		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.title));
+		roomsNav.append(element);
 	}
 	
 	$('#chats .loading').addClass('hidden');
 
 	$('#chats a').click(function () {
-		if ($(this).text() != current) {
-			current = $(this).text();
+		if ($(this).data('room') != current) {
+			current = $(this).data('room');
 			
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
@@ -194,10 +207,9 @@ $(document).ready(function () {
 
 			
 			$('#message').prop('disabled', true);
-			$('#login').attr('href', '/authenticate/'+current);
 
-			socket.emit('get chatlog', current, renderChatlogs);
-			socket.emit('get online', current);			
+			socket.emit('get chatlog', current.id, renderChatlogs);
+			socket.emit('get online', current.id);			
 		}
 		return false;
 	});
@@ -206,7 +218,7 @@ $(document).ready(function () {
 		// TODO: since we are sending the message to the server and waiting for the reply
 		//       we should display some kind of 'Sending...' text
 		if ($('#message').val()) {
-			socket.emit('message', current, $('#message').val(), Object.keys($('#message').data('mentions')));
+			socket.emit('message', current.id, $('#message').val(), Object.keys($('#message').data('mentions')));
 			$('#message').data('mentions', {});
 			clear();
 			scrollToBottom();
@@ -240,7 +252,7 @@ $(document).ready(function () {
 				return;
 			}
 
-			getUsers(current, filter, limit, function(mapping, online, offline) {
+			getUsers(current.id, filter, limit, function(mapping, online, offline) {
 				online.sort();
 				offline.sort();
 				var ids = online.concat(offline);
@@ -302,9 +314,6 @@ $(document).ready(function () {
 		}
 	});
 
-	$('#archives').attr('href', '/chat/'+current+'/archives');
-	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL+'/'+current));
-
 	$('#close').click(function () {
 		// remove chatroom from sidebar
 		// load next chatroom in line
@@ -313,12 +322,12 @@ $(document).ready(function () {
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
 		$('#chats .active').remove();
-		var left = current;
+		var left = current.id;
 		
 		var next = $('#chats a:first')
 		if (next.length) {
 			next.parent().addClass('active');
-			current = next.text();
+			current = next.data('room');
 			$('.chat-title h2').text('Loading...');
 		}
 		
@@ -326,8 +335,8 @@ $(document).ready(function () {
 
 		socket.emit('leave room', left, function() {
 			if (next.length) {
-				socket.emit('get chatlog', current, renderChatlogs);
-				socket.emit('get online', current);
+				socket.emit('get chatlog', current.id, renderChatlogs);
+				socket.emit('get online', current.id);
 			}
 		});
 		

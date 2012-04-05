@@ -43,19 +43,22 @@ function getAbbreviatedTitles(rooms, callback) {
 	var added = 0;
 	var titles = [];
 	for (var i = 0; i < rooms.length; i++) {
-		var room = rooms[i];
-		getAbbreviatedTitle(room, function(title) {
-			added++;
+		function closure() {
+			var room = rooms[i];
+			getAbbreviatedTitle(room, function(title) {
+				added++;
 
-			titles.push({
-				id: room,
-				title: title,
+				titles.push({
+					id: room,
+					title: title,
+				});
+
+				if (added == rooms.length) {
+					callback(titles);
+				}
 			});
-
-			if (added == rooms.length) {
-				callback(titles);
-			}
-		});
+		}
+		closure();
 	};
 }
 
