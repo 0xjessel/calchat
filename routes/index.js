@@ -78,8 +78,6 @@ exports.chatroom = function(req, res) {
 	room = sanitize(room).entityEncode();
 	
 	helper.isValid(room, function(valid, suggestion) {
-		room = room.toUpperCase();
-		
 		if (valid) {		
 			if (req.loggedIn) {
 				// convert string to array
@@ -120,7 +118,6 @@ exports.chatroom = function(req, res) {
 			}
 		} else {
 			// error: invalid chatroom
-
 			if (suggestion) {
 				return res.redirect('/chat/'+suggestion);
 			} else {
@@ -138,17 +135,19 @@ exports.archives = function(req, res) {
 	var room = req.params.room;
 	// hgetall class:_rawid_, db 0
 	helper.isValid(room, function(valid, suggestion) {
-		helper.getPrettyTitle(suggestion, function(pretty) {
-			room = pretty;
-			res.render('archives', { 
-				title: 'CalChat - '+room+' Archives', 
-				layout: 'layout-archives',
-				loggedIn: req.loggedIn,
-				showChatTab: true,
-				room: room,
-				today: new Date().toDateString(),
-				index: 3 //wtf should this be
-			});
+		helper.getPrettyTitle(suggestion, function(pretty, err) {
+			if (!err) {
+				room = pretty;
+				res.render('archives', { 
+					title: 'CalChat - '+room+' Archives', 
+					layout: 'layout-archives',
+					loggedIn: req.loggedIn,
+					showChatTab: true,
+					room: room,
+					today: new Date().toDateString(),
+					index: 3 //wtf should this be
+				});
+			}
 		});
 	});
 }

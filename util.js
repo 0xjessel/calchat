@@ -15,17 +15,17 @@ function getPrettyTitle(room, callback) {
 					var number = reply.number;
 					client1.hget('abbreviations', strip(department), function(err, abbreviation) {
 						if (!err && abbreviation) {
-							callback(abbreviation + ' ' + number, 'abbreviation');
+							callback(abbreviation + ' ' + number, err);
 						} else {
-							callback(department + ' ' + number, 'no abbreviation');
+							callback(department + ' ' + number, err);
 						}
 					});
 				} else {
-					callback(room, 'err');
+					callback(room, false);
 				}
 			});
 		} else {
-			callback(room, 'invalid');
+			callback(room, false);
 		}
 	});
 }
@@ -71,6 +71,7 @@ function prependRoom(room, rooms) {
 }
 
 // query db to see if room is valid
+// returns true if its the raw id, else false and a suggestion
 function isValid(room, callback) {
 	if (!room) {
 		callback(false);
