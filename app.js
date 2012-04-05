@@ -35,6 +35,10 @@ everyauth.everymodule.findUserById(function (userId, callback) {
 	client2.hgetall('user:'+userId, callback);
 });
 
+everyauth.facebook.sendResponse(function(res, data) {
+	res.redirect(data.session.redirectPath || this.redirectPath());
+});
+
 everyauth.facebook
 .appId('297402036983700')
 .appSecret('aad4c11b1b2ccbad5ea5d3632cc5d920')
@@ -100,6 +104,7 @@ app.get('/dashboard', routes.dashboard);
 app.get('/chat', routes.chat);
 app.get('/chat/:room', routes.chatroom); 
 app.get('/chat/:room/archives', routes.archives);
+app.get('/authenticate/:room', routes.authenticate);
 app.get('*', routes.invalid);
 
 app.listen(3000);

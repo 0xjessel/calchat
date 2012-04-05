@@ -1,6 +1,7 @@
 // socket variable already instantiated via geo.js
 
 $(document).ready(function () {
+
 	var container = $('.container-fluid');
 	if (rooms.length == 1 && rooms[0] == "") {
 		container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
