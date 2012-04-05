@@ -79,10 +79,10 @@ exports.chatroom = function(req, res) {
 				if (!sessionRooms) {
 					// logging in from /, not first time
 					if (userChatrooms) {
-						rooms = helper.prependRoom(room, userChatrooms.split(','));
+						rooms = helper.prependRoom(rawId, userChatrooms.split(','));
 					// logging in from /, first time
 					} else {
-						rooms = [room];
+						rooms = [rawId];
 					}
 				} else {
 					req.session.redirectPath = undefined;
