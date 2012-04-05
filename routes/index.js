@@ -16,7 +16,7 @@ client2.select(2);
 exports.index = function(req, res) {
 	helper.debug('index');
 	res.render('index', { 
-		title: 'CalChat - Connecting Students On Campus', 
+		title: 'CalChat', 
 		layout: 'layout-index', 
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
@@ -32,7 +32,7 @@ exports.dashboard = function(req, res) {
 
 		helper.getAbbreviatedTitles(roomIds, function(rooms) {
 			res.render('dashboard', {
-				title: 'CalChat - Dashboard',
+				title: 'Dashboard',
 				layout: 'layout-dashboard',
 				loggedIn: req.loggedIn,
 				showChatTab: true,
@@ -111,7 +111,7 @@ exports.chatroom = function(req, res) {
 				client2.hset('user:'+req.user.id, 'chatrooms', roomIds.join(), function() {
 					helper.getAbbreviatedTitles(roomIds, function(rooms) {
 						res.render('chat', {
-							title: 'CalChat - Chat',
+							title: rooms[0].title+' Chatroom',
 							layout: 'layout-chat',
 							loggedIn: req.loggedIn,
 							showChatTab: true,
@@ -131,7 +131,7 @@ exports.chatroom = function(req, res) {
 
 				helper.getAbbreviatedTitles(req.session.rooms, function(rooms) {
 					res.render('chat', { 
-						title: 'CalChat - Chat', 
+						title: rooms[0].title+' Chatroom',
 						layout: 'layout-chat',
 						loggedIn: req.loggedIn,
 						showChatTab: true,
@@ -160,7 +160,7 @@ exports.archives = function(req, res) {
 		helper.getAbbreviatedTitle(rawId, function(pretty) {
 			if (pretty) {
 				res.render('archives', {
-					title: 'CalChat - '+pretty+' Archives',
+					title: pretty+' Archives',
 					layout: 'layout-archives',
 					loggedIn: req.loggedIn,
 					showChatTab: true,

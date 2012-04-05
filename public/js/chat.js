@@ -137,7 +137,11 @@ function renderChatlogs (logs, mapping, title) {
 	$('#login').attr('href', '/authenticate/'+strip(title));
 
 	$('.chat-title h2').text(title);
-	History.pushState(null, null, strip(title));
+	History.pushState(null, null, strip(title));			
+	
+	var newTitle = current.title+' Chatroom';
+	document.title = newTitle;
+	$("meta[property=og\\:title]").attr("content", newTitle);
 
 	$('#archives').attr('href', '/chat/'+strip(title)+'/archives');
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
@@ -241,7 +245,7 @@ $(document).ready(function () {
 	$('#chats a').click(function () {
 		if ($(this).data('room') != current) {
 			current = $(this).data('room');
-			
+
 			$('#lines').empty();
 			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();
