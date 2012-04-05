@@ -58,7 +58,8 @@ socket.on('error', function (e) {
 	message(current, 'System', e ? e : 'A unknown error occurred');
 });
 
-function message (to, from, msg, mentions) {    
+function message (to, from, msg, mentions) {   
+	console.log(mentions);
 	if (to == current) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(from, msg, mentions);
@@ -78,16 +79,17 @@ function message (to, from, msg, mentions) {
 	}
 }
 
-function renderChatlogs (logs, mentions, title) {
+function renderChatlogs (logs, mapping, title) {
 	for (timestamp in logs) {
 		// not showing timestamp for now
 
 		var entry = logs[timestamp];
 		
-		var from = entry['from'];
-		var text = entry['text'];
+		var from = entry.from;
+		var text = entry.text;
+		var mentions = entry.mentions;
 
-		var element = renderChatMessage(from, text, mentions);
+		var element = renderChatMessage(from, text, mentions, mapping);
 		$('#lines').append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
@@ -99,13 +101,13 @@ function renderChatlogs (logs, mentions, title) {
 	clear();
 }
 
-function renderChatMessage(fromUid, msg, mentions) {
+function renderChatMessage(fromUid, msg, mentions, mapping) {
 	msg = linkify(msg);
-	msg = mentionize(msg, mentions);
+	// msg = mentionize(msg, mapping);
 	
 	var from = fromUid;
-	if (mentions && fromUid in mentions) {
-		from = mentions[fromUid];
+	if (mapping && fromUid in mapping) {
+		from = mapping[fromUid];
 	}
 	
 	if (from == 'System') {
@@ -154,6 +156,8 @@ function getUsers(room, filter, limit, callback) {
 $(document).ready(function () {
 	$('.chat-title h2').text('Loading...');
 
+	$('#message').data('mentions', {});
+
 	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar
@@ -194,7 +198,7 @@ $(document).ready(function () {
 		// TODO: since we are sending the message to the server and waiting for the reply
 		//       we should display some kind of 'Sending…' text
 		if ($('#message').val()) {
-			socket.emit('message', current, $('#message').val());
+			socket.emit('message', current, $('#message').val(), Object.keys($('#message').data('mentions')));
 			clear();
 			scrollToBottom();
 		}
@@ -210,6 +214,8 @@ $(document).ready(function () {
 			$('#message').data('selectionStart', end);
 			// get position of '@'
 			var start = msg.substring(0, end).lastIndexOf('@');
+
+			$('#message').data('');
 
 			// quit if no '@'
 			if (start == -1) {
@@ -269,7 +275,7 @@ $(document).ready(function () {
 			// get position of '@'
 			var start = msg.substring(0, end).lastIndexOf('@');
 			
-			var replacement = '#'+item.id+'$';
+			var replacement = item.name;
 			
 			var transformedMsg = msg.substring(0, start) + replacement + msg.substring(end);
 
@@ -281,6 +287,9 @@ $(document).ready(function () {
 			.val(transformedMsg)
 			.focus()
 			.get(0).setSelectionRange(caretPosition,caretPosition);
+
+			// use associative array for de-duplication
+			$('#message').data('mentions')[item.id] = null;
 		}
 	});
 

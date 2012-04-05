@@ -146,6 +146,10 @@ io.sockets.on('connection', function (socket) {
     }
     
     function getUsers(ids, callback) {
+    	if (!ids) {
+    		callback({});
+    	}
+
         var users = {};
 		var online = [];
 		
@@ -337,47 +341,39 @@ io.sockets.on('connection', function (socket) {
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
 			if (!err) {
 				helper.getPrettyTitle(room, function(title) {
+					console.log('test: ' + chatlog.length);
 					if (chatlog.length == 0) {
 						callback({}, {}, title);
 						return;
 					}
 				
 					var logs = {};
-					var mentions = {};
+					var allMentions = [];
 					var added = 0;
 					for (var i = 0; i < chatlog.length; i++) {
 						var mid = chatlog[i];
-						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', function(err, messageReplies) {
+						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
 							added++;
 							if (!err){
-								var timestamp = messageReplies[0];
-								var fromUid = messageReplies[1];
-								var text = messageReplies[2];
+								var timestamp = message[0];
+								var fromUid = message[1];
+								var text = message[2];
+								var mentions = message[3].split();
+
+								allMentions = allMentions.concat(mentions, fromUid);
 							
 								var entry = {
-									'from'	: fromUid,
-									'text'	: text,
+									'from'		: fromUid,
+									'text'		: text,
+									'mentions'	: mentions,
 								};
 								logs[timestamp] = entry;
-							
-								var messageMentions = getMentions([text], [fromUid]);
-								for (var i = 0; i < messageMentions.length; i++) {
-									var mention = messageMentions[i];
-									if (mention != '') {
-										// de-duplicate
-										mentions[mention] = mention;
-									}
-								}
 							} else {
 								error(err, socket);
 							}
 							
 							if (added == chatlog.length) {
-								var ids = [];
-								for (id in mentions) {
-									ids.push(id);
-								}
-								getUsers(ids, function(mapping) {
+								getUsers(allMentions, function(mapping) {
 									callback(logs, mapping, title);
 								});
 							}
@@ -416,26 +412,33 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('online', room, nicknames[room]);
 	});
 
-	socket.on('message', function (room, msg) {
+	socket.on('message', function (room, msg, mentions) {
 		var text = msg;
 		text = sanitize(text).xss();
 		text = sanitize(text).entityEncode();
 		socket.get('uid', function(err, uid) {
-			if (!err){
+			if (!err) {
 				var timestamp = new Date().getTime();
-				var mentions = getMentions([text], [uid]);
+
+				var temp = {};
+				temp[uid] = null;
+				for (var i = 0; i < mentions.length; i++) {
+					temp[mentions[i]] = null;
+				};
+				mentions = Object.keys(temp);
 			
-				getUsers(mentions, function(mapping) {
+				getUsers(mentions.concat(uid), function(mapping) {
 					io.sockets.in(room).emit('message', room, uid, text, mapping);
 				});
-		
+				
 				client2.incr('message:id:next', function(err, mid) {
-					if (!err){
+					if (!err) {
 						client2.hmset('message:'+mid, {
 							'from'		: uid,
 							'to'		: room,
 							'text'		: text,
 							'timestamp'	: timestamp,
+							'mentions'	: mentions.join(),
 						});
 						client2.zadd('chatlog:'+room, timestamp, mid);
 				
