@@ -444,7 +444,7 @@ io.sockets.on('connection', function (socket) {
 							'from'		: uid,
 							'to'		: room,
 							'text'		: text,
-							'mentions'	: mentions.join(),
+							'mentions'	: mentions,
 							'id'		: mid,
 						};
 

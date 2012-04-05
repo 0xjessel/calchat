@@ -75,8 +75,12 @@ p.message > span.mentions {
 	right: 10px;
 }
 
-div.message-mentions {
-	/*visibility: hidden;*/
+#lines p:nth-child(even) div.message-mentions {
+	background: #fafafa;
+}
+
+#lines p div.message-mentions {
+	background: #eee;
 }
 
 div.message-mentions a.mention {

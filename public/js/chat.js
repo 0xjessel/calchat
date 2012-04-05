@@ -133,6 +133,8 @@ function renderChatMessage(entry, mapping) {
 	var mentions = entry.mentions;
 	var id = entry.id;
 
+	console.log(mentions);
+
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
@@ -163,7 +165,7 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
-			$('<span>').addClass('text').append(msg),
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+id),
 			$('<span>').addClass('mentions').append(mentionsElement));
 
 		return element;
