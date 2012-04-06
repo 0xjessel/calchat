@@ -492,41 +492,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
-	socket.on('get nearest buildings', function (lat, lng, num, callback) {
-		helper.debug('get nearest buildings', lat, lng, num);
-		client0.hgetall("location:all", function (err, replies) {
-			if (!err) {
-				var locations = new Array(replies.length);
-				for (var key in replies) {
-					locations.push(key);
-				}
-
-				//sort locations from nearest to furthest
-				locations.sort(function(a,b) {
-					var latA = a.split(",")[0];
-					var lngA = a.split(",")[1];
-					var distA = dist(lat, lng, latA, lngA);
-					var latB = b.split(",")[0];
-					var lngB = b.split(",")[1];
-					var distB = dist(lat, lng, latB, lngB);
-
-					return distA - distB;
-				});
-
-				var buildings = {};
-				for (var i = 0; i < num; i++) {
-					var location = locations[i];
-					var lat2 = location.split(",")[0];
-					var lng2 = location.split(",")[1];
-					buildings[replies[location]] = dist(lat,lng,lat2,lng2);
-				}
-			
-				callback(buildings);
-			} else {
-				callback();
-			}
-		});
-		
+	socket.on('get nearest buildings', function (lat, lng, limit, callback) {
 		function dist (lat1, lng1, lat2, lng2) {
 			var R = 6371; // km
 			var dLat = (lat2-lat1) * Math.PI / 180;
@@ -539,6 +505,59 @@ io.sockets.on('connection', function (socket) {
 			var d = R * c;
 			return d;
 		}
+
+		helper.debug('get nearest buildings', lat, lng, limit);
+		client0.hgetall("location:all", function (err, locations) {
+			if (!err) {
+				var coordinates = [];
+				for (var key in locations) {
+					coordinates.push(key);
+				}
+
+				//sort coordinates from nearest to furthest
+				coordinates.sort(function(a,b) {
+					var latA = a.split(",")[0];
+					var lngA = a.split(",")[1];
+					var distA = dist(lat, lng, latA, lngA);
+					var latB = b.split(",")[0];
+					var lngB = b.split(",")[1];
+					var distB = dist(lat, lng, latB, lngB);
+
+					return distA - distB;
+				});
+
+				var buildings = [];
+				var added = 0;
+				for (var i = 0; i < limit; i++) {
+					function closure() {						
+						var coordinate = coordinates[i];
+						var lat2 = coordinate.split(",")[0];
+						var lng2 = coordinate.split(",")[1];
+						var id = locations[coordinate];
+						var distance = dist(lat,lng,lat2,lng2);
+
+						client0.hgetall('location:'+id, function(err, location) {
+							added++;
+							if (!err) {
+								location.distance = distance;
+								location.pretty = location.name;
+								buildings.push(location);
+							} else {
+								error(err, socket);
+							}
+
+							if (added == limit) {
+								callback(buildings);
+							}
+						});
+					}
+					closure();
+				}
+			} else {
+				error(err, socket);
+				callback();
+			}
+		});
 	});
     
 	socket.on('get users', function(room, filter, limit, callback) {

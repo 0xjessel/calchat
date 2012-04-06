@@ -120,7 +120,7 @@ public class Utils {
 		return hash;
 	}
 
-	public static String strip(String s) {
+	public static String stripHigh(String s) {
 		return s.replaceAll("[^A-Za-z0-9:-]", "").toUpperCase();
 	}
 
@@ -147,8 +147,8 @@ public class Utils {
 		}
 
 		// validrooms
-		String department = strip(m.department);
-		String number = strip(m.number);
+		String department = stripHigh(m.department);
+		String number = stripHigh(m.number);
 		String combine = department + number;
 		synchronized (pipeline0) {
 			pipeline0.zadd("validrooms", stringScore(combine), id);
@@ -182,8 +182,8 @@ public class Utils {
 					continue;
 				}
 				String roomKey = String.format("room:%s:%s:%s",
-						strip(schedule.building), schedule.buildingNumber, day);
-				String field = strip(schedule.time);
+						stripHigh(schedule.building), schedule.buildingNumber, day);
+				String field = stripHigh(schedule.time);
 
 				synchronized (pipeline0) {
 					pipeline0.hset(roomKey, field, id);
@@ -193,7 +193,7 @@ public class Utils {
 	}
 
 	public static String getClassId(ClassModel m) {
-		return String.format("%s%s", strip(m.department), strip(m.number));
+		return String.format("%s%s", stripHigh(m.department), stripHigh(m.number));
 	}
 
 	public static void disconnect() {
@@ -261,18 +261,18 @@ public class Utils {
 		HttpURLConnection connection = null;
 		JSONObject json = null;
 		try {
-			String key = String.format("location:%s", strip(building));
+			String key = String.format("location:%s", stripHigh(building));
 			String hkey = "location:all";
 
 			String lat = null, lng = null, location = null;
-			location = locations.get(strip(building));
+			location = locations.get(stripHigh(building));
 
 			String longName = null;
 
 			if (location == null) {
 				String name = null;
 
-				name = renames.get(strip(building));
+				name = renames.get(stripHigh(building));
 
 				if (name == null)
 					name = building;
@@ -325,14 +325,14 @@ public class Utils {
 				value.put("longname", longName);
 				pipeline0.hmset(key, value);
 
-				pipeline0.hset(hkey, location, building);
+				pipeline0.hset(hkey, location, stripHigh(building));
 
-				pipeline0.zadd("validrooms", stringScore(strip(building)),
-						strip(building));
+				pipeline0.zadd("validrooms", stringScore(stripHigh(building)),
+						stripHigh(building));
 				if (longName != null
-						&& !strip(building).equals(strip(longName))) {
-					pipeline0.zadd("validrooms", stringScore(strip(longName)),
-							strip(building) + "#");
+						&& !stripHigh(building).equals(stripHigh(longName))) {
+					pipeline0.zadd("validrooms", stringScore(stripHigh(longName)),
+							stripHigh(building) + "#");
 				}
 			}
 

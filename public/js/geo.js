@@ -44,17 +44,15 @@ function normalize_yql_response(response) {
 }
 
 function handle_geolocation_query(position) {
-	console.log('Lat: ' + position.coords.latitude +  
-	' Lon: ' + position.coords.longitude);
+	console.log('Location: '+ position.coords.latitude+','+position.coords.longitude);
 	socket.emit('get nearest buildings', position.coords.latitude, position.coords.longitude, 3, function(buildings) {
-		console.log("got nearest buildings");
 		var buildingRow = $('.suggestions')
 		if (buildingRow.length) {
 			buildingRow.empty();
-			for (key in buildings) {
-				// need friendly key text translation
-				buildingRow.append('<a class="btn" href="/chat/'+key+'">'+key+'</button>');
-			}
+			for (var i = 0; i < buildings.length; i++) {
+				var building = buildings[i];
+				buildingRow.append('<a class="btn" href="/chat/'+building.pretty.toLowerCase()+'">'+building.longname+'</button>');
+			};
 		}
 	});
 }
