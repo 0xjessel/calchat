@@ -209,9 +209,9 @@ function renderChatMessage(entry, mapping) {
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
 				function() {
-					$('#mentions'+mid).stop().animate({opacity: 0.0}, 200);
+					$('#mentions'+mid).stop().fadeTo(400 ,0, function(){$(this).hide()});
 				}, function() {
-					$('#mentions'+mid).stop().animate({opacity: 1.0}, 200);
+					$('#mentions'+mid).show().stop().fadeTo(300, 1);
 				}),
 			$('<span>').addClass('mentions').append(mentionsElement));
 
