@@ -28,7 +28,6 @@ redis.debug_mode = false;
 /**
 * Facebook Connect
 */
-everyauth.debug = true;
 everyauth.everymodule.moduleTimeout(-1); // turn off timeouts (github issue #29)
 everyauth.everymodule.findUserById(function (userId, callback) {
 	// callback has the signature, function (err, user) {...}
@@ -304,7 +303,6 @@ io.sockets.on('connection', function (socket) {
 				
 						//remove room from rooms
 						rooms.splice(rooms.indexOf(room), 1);
-				
 						var newRooms = rooms.join();
 						client2.hset('user:'+uid, 'chatrooms', newRooms, function(err, reply) {
 							callback();

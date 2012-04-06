@@ -377,26 +377,16 @@ $(document).ready(function () {
 		$('#chats .active').remove();
 		var left = current.id;
 		
-		var next = $('#chats a:first')
-		if (next.length) {
-			next.parent().addClass('active');
-			current = next.data('room');
-			$('.chat-title h2').text('Loading...');
-		}
-		
+		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
 
 		socket.emit('leave room', left, function() {
 			if (next.length) {
-				socket.emit('get chatlog', current.id, renderChatlogs);
-				socket.emit('get online', current.id);
+				renderChatroom(next);
+			} else {
+				window.location.href = '/dashboard';
 			}
 		});
-		
-		if (!next.length) {
-			// redirect
-			window.location.href = '/dashboard';
-		}
 	});
 	
 	$('a[rel=tooltip]').tooltip();
