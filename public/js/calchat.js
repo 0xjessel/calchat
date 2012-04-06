@@ -59,15 +59,15 @@ $(document).ready(function () {
 		},
 		
 		onselect: function(item) {
-			var course = item;
-			addChatInput.val(course.department + ' ' + course.number);
+			// item.pretty is the abbrev. form, o/w the pretty form
+			addChatInput.val(item.pretty);
 			addChatForm.submit();
 		},
 	});
 	
 	addChatForm.submit(function () {
-		// no validation on text input, needs to be done on server side
-		window.location.href = '/chat/'+addChatInput.val();
+		// no validation on text input, done on server side
+		window.location.href = '/chat/'+stripLow(addChatInput.val());
 		return false;
 	});
 });
