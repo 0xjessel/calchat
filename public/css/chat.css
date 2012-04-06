@@ -1,6 +1,6 @@
 /* CSS Document */
 ul#online {
-	font-size:1.3em;
+	font-size:17px;
 }
 
 .badge {
@@ -40,7 +40,7 @@ ul#online {
 #lines p {
 	margin:0px;
 	padding:0px 10px;
-    font-size:1.2em;
+    font-size:16px;
 }
 
 #login {
@@ -54,6 +54,14 @@ ul#online {
 
 .system-message {
 	font-style:italic;
+}
+
+.avatar-msg {
+	        border-radius:5px;
+	   -moz-border-radius:5px;
+	-webkit-border-radius:5px;
+	margin-right:5px;
+	vertical-align:text-top;
 }
 
 p.message a.from {

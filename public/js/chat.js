@@ -3,6 +3,7 @@ var opts = {};
 opts['sync disconnect on unload'] = false;
 var socket = io.connect(null, opts);
 var current = rooms[0];
+var currentOnline = {};
 var chatDiv;
 var selfAnnounced = false;
 var unread = {};
@@ -43,6 +44,9 @@ socket.on('announcement', function (to, msg) {
 socket.on('online', function(room, nicknames) {
 	debug('online');
 	if (room == current.id) {
+		// store the new nicknames object
+		currentOnline = nicknames;
+
 		// empty out sidebar, repopulate with online people
 		var onlineSidebar = $('#online');
 		$('#online li:not(.nav-header)').remove();
@@ -206,6 +210,7 @@ function renderChatMessage(entry, mapping) {
 
 
 		var element = $('<p>').addClass('message').append(
+			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
 				function() {
