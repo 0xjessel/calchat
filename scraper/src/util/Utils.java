@@ -146,21 +146,21 @@ public class Utils {
 			e.printStackTrace();
 		}
 
-		// courses
+		// validrooms
 		String department = strip(m.department);
 		String number = strip(m.number);
 		String combine = department + number;
 		synchronized (pipeline0) {
-			pipeline0.zadd("courses", stringScore(combine), id);
+			pipeline0.zadd("validrooms", stringScore(combine), id);
 		}
 
-		// abbreviated courses
+		// abbreviated validrooms
 		String abbreviation = abbreviations.get(department);
 		if (abbreviation != null) {
 			// assume there's at most 1 abbreviation
 			String combine2 = abbreviation + number;
 			synchronized (pipeline0) {
-				pipeline0.zadd("courses", stringScore(combine2), id + "#");
+				pipeline0.zadd("validrooms", stringScore(combine2), id + "#");
 			}
 		}
 
@@ -267,6 +267,8 @@ public class Utils {
 			String lat = null, lng = null, location = null;
 			location = locations.get(strip(building));
 
+			String longName = null;
+
 			if (location == null) {
 				String name = null;
 
@@ -303,6 +305,10 @@ public class Utils {
 						.getJSONObject(0).getJSONObject("geometry")
 						.getJSONObject("location");
 
+				longName = json.getJSONArray("results").getJSONObject(0)
+						.getJSONArray("address_components").getJSONObject(0)
+						.getString("long_name");
+
 				lat = String.format("%f", locationJson.getDouble("lat"));
 				lng = String.format("%f", locationJson.getDouble("lng"));
 				location = String.format("%s,%s", lat, lng);
@@ -312,10 +318,22 @@ public class Utils {
 			}
 
 			synchronized (pipeline0) {
-				pipeline0.hset(key, "lat", lat);
-				pipeline0.hset(key, "lng", lng);
+				Map<String, String> value = new HashMap<String, String>();
+				value.put("lat", lat);
+				value.put("lng", lng);
+				value.put("name", building);
+				value.put("longname", longName);
+				pipeline0.hmset(key, value);
 
 				pipeline0.hset(hkey, location, building);
+
+				pipeline0.zadd("validrooms", stringScore(strip(building)),
+						strip(building));
+				if (longName != null
+						&& !strip(building).equals(strip(longName))) {
+					pipeline0.zadd("validrooms", stringScore(strip(longName)),
+							strip(building) + "#");
+				}
 			}
 
 			System.err.println(String.format("Found location for: %s (%s)",

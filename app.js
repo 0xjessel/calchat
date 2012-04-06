@@ -564,21 +564,21 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-	socket.on('get courses', function(query, limit, callback) {		
-		helper.debug('get courses', query, limit);
+	socket.on('get validrooms', function(query, limit, callback) {		
+		helper.debug('get validrooms', query, limit);
 		query = helper.stripHigh(query);
 		
 		if (!query || !limit) {
 			callback([]);
 		} else {
-			client0.zrangebyscore('courses', stringScore(query), capStringScore(query), 'limit', 0, limit, function(err, ids) {
+			client0.zrangebyscore('validrooms', stringScore(query), capStringScore(query), 'limit', 0, limit, function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {
 						callback([]);
 						return;
 					}
 
-					var courses = {};
+					var rooms = {};
 					var added = 0;
 					for (var i = 0; i < ids.length; i++) {
 						// use closure so var id isn't changed by next loop iteration before callback
@@ -590,17 +590,20 @@ io.sockets.on('connection', function (socket) {
 								id = id.substring(0, id.length - 1);
 							}
 
-								client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
-									var department = course[0];
-									var number = course[1];
-									helper.getAbbreviatedTitle(helper.stripHigh(department+number), function(pretty) {
+							// check if id is a course
+							client0.hgetall('class:'+id, function(err, course) {
+								console.log('===');
+								console.log(err);
+								console.log(course);
+								console.log('===');
+								if (!err && Object.keys(course).length) {
+									helper.getAbbreviatedTitle(helper.stripHigh(course.department+course.number), function(pretty) {
 										added++;
 										if (!err) {
-											courses[id] = {
-												'department': department, 
-												'number': number,
-												'title': course[2],
-												'pretty': pretty,
+											rooms[id] = {
+												'name'		: course.department+' '+course.number,
+												'title'		: course.title,
+												'pretty'	: pretty,
 											};
 										} else {
 											error(err, socket);
@@ -608,13 +611,37 @@ io.sockets.on('connection', function (socket) {
 
 										if (added == ids.length) {
 											var objects = [];
-											for (id in courses) {
-												objects.push(courses[id]);
+											for (id in rooms) {
+												objects.push(rooms[id]);
 											}
 											callback(objects);
 										}
 									});
-								});
+								} else {
+									//check if id is a location
+									client0.hgetall('location:'+id, function(err, location) {
+										if (!err) {
+											added++;
+											rooms[id] = {
+												'name'		: location.name,
+												'title'		: location.longname,
+												'pretty'	: location.name,
+											};
+										} else {
+											error(err, socket);
+											callback();
+										}
+
+										if (added == ids.length) {
+											var objects = [];
+											for (id in rooms) {
+												objects.push(rooms[id]);
+											}
+											callback(objects);
+										}
+									});
+								}
+							});
 						}
 						closure();
 					}

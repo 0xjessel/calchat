@@ -11,6 +11,7 @@ function getAbbreviatedTitle(room, callback) {
 	isValid(room, function(valid, rawId) {
 		if (valid) {
 			room = rawId;
+			// first check if room is a class
 			client0.hgetall('class:'+rawId, function(err, reply) {
 				if (!err && Object.keys(reply).length) {
 					var department = reply.department;
@@ -25,8 +26,15 @@ function getAbbreviatedTitle(room, callback) {
 						}
 					});
 				} else {
-					// for example, CALCHAT
-					callback(room);
+					// then check if room is a building
+					client0.hget('location:'+rawId, 'name', function(err, name) {
+						if (!err && name) {
+							callback(name);
+						} else {
+							// for example, CALCHAT
+							callback(room);
+						}
+					});
 				}
 			});
 		} else {
@@ -112,12 +120,12 @@ function isValid(room, callback) {
 
 		// try to find room in the database
 		var score = stringScore(room);
-		client0.zrangebyscore('courses', score, score, 'limit', 0, 1, function(err, courses) {
+		client0.zrangebyscore('validrooms', score, score, 'limit', 0, 1, function(err, rooms) {
 			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
-			var valid = !err && courses.length;
+			var valid = !err && rooms.length;
 			if (valid) {
 				// set suggestion to the RAW ID (sometimes followed by # if the input room was an abbreviation)
-				var suggestion = courses[0];
+				var suggestion = rooms[0];
 
 				// remove # at the end
 				if (suggestion.charAt(suggestion.length - 1) == '#') {

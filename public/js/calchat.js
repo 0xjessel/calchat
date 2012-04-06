@@ -19,32 +19,33 @@ $(document).ready(function () {
 				return;
 			}
 
-			socket.emit('get courses', query, limit, function(courses) {
-				if (!courses.length) {
+			socket.emit('get validrooms', query, limit, function(rooms) {
+				console.log(rooms);
+				if (!rooms.length) {
 					addChatInput.data('filter-empty', query);
 				} else {
 					addChatInput.data('filter-empty', null);
 				}
 
-				for (var i = 0; i < courses.length; i++) {
-					var course = courses[i];
+				for (var i = 0; i < rooms.length; i++) {
+					var room = rooms[i];
 
 					var firstLine = $('<div>').append(
-						$('<span>').append('<p>').addClass('course-pretty').text(course.pretty));
+						$('<span>').append('<p>').addClass('room-pretty').text(room.pretty));
 
-					var name = course.department+' '+course.number;
-					if (course.pretty != name) {
+					var name = room.name;
+					if (room.pretty != name) {
 						firstLine.append(
-							$('<span>').append('<p>').addClass('course-name').text(' ('+name+')'));
+							$('<span>').append('<p>').addClass('room-name').text(' ('+name+')'));
 					}
 
 					var html = $('<div>').append(
 						firstLine,
-						$('<div>').append('<p>').addClass('course-title').text(course.title));
+						$('<div>').append('<p>').addClass('room-title').text(room.title));
 
-					course.value = html.html();
+					room.value = html.html();
 				};
-				typeahead.process(courses);
+				typeahead.process(rooms);
 			});
 		},
 		
