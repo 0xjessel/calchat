@@ -61,7 +61,9 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
-		res.redirect('/chat/'+helper.stripLow(rooms[0]));
+		helper.getAbbreviatedTitle(rooms[0], function(room) {
+			res.redirect('/chat/'+helper.stripLow(room));
+		});
 	} else {
 		// error: guest did not add any chats yet
 		return res.redirect('/?error=1');
