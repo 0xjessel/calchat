@@ -15,7 +15,7 @@ function getAbbreviatedTitle(room, callback) {
 				if (!err && Object.keys(reply).length) {
 					var department = reply.department;
 					var number = reply.number;
-					client1.hget('abbreviations', strip(department), function(err, abbreviation) {
+					client1.hget('abbreviations', stripHigh(department), function(err, abbreviation) {
 						if (!err && abbreviation) {
 							// for example, ELENG40 -> EE 40
 							callback(abbreviation + ' ' + number);
@@ -89,7 +89,7 @@ function isValid(room, callback) {
 		callback(false);
 		return;
 	} else {
-		room = strip(room);
+		room = stripHigh(room);
 
 		// CALCHAT is a special case
 		if (room == 'CALCHAT') {
@@ -131,18 +131,22 @@ function isValid(room, callback) {
 	}
 }
 
-function strip(string) {
+function stripHigh(string) {
 	return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+}
+
+function stripLow(string) {
+	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
 }
 
 function debug(msg) {
 	console.log(msg);
 }
 
-
 exports.getAbbreviatedTitle = getAbbreviatedTitle;
 exports.getAbbreviatedTitles = getAbbreviatedTitles;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
-exports.strip = strip;
+exports.stripHigh = stripHigh;
+exports.stripLow = stripLow;
 exports.debug = debug;

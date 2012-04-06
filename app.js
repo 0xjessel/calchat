@@ -211,7 +211,7 @@ io.sockets.on('connection', function (socket) {
 	function stringScore(string) {
 		if (!string) return '-inf';
 
-		string = helper.strip(string);
+		string = helper.stripHigh(string);
 		var hash = 0;
 
 		for (var i = 0; i < string.length; i++) {
@@ -223,7 +223,7 @@ io.sockets.on('connection', function (socket) {
 	function capStringScore(string) {
 		if (!string) return '+inf';
 
-		string = helper.strip(string);
+		string = helper.stripHigh(string);
 		var last = string.charAt(string.length - 1);
 		var next = String.fromCharCode(last.charCodeAt() + 1);
 		var cap = string.substring(0, string.length - 1) + next;
@@ -349,7 +349,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(room, callback) {
 		helper.debug('get chatlog');
-		room = helper.strip(room);
+		room = helper.stripHigh(room);
 
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
@@ -567,7 +567,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get courses', function(query, limit, callback) {		
 		helper.debug('get courses');
-		query = helper.strip(query);
+		query = helper.stripHigh(query);
 		
 		if (!query || !limit) {
 			callback([]);
@@ -594,7 +594,7 @@ io.sockets.on('connection', function (socket) {
 								client0.hmget('class:'+id, 'department', 'number', 'title', function(err, course) {
 									var department = course[0];
 									var number = course[1];
-									helper.getAbbreviatedTitle(helper.strip(department+number), function(pretty) {
+									helper.getAbbreviatedTitle(helper.stripHigh(department+number), function(pretty) {
 										added++;
 										if (!err) {
 											courses[id] = {

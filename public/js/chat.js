@@ -133,21 +133,21 @@ function renderChatlogs (logs, mapping, title) {
 	$('#message').prop('disabled', false);
 	$('#message').data('mentions', {});
 
-	$('#login').attr('href', '/authenticate/'+strip(title));
+	$('#login').attr('href', '/authenticate/'+stripLow(title));
 
 	$('.chat-title h2').text(title);
-	History.pushState(null, null, strip(title));			
+	History.pushState(null, null, stripLow(title));			
 	
 	var newTitle = current.title+' Chatroom';
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
-	$('#archives').attr('href', '/chat/'+strip(title)+'/archives');
+	$('#archives').attr('href', '/chat/'+stripLow(title)+'/archives');
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
 	$('.chat-header .loading').addClass('hidden');
 	$('.actions').removeClass('hidden');
-	
+
 	clear();
 }
 
@@ -218,10 +218,6 @@ function scrollToBottom () {
 
 function getUsers(room, filter, limit, callback) {
 	socket.emit('get users', current.id, filter, limit, callback);
-}
-
-function strip(string) {
-	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
 }
 
 // dom manipulation

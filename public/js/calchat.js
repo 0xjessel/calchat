@@ -71,3 +71,7 @@ $(document).ready(function () {
 		return false;
 	});
 });
+
+function stripLow(string) {
+	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+}
