@@ -14,7 +14,7 @@ client2.select(2);
 * GET home page.
 */
 exports.index = function(req, res) {
-	helper.debug('index');
+	helper.debug('index', req.session);
 	res.render('index', { 
 		title: 'CalChat', 
 		layout: 'layout-index', 
@@ -25,7 +25,7 @@ exports.index = function(req, res) {
 };
 
 exports.dashboard = function(req, res) {
-	helper.debug('dashboard');
+	helper.debug('dashboard', req.user);
 	if (req.loggedIn) {
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
@@ -47,7 +47,7 @@ exports.dashboard = function(req, res) {
 };
 
 exports.chat = function(req, res) {
-	helper.debug('chat');
+	helper.debug('chat', req.user, req.session);
 	if (req.loggedIn) {		
 		if (req.user.chatrooms === '') {
 			// redirect to dashboard to add some classes to favorites or select a class
@@ -71,7 +71,7 @@ exports.chat = function(req, res) {
 };
 
 exports.chatroom = function(req, res) {
-	helper.debug('chatroom');
+	helper.debug('chatroom', req.params, req.session, req.user);
 	var room = req.params.room;
 
 	room = sanitize(room).xss();
@@ -110,7 +110,9 @@ exports.chatroom = function(req, res) {
 
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', roomIds.join(), function() {
+					console.log(roomIds);
 					helper.getAbbreviatedTitles(roomIds, function(rooms) {
+						console.log(rooms);
 						res.render('chat', {
 							title: rooms[0].title+' Chatroom',
 							layout: 'layout-chat',
@@ -154,7 +156,7 @@ exports.chatroom = function(req, res) {
 }
 
 exports.archives = function(req, res) {
-	helper.debug('archives');
+	helper.debug('archives', req.params);
 	var room = req.params.room;
 
 	helper.isValid(room, function(valid, rawId) {
@@ -179,7 +181,7 @@ exports.archives = function(req, res) {
 }
 
 exports.authenticate = function (req, res, next) {
-	helper.debug('authenticate');
+	helper.debug('authenticate', req.params);
 	var room = req.params.room;
 	helper.isValid(room, function(valid, rawId) {
 		if (valid) {

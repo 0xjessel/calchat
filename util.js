@@ -7,7 +7,7 @@ client1.select(1);
 
 
 function getAbbreviatedTitle(room, callback) {
-	debug('getAbbreviatedTitle');
+	debug('getAbbreviatedTitle', room);
 	isValid(room, function(valid, rawId) {
 		if (valid) {
 			room = rawId;
@@ -47,13 +47,15 @@ function getAbbreviatedTitles(rooms, callback) {
 	for (var i = 0; i < rooms.length; i++) {
 		function closure() {
 			var room = rooms[i];
+			var n = i;
 			getAbbreviatedTitle(room, function(title) {
 				added++;
 
-				titles.push({
+				// preserve order
+				titles[n] = {
 					id: room,
 					title: title,
-				});
+				};
 
 				if (added == rooms.length) {
 					callback(titles);
@@ -66,6 +68,7 @@ function getAbbreviatedTitles(rooms, callback) {
 
 // prepends room to rooms (use this only if rooms exists!)
 function prependRoom(room, rooms) {
+	debug('prependRoom', room, rooms);
 	var index = -1;
 	for (var i = 0; i < rooms.length; i++) {
 		if (rooms[i] == room) {
@@ -139,8 +142,15 @@ function stripLow(string) {
 	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
 }
 
-function debug(msg) {
-	console.log(msg);
+function debug() {
+	function inner() {
+		for(var i = 0; i < arguments.length; i++) {
+			console.log(arguments[i]);
+		}
+	}
+	console.log('--');
+	inner.apply(null, arguments);
+	console.log('--');
 }
 
 exports.getAbbreviatedTitle = getAbbreviatedTitle;
