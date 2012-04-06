@@ -1,6 +1,6 @@
 include includes/navbar
 
-div.container
+div.container-fluid
   div.hero-unit
     if loggedIn
       h1 Welcome back, #{everyauth.facebook.user.name}
@@ -11,7 +11,7 @@ div.container
       p
         a(href='/auth/facebook')#login
           
-  div.row
+  div.row-fluid
     div.span4
       h2 Heading
       p Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. 
