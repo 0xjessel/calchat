@@ -207,11 +207,12 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
-			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).mouseenter(function() {
-				$('#mentions'+mid).stop().fadeOut();
-			}).mouseleave(function() {
-				$('#mentions'+mid).stop().show();
-			}),
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
+				function() {
+					$('#mentions'+mid).stop().animate({opacity: 0.0}, 200);
+				}, function() {
+					$('#mentions'+mid).stop().animate({opacity: 1.0}, 200);
+				}),
 			$('<span>').addClass('mentions').append(mentionsElement));
 
 		return element;
