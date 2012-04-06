@@ -130,7 +130,6 @@ function renderChatlogs (logs, mapping, title) {
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
 	
-	$('.chat-header .loading').addClass('hidden');
 	$('#message').prop('disabled', false);
 	$('#message').data('mentions', {});
 
@@ -146,6 +145,9 @@ function renderChatlogs (logs, mapping, title) {
 	$('#archives').attr('href', '/chat/'+strip(title)+'/archives');
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
+	$('.chat-header .loading').addClass('hidden');
+	$('.actions').removeClass('hidden');
+	
 	clear();
 }
 
@@ -250,10 +252,11 @@ $(document).ready(function () {
 			$('#online li:not(.nav-header)').remove();
 			$(this).find('.badge').remove();
 			
-			$('.loading:not(#chats .loading)').removeClass('hidden');
+			$('.loading').removeClass('hidden');
+			$('.actions').addClass('hidden');
 			$('#chats .active').removeClass('active');
 			$(this).parent().addClass('active');
-
+			$('#chats .loading').addClass('hidden');
 			
 			$('#message').prop('disabled', true);
 
