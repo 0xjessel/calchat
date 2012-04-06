@@ -11,8 +11,6 @@ html(lang='en')
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
   script(src='/js/libs/jquery.history.js')
-  script
-    window.History.replaceState(null, null, '/dashboard');
   script(src='/js/geo.js')
   script(src='/js/dashboard.js')
   script(src='/js/libs/bootstrap/alert.js')

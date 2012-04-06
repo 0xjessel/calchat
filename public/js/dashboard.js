@@ -12,6 +12,14 @@ $(document).ready(function () {
 			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span id="'+room+'" class="close close-chat">x</span></a></li>');
 		}
 	}
+
+	var path = location.href.split('?');
+	if (path.length > 1) {
+		var invalid = path[1].split('=');
+		if (invalid[0] == 'invalid') {
+			container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a><b>Error: </b>\"'+invalid[1]+'\" is an invalid chatroom, please try again.</div>');
+		}
+	}
 	
 	$('.close-chat').click(function () {
 		socket.emit('remove room', uid, $(this).attr('id'));
@@ -24,24 +32,4 @@ $(document).ready(function () {
 		window.location.href = '/chat/'+$('.form-search .search-query').val();
 		return false;
 	});
-	
-	getUrlVars(function (errors) {
-		if (errors.length) {
-			var room = errors["invalid"];
-			if (room) {
-				container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a>Sorry, '+room+' is an invalid chatroom</div>');
-			}
-		}
-	});
-	
-	function getUrlVars(callback) {
-		var vars = [], hash;
-		var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
-		for(var i = 0; i < hashes.length; i++) {
-			hash = hashes[i].split('=');
-			vars.push(hash[0]);
-			vars[hash[0]] = hash[1];
-		}
-		callback(vars);
-	}
 });
