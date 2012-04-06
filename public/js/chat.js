@@ -109,6 +109,26 @@ function message (entry, mapping) {
 	}
 }
 
+function renderChatroom(anchor) {
+	debug('renderChatroom');
+	current = anchor.data('room');
+
+	$('#lines').empty();
+	$('#online li:not(.nav-header)').remove();
+	anchor.find('.badge').remove();
+	
+	$('.loading').removeClass('hidden');
+	$('.actions').addClass('hidden');
+	$('#chats .active').removeClass('active');
+	anchor.parent().addClass('active');
+	$('#chats .loading').addClass('hidden');
+	
+	$('#message').prop('disabled', true);
+
+	socket.emit('get chatlog', current.id, renderChatlogs);
+	socket.emit('get online', current.id);			
+}
+
 function renderChatlogs (logs, mapping, title) {
 	debug('renderChatlogs');
 	if (!Object.keys(logs).length) {
@@ -242,22 +262,7 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).data('room') != current) {
-			current = $(this).data('room');
-
-			$('#lines').empty();
-			$('#online li:not(.nav-header)').remove();
-			$(this).find('.badge').remove();
-			
-			$('.loading').removeClass('hidden');
-			$('.actions').addClass('hidden');
-			$('#chats .active').removeClass('active');
-			$(this).parent().addClass('active');
-			$('#chats .loading').addClass('hidden');
-			
-			$('#message').prop('disabled', true);
-
-			socket.emit('get chatlog', current.id, renderChatlogs);
-			socket.emit('get online', current.id);			
+			renderChatroom($(this));	
 		}
 		return false;
 	});
@@ -395,4 +400,19 @@ $(document).ready(function () {
 	});
 	
 	$('a[rel=tooltip]').tooltip();
+});
+
+var init = true;
+window.addEventListener('popstate', function(e) {
+	if (init) {
+		init = false;
+		return;
+	}
+	var path = location.pathname.split('/');
+	var room = path[path.length-1];
+	$('#chats a').each(function() {
+		if(stripLow($(this).data().room.title) == room) {
+			renderChatroom($(this));
+		}
+	});
 });
