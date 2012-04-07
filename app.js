@@ -352,34 +352,23 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	// remove room from the dashboard
-	socket.on('remove room', function (room, index) {
+	socket.on('remove room', function (room) {
 		helper.debug('remove room', room);
 
-		if (index != -1) {
-			client2.hget('user:'+session.uid, 'unread', function (err, reply) {
-				if (!err && reply != null) {
-					var unreads = reply.split(',');
-					unreads.splice(index, 1);
-					client2.hset('user:'+session.uid, 'unread', unreads.join());
-				} else {
-					error(err, socket);
-				}
-			});
-		}
+		// remove room from user's list of chatrooms and unread
+		client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+			if (!err && reply[0] != null && reply[1] != null) {
 
-		// remove room from user's list of chatrooms
-		client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
-			if (!err) {
-				var rooms = chatrooms.split(',');
-			
+				var rooms = reply[0].split(',');
+				var unreads = reply[1].split(',');
 				//remove room from rooms
-				var i = rooms.indexOf(room);
-				if (i != -1) {
-					rooms.splice(rooms.indexOf(room), 1);
+				var index = rooms.indexOf(room);
+				if (index != -1) {
+					rooms.splice(index, 1);
+					unreads.splice(index, 1)
 				}
-			
-				var newRooms = rooms.join();
-				client2.hset('user:'+session.uid, 'chatrooms', newRooms);
+		
+				client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
 			} else {
 				error(err, socket);
 			}

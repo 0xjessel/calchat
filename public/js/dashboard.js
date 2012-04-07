@@ -3,13 +3,13 @@
 $(document).ready(function () {
 
 	var container = $('.container-fluid');
-	if (rooms.length == 1) {
+	if (rooms[0] == null) {
 		container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
 	} else {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i].pretty;
-			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span id="'+i+'" data-room="'+room+'" class="close close-chat">x</span></a></li>');
+			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span data-room="'+rooms[i].id+'" class="close close-chat">x</span></a></li>');
 		}
 	}
 
@@ -22,7 +22,7 @@ $(document).ready(function () {
 	}
 	
 	$('.close-chat').click(function () {
-		socket.emit('remove room', $(this).data('room'), $(this).attr('id'));
+		socket.emit('remove room', $(this).data('room'));
 		$(this).parent().parent().remove();
 		return false;
 	});
