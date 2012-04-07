@@ -397,13 +397,14 @@ io.sockets.on('connection', function (socket) {
 					for (var i = 0; i < chatlog.length; i++) {
 						function closure() {
 							var mid = chatlog[i];
-							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
+							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', 'badge', function(err, message) {
 								added++;
 								if (!err){
 									var timestamp = message[0];
 									var fromUid = message[1];
 									var text = message[2];
 									var mentions = message[3]; // turn into array later
+									var badge = message[4];
 
 									if (mentions) {
 										mentions = mentions.split();
@@ -419,6 +420,7 @@ io.sockets.on('connection', function (socket) {
 										'text'		: text,
 										'mentions'	: mentions,
 										'id'		: mid,
+										'badge'		: badge
 									};
 									logs[timestamp] = entry;
 								} else {
