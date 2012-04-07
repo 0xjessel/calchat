@@ -247,6 +247,15 @@ function getUsers(room, filter, limit, callback) {
 
 // dom manipulation
 $(document).ready(function () {
+	function stringScore(string) {
+		string = string.toUpperCase();
+		var hash = 0;
+
+		for (var i = 0; i < string.length; i++) {
+			hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
+		}
+		return hash;
+	}
 	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar

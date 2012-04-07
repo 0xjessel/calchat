@@ -56,7 +56,7 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
-					'chatrooms': 'CAMPUS,CALCHAT',
+					'chatrooms': 'CALCHAT',
 					'unread': '',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,

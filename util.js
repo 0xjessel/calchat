@@ -113,13 +113,13 @@ function prependRoom(room, rooms) {
 // return true if any form of room is valid
 // return false if room cannot possibly be valid
 // if true, then you must use rawId, which contains the raw id
-function isValid(room, callback) {
-	debug('isValid');
-	if (!room) {
+function isValid(roomId, callback) {
+	debug('isValid', roomId);
+	if (!roomId) {
 		callback(false);
 		return;
 	} else {
-		room = stripHigh(room);
+		roomId = stripHigh(roomId);
 
 		function stringScore(string) {
 			string = string.toUpperCase();
@@ -132,21 +132,49 @@ function isValid(room, callback) {
 		}
 
 		// try to find room in the database
-		var score = stringScore(room);
-		client0.zrangebyscore('validrooms', score, score, 'limit', 0, 1, function(err, rooms) {
+		var score = stringScore(roomId);
+		client0.zrangebyscore('validrooms', score, score, function(err, rooms) {
 			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
 			var valid = !err && rooms.length;
 			if (valid) {
-				// set suggestion to the RAW ID (sometimes followed by # if the input room was an abbreviation)
-				var suggestion = rooms[0];
+				var sameLastChars = [];
+				for (var i = 0; i < rooms.length; i++) {
+					var room = rooms[i];
+					// set suggestion to the RAW ID (sometimes followed by # if the input room was an abbreviation)
+					var suggestion = rooms[i];
 
-				// remove # at the end
-				if (suggestion.charAt(suggestion.length - 1) == '#') {
-					suggestion = suggestion.substring(0, suggestion.length - 1);
-				}
+					// remove # at the end
+					if (suggestion.charAt(suggestion.length - 1) == '#') {
+						suggestion = suggestion.substring(0, suggestion.length - 1);
+					}
 
-				// suggestion will always be the RAW ID
-				callback(true, suggestion);
+					if (suggestion == roomId && rooms.length == 1) {
+						callback(true, suggestion);
+						return;
+					}
+
+					var sameLastChar = 0;
+					for (var j = 0; j < Math.min(suggestion.length-1, roomId.length-1); j++) {
+						var roomIdChar = roomId.charAt(roomId.length-1-j);
+						var suggestionChar = suggestion.charAt(suggestion.length-1-j);
+
+						if (roomIdChar == suggestionChar) {
+							sameLastChar++;
+						} else {
+							break;
+						}
+					}
+					sameLastChars.push({
+						'sameLastChar'	: sameLastChar,
+						'suggestion'	: suggestion,
+					});
+				};
+
+				sameLastChars.sort(function(a,b) {
+					return b.sameLastChar - a.sameLastChar;
+				});
+
+				callback(true, sameLastChars[0].suggestion);
 			} else {
 				// not valid
 				callback(false);

@@ -64,6 +64,7 @@ exports.chat = function(req, res) {
 	}
 	if (rooms && rooms.length) {
 		helper.getRoomInfo(rooms[0], function(room) {
+			console.log(room, rooms);
 			res.redirect('/chat/'+helper.stripLow(room.pretty));
 		});
 	} else {
