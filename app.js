@@ -56,8 +56,9 @@ everyauth.facebook
 					'chatrooms': 'CAMPUS,CALCHAT',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
-					'type': 1,
+					'founder': 0,
 					'timestamp' : timeStamp,
+					'gsirooms' : "",
 				}, function() {
 					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
