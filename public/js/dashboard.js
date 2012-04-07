@@ -9,7 +9,8 @@ $(document).ready(function () {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i].pretty;
-			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span data-room="'+rooms[i].id+'" class="close close-chat">x</span></a></li>');
+			var unread = rooms[i].unread;
+			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+stripLow(room)).text(room).append($('<span>').addClass('close').addClass('close-chat').data('room', rooms[i].id).text('x'))));
 		}
 	}
 

@@ -165,7 +165,7 @@ function renderChatlogs (logs, mapping, room) {
 	$('.chat-title h3').text(room.title);
 	History.pushState(null, null, stripLow(room.pretty));			
 	
-	var newTitle = current.title+' Chatroom';
+	var newTitle = current.pretty+' Chatroom';
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
