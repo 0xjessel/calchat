@@ -6,6 +6,7 @@ var express = require('express')
 , sio = require('socket.io')
 , everyauth = require('everyauth')
 , redis = require('redis')
+, parseCookie = require('connect').utils.parseCookie
 , sanitize = require('validator').sanitize
 , util = require('util')
 , routes = require('./routes')
@@ -54,6 +55,7 @@ everyauth.facebook
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
 					'chatrooms': '',
+					'unread': '',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 					'type': 1,
@@ -345,9 +347,13 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get chatlog', getChatlog);
-	function getChatlog(room, callback) {
+	function getChatlog(room, index, callback) {
 		helper.debug('get chatlog', room);
 		room = helper.stripHigh(room);
+
+		if (index != -1) {
+			//client2.hgetall()
+		}
 
 		// get last 30 messages
 		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
