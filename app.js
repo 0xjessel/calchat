@@ -232,10 +232,13 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('Error: '+err);
 	}
 
-	function stringScore(string) {
+	function stringScore(string, strip) {
 		if (!string) return '-inf';
 
-		string = helper.stripHigh(string);
+		if (strip === undefined || strip) {
+			string = helper.stripHigh(string);
+		}
+		
 		var hash = 0;
 
 		for (var i = 0; i < string.length; i++) {
@@ -251,7 +254,8 @@ io.sockets.on('connection', function (socket) {
 		var last = string.charAt(string.length - 1);
 		var next = String.fromCharCode(last.charCodeAt() + 1);
 		var cap = string.substring(0, string.length - 1) + next;
-		return '('+stringScore(cap);
+		helper.debug('capStringScore', string, cap);
+		return '('+stringScore(cap, false);
 	}
 
 	socket.on('initialize', function(roomIds, current, callback) {
@@ -266,7 +270,7 @@ io.sockets.on('connection', function (socket) {
 			socket.join(roomId);
 		}
 
-		if (session.uid !== undefined && session.nick !== undefined) {
+		if (session !== undefined && session.uid !== undefined && session.nick !== undefined) {
 			socket.nickname = session.nick;
 			
 			getChatlog(current, 0, function(logs, mentions, room) {	
@@ -620,6 +624,7 @@ io.sockets.on('connection', function (socket) {
 		if (!query || !limit) {
 			callback([]);
 		} else {
+			helper.debug(stringScore(query), capStringScore(query));
 			client0.zrangebyscore('validrooms', stringScore(query), capStringScore(query), 'limit', 0, limit, function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {

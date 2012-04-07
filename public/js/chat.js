@@ -258,7 +258,11 @@ $(document).ready(function () {
 			element.addClass('active');
 		}
 
-		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.pretty));
+		element.append($('<a>')
+			.attr('href', 'javascript:void(0)')
+			.attr('id', room.id)
+			.data('room', room)
+			.append(room.pretty));
 		roomsNav.append(element);
 	}
 	
@@ -266,6 +270,8 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).data('room') != current) {
+			$('.chat-title h2').text('Loading...');
+			$('.chat-title h3').text('');
 			renderChatroom($(this));	
 		}
 		return false;
@@ -382,6 +388,8 @@ $(document).ready(function () {
 		
 		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
+		$('.chat-title h2').text('Loading...');
+		$('.chat-title h3').text('');
 
 		socket.emit('leave room', current.id, rooms.indexOf(current), function() {
 			if (next.length) {
