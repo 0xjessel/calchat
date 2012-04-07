@@ -8,7 +8,7 @@ $(document).ready(function () {
 	} else {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
-			var room = rooms[i].title;
+			var room = rooms[i].pretty;
 			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span id="'+room+'" class="close close-chat">x</span></a></li>');
 		}
 	}
@@ -25,7 +25,7 @@ $(document).ready(function () {
 		socket.emit('remove room', $(this).attr('id'));
 		$(this).parent().parent().remove();
 		return false;
-	})
+	});
 	
 	$('.form-search').submit(function () {
 		// no validation on text input, needs to be done on server side
