@@ -247,15 +247,6 @@ function getUsers(room, filter, limit, callback) {
 
 // dom manipulation
 $(document).ready(function () {
-	function stringScore(string) {
-		string = string.toUpperCase();
-		var hash = 0;
-
-		for (var i = 0; i < string.length; i++) {
-			hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
-		}
-		return hash;
-	}
 	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar
@@ -267,7 +258,11 @@ $(document).ready(function () {
 			element.addClass('active');
 		}
 
-		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.pretty));
+		element.append($('<a>')
+			.attr('href', 'javascript:void(0)')
+			.attr('id', room.id)
+			.data('room', room)
+			.append(room.pretty));
 		roomsNav.append(element);
 	}
 	
@@ -275,6 +270,8 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).data('room') != current) {
+			$('.chat-title h2').text('Loading...');
+			$('.chat-title h3').text('');
 			renderChatroom($(this));	
 		}
 		return false;
@@ -392,6 +389,9 @@ $(document).ready(function () {
 		
 		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
+
+		$('.chat-title h2').text('Loading...');
+		$('.chat-title h3').text('');
 
 		socket.emit('leave room', left, function() {
 			if (next.length) {
