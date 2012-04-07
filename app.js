@@ -229,45 +229,42 @@ io.sockets.on('connection', function (socket) {
 		return '('+stringScore(cap);
 	}
 	
-	socket.on('initialize', function(uid, nick, rooms, current, callback) {
-		helper.debug('initialize', uid, nick, rooms, current);
-		function joinRooms(rooms) {
-			for (var i = 0; i < rooms.length; i++) {
-				var room = rooms[i];
-				if (!nicknames[room]) {
-					nicknames[room] = {};
-				}
-				socket.join(room);
+	socket.on('initialize', function(uid, nick, roomIds, current, callback) {
+		helper.debug('initialize', uid, nick, roomIds, current);
+
+		// join rooms
+		for (var i = 0; i < roomIds.length; i++) {
+			var roomId = roomIds[i];
+			if (!nicknames[roomId]) {
+				nicknames[roomId] = {};
 			}
+			socket.join(roomId);
 		}
 
-		helper.getAbbreviatedTitle(current, function(title) {
-			if (uid != null && nick != null) {
-				socket.nickname = nick;
-				socket.set('uid', uid);
+		if (uid != null && nick != null) {
+			socket.nickname = nick;
+			socket.set('uid', uid);
 			
-				joinRooms(rooms);
-			
-				getChatlog(current, function(logs, mentions) {	
-					client2.hget('user:'+uid, 'chatrooms', function(err, reply) {
-						if (!err) {
-							if (reply) {
-								var rooms = reply.split(',');
-								for (var i = 0; i < rooms.length; i++) {
-									var room = rooms[i];
-									nicknames[room][uid] = socket.nickname;
-									client2.zadd('users:'+room, stringScore(socket.nickname), uid);
+			getChatlog(current, function(logs, mentions, room) {	
+				client2.hget('user:'+uid, 'chatrooms', function(err, chatrooms) {
+					if (!err) {
+						if (chatrooms) {
+							var roomIds = chatrooms.split(',');
+							for (var i = 0; i < roomIds.length; i++) {
+								var roomId = roomIds[i];
+								nicknames[roomId][uid] = socket.nickname;
+								client2.zadd('users:'+roomId, stringScore(socket.nickname), uid);
 
-									if (room != current) {
-										io.sockets.in(room).emit('announcement', room, nick + ' connected');
-										io.sockets.in(room).emit('online', room, nicknames[room]);
-									}
+								if (roomId != current) {
+									io.sockets.in(roomId).emit('announcement', roomId, nick + ' connected');
+									io.sockets.in(roomId).emit('online', roomId, nicknames[roomId]);
 								}
-
-								callback(logs, mentions, title);
-							} else {
-								callback();
 							}
+
+							callback(logs, mentions, room);
+						} else {
+							callback();
+						}
 						
 							// TODO: can we just get rid of that if check on line 213 so we don't need this? 
 							io.sockets.in(current).emit('announcement', current, nick + ' connected');
@@ -277,17 +274,14 @@ io.sockets.on('connection', function (socket) {
 							callback();
 						}
 					});
-				});
-			} else {
-				joinRooms(rooms);
+			});
+		} else {
+			getChatlog(current, function(logs, mentions, room) {
+				callback(logs, mentions, room);
+			});
 
-				getChatlog(current, function(logs, mentions) {
-					callback(logs, mentions, title);
-				});
-
-				io.sockets.in(current).emit('online', current, nicknames[current]);
-			}
-		});
+			io.sockets.in(current).emit('online', current, nicknames[current]);
+		}
 	});
 	
 	socket.on('leave room', function (room, callback) {
@@ -345,16 +339,16 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get chatlog', getChatlog);
-	function getChatlog(room, callback) {
-		helper.debug('get chatlog', room);
-		room = helper.stripHigh(room);
+	function getChatlog(roomId, callback) {
+		helper.debug('get chatlog', roomId);
+		roomId = helper.stripHigh(roomId);
 
 		// get last 30 messages
-		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
+		client2.zrange('chatlog:'+roomId, -30, -1, function(err, chatlog) {
 			if (!err) {
-				helper.getAbbreviatedTitle(room, function(title) {
+				helper.getRoomInfo(roomId, function(room) {
 					if (chatlog.length == 0) {
-						callback({}, {}, title);
+						callback({}, {}, room);
 						return;
 					}
 				
@@ -382,7 +376,7 @@ io.sockets.on('connection', function (socket) {
 								
 									var entry = {
 										'from'		: fromUid,
-										'to'		: room,
+										'to'		: roomId,
 										'text'		: text,
 										'mentions'	: mentions,
 										'id'		: mid,
@@ -394,7 +388,7 @@ io.sockets.on('connection', function (socket) {
 								
 								if (added == chatlog.length) {
 									getUsers(allMentions, function(mapping) {
-										callback(logs, mapping, title);
+										callback(logs, mapping, room);
 									});
 								}
 							});

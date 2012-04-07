@@ -6,6 +6,66 @@ var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
 
 
+// Returns an object containing the id, official name, pretty name, and title
+function getRoomInfo(roomId, callback) {
+	debug('getRoomInfo', roomId);
+	isValid(roomId, function(valid, rawId) {
+		if (valid) {
+			// check if the room is a class
+			client0.hgetall('class:'+rawId, function(err, klass) {
+				if (!err && Object.keys(klass).length) {
+					var name = klass.department+' '+klass.number;
+					var pretty = null;
+					client1.hget('abbreviations', stripHigh(department), function(err, abbreviation) {
+						if (!err && abbreviation) {
+							// for example, ELENG40 -> EE 40
+							pretty = abbreviation+' '+klass.number;
+						} else {
+							// for example, ANTHRO1 -> ANTHRO 1
+							pretty = name;
+						}
+
+						callback({
+							'id'		: rawId,
+							'name'		: name,
+							'pretty'	: pretty,
+							'title'		: klass.title,
+						});
+					});
+				} else {
+					// check if the room is a building
+					client0.hgetall('location:'+rawId, function(err, location) {
+						if (!err && Object.keys(location).length) {
+							callback({
+								'id'		: rawId,
+								'name'		: location.name,
+								'pretty'	: location.name,
+								'title'		: location.longname,
+							});
+						} else {
+							// check if room is a special manual input
+							client1.hget('validrooms', rawId, function(err, title) {
+								if (!err && title) {
+									callback({
+										'id'		: rawId,
+										'name'		: rawId,
+										'pretty'	: rawId,
+										'title'		: title,
+									});
+								} else {
+									callback(null);
+								}
+							});
+						}
+					});
+				}
+			});
+		} else {
+			callback(null);
+		}
+	});
+}
+
 function getAbbreviatedTitle(room, callback) {
 	debug('getAbbreviatedTitle', room);
 	isValid(room, function(valid, rawId) {
@@ -155,6 +215,7 @@ function debug() {
 	console.log('--');
 }
 
+exports.getRoomInfo = getRoomInfo;
 exports.getAbbreviatedTitle = getAbbreviatedTitle;
 exports.getAbbreviatedTitles = getAbbreviatedTitles;
 exports.prependRoom = prependRoom;
