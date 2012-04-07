@@ -16,7 +16,7 @@ function getRoomInfo(roomId, callback) {
 				if (!err && Object.keys(klass).length) {
 					var name = klass.department+' '+klass.number;
 					var pretty = null;
-					client1.hget('abbreviations', stripHigh(department), function(err, abbreviation) {
+					client1.hget('abbreviations', stripHigh(klass.department), function(err, abbreviation) {
 						if (!err && abbreviation) {
 							// for example, ELENG40 -> EE 40
 							pretty = abbreviation+' '+klass.number;
@@ -66,41 +66,10 @@ function getRoomInfo(roomId, callback) {
 	});
 }
 
-function getAbbreviatedTitle(room, callback) {
-	debug('getAbbreviatedTitle', room);
-	isValid(room, function(valid, rawId) {
-		if (valid) {
-			room = rawId;
-			// first check if room is a class
-			client0.hgetall('class:'+rawId, function(err, reply) {
-				if (!err && Object.keys(reply).length) {
-					var department = reply.department;
-					var number = reply.number;
-					client1.hget('abbreviations', stripHigh(department), function(err, abbreviation) {
-						if (!err && abbreviation) {
-							// for example, ELENG40 -> EE 40
-							callback(abbreviation + ' ' + number);
-						} else {
-							// for example, ANTHRO1 -> ANTHRO 1
-							callback(department + ' ' + number);
-						}
-					});
-				} else {
-					// then check if room is a building
-					client0.hget('location:'+rawId, 'name', function(err, name) {
-						if (!err && name) {
-							callback(name);
-						} else {
-							// for example, CALCHAT
-							callback(rawId);
-						}
-					});
-				}
-			});
-		} else {
-			// for example, INVALIDROOM
-			callback(null);
-		}
+function getAbbreviatedTitle(roomId, callback) {
+	debug('getAbbreviatedTitle', roomId);
+	getRoomInfo(roomId, function(room) {
+		callback(room.pretty);
 	});
 }
 
