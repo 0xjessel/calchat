@@ -10,7 +10,12 @@ $(document).ready(function () {
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i].pretty;
 			var unread = rooms[i].unread;
-			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+stripLow(room)).text(room).append($('<span>').addClass('close').addClass('close-chat').data('room', rooms[i].id).text('x'))));
+			var unreadBadge = $('<span>').addClass('badge').addClass('badge-error').text(unread).hide();
+
+			if (unread > 0) {
+				unreadBadge.show();
+			}
+			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+stripLow(room)).text(room).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', rooms[i].id).text('x'))));
 		}
 	}
 

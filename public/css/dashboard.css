@@ -5,6 +5,10 @@
 	float:left;
 }
 
+li .badge-error {
+	margin-left:5px;
+}
+
 .separator {
 	margin-left:5px;
 }
