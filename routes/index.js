@@ -46,7 +46,7 @@ exports.dashboard = function(req, res) {
 									client2.zcount('chatlog:'+rooms[i], prev, cur, function (err, reply) {
 										console.log('lol: '+reply);
 										room.unread = reply;
-										count--;
+										count++;
 										if (count == rooms.length) {
 											console.log('done');
 											callback();
