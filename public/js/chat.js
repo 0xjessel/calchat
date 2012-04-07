@@ -148,6 +148,7 @@ function renderChatlogs (logs, mapping, room) {
 
 		var entry = logs[timestamp];
 		
+		// wtf is this used for 
 		var text = entry.text;
 
 		var element = renderChatMessage(entry, mapping);
