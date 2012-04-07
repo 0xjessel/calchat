@@ -117,7 +117,7 @@ function renderChatroom(anchor) {
 
 	$('.chat-title h2').text('Loading...');
 	$('.chat-title h3').text('');
-	
+
 	$('#lines').empty();
 	$('#online li:not(.nav-header)').remove();
 	anchor.find('.badge').remove();
@@ -390,7 +390,7 @@ $(document).ready(function () {
 		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
 
-		socket.emit('leave room', current.id, rooms.indexOf(current), function() {
+		socket.emit('leave room', current.id, function() {
 			if (next.length) {
 				renderChatroom(next);
 			} else {

@@ -31,7 +31,6 @@ exports.dashboard = function(req, res) {
 
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
-
 		helper.getRoomsInfo(roomIds, function(rooms) {
 			res.render('dashboard', {
 				title: 'Dashboard',

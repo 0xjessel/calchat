@@ -312,36 +312,39 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 	
-	socket.on('leave room', function (room, index, callback) {
+	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
 		if (session.uid !== undefined){
 			delete nicknames[room][session.uid];
 
-			if (index != -1) {
-				client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
+			client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
 
-					if (!err && reply[0] != null && reply[1] != null) {
-						var unreads = reply[0].split(',');
-						unreads.splice(index, 1);
+				if (!err && reply[0] != null && reply[1] != null) {
+					var rooms = reply[1].split(',');
+					var index = rooms.indexOf(room);
 
-						var rooms = reply[1].split(',');
-						rooms.splice(rooms.indexOf(room));
+					rooms.splice(index, 1);
 
-						client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
-							callback();
-						});
-					} else {
-						error(err, socket);
+					console.log('index: '+index);
+					var unreads = reply[0].split(',');
+					console.log('before: '+unreads);
+					unreads.splice(index, 1);
+					console.log('after: '+unreads);
+
+					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
 						callback();
-					}
-				});
+					});
+				} else {
+					error(err, socket);
+					callback();
+				}
+			});
 
-				// remove user from chatroom's list of users
-				client2.zrem('users:'+room, session.uid);
-	        
-				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-				io.sockets.in(room).emit('online', room, nicknames[room]);
-			}
+			// remove user from chatroom's list of users
+			client2.zrem('users:'+room, session.uid);
+        
+			io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+			io.sockets.in(room).emit('online', room, nicknames[room]);
 		} else {
 			error("session.uid undefined", socket);
 			callback();
@@ -390,14 +393,16 @@ io.sockets.on('connection', function (socket) {
 
 		if (session.uid !== undefined) {
 			// make this chatroom most recent in user's list
-			client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
-				if (!err){
-					var rooms = chatrooms.split(',');
+			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+				if (!err && reply[0] != null && reply[1] != null){
+					var rooms = reply[0].split(',');
+					var unreads = reply[1].split(',');
 			
 					// move room to front of rooms
 					var index = rooms.indexOf(roomId);
 					rooms.unshift(rooms.splice(index, 1));
-					client2.hset('user:'+session.uid, 'chatrooms', rooms.join());
+					unreads.unshift(unreads.splice(index, 1));
+					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
 				} else {
 					error(err, socket);
 				}
@@ -681,16 +686,20 @@ io.sockets.on('connection', function (socket) {
 					var rooms = reply[0].split(',');
 					var unreads = reply[1].split(',')
 					var time = new Date().getTime();
-					for (var i = 0; i < rooms.length; i++) {
-						var room = rooms[i];
 
-						// update unreads to time of d/c
-						unreads[i] = time;
+					// do not run if array is [""] (which happens b/c "".split(',') becomes [""])
+					if (rooms.length > 1) {
+						for (var i = 0; i < rooms.length; i++) {
+							var room = rooms[i];
 
-						io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-						io.sockets.in(room).emit('online', room, nicknames[room]);
+							// update unreads to time of d/c
+							unreads[i] = time;
+
+							io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+							io.sockets.in(room).emit('online', room, nicknames[room]);
+						}
+						client2.hset('user:'+session.uid, 'unread', unreads.join());
 					}
-					client2.hset('user:'+session.uid, 'unread', unreads.join());
 				} else {
 					error(err, socket);
 				}
