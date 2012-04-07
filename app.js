@@ -604,75 +604,16 @@ io.sockets.on('connection', function (socket) {
 								id = id.substring(0, id.length - 1);
 							}
 
-							// check if id is a course
-							client0.hgetall('class:'+id, function(err, course) {
-								console.log('===');
-								console.log(err);
-								console.log(course);
-								console.log('===');
-								if (!err && Object.keys(course).length) {
-									helper.getAbbreviatedTitle(helper.stripHigh(course.department+course.number), function(pretty) {
-										added++;
-										if (!err) {
-											rooms[id] = {
-												'name'		: course.department+' '+course.number,
-												'title'		: course.title,
-												'pretty'	: pretty,
-											};
-										} else {
-											error(err, socket);
-										}
+							helper.getRoomInfo(id, function(room) {
+								added++;
+								rooms[id] = room;
 
-										if (added == ids.length) {
-											var objects = [];
-											for (id in rooms) {
-												objects.push(rooms[id]);
-											}
-											callback(objects);
-										}
-									});
-								} else {
-									//check if id is a location
-									client0.hgetall('location:'+id, function(err, location) {
-										if (!err && Object.keys(location).length) {
-											added++;
-											rooms[id] = {
-												'name'		: location.name,
-												'title'		: location.longname,
-												'pretty'	: location.name,
-											};
-
-											if (added == ids.length) {
-												var objects = [];
-												for (id in rooms) {
-													objects.push(rooms[id]);
-												}
-												callback(objects);
-											}
-										} else {
-											// For example, CALCHAT
-											client1.hget('validrooms', id, function(err, title) {
-												added++;
-												if (!err && title) {
-													rooms[id] = {
-														'name'		: id,
-														'title'		: title,
-														'pretty'	: id,
-													};
-												} else {
-													error(err, socket);
-												}
-
-												if (added == ids.length) {
-													var objects = [];
-													for (id in rooms) {
-														objects.push(rooms[id]);
-													}
-													callback(objects);
-												}
-											});
-										}
-									});
+								if (added == ids.length) {
+									var objects = [];
+									for (id in rooms) {
+										objects.push(rooms[id]);
+									}
+									callback(objects);
 								}
 							});
 						}
