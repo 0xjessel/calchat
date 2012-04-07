@@ -471,7 +471,12 @@ io.sockets.on('connection', function (socket) {
 					client2.hmget('user:'+session.uid, 'gsirooms', 'founder', function (err, reply) {
 						if (!err && reply[0] != null && reply[1] != null) {
 							//  0 if founder bit is on, else set badge to 2 if one of the gsirooms is equal to room
-
+							var gsiRooms = reply[0].split(',');
+							for (var i=0; i<gsiRooms.length; i++){
+								if (gsiRooms[i] == room){
+									badge = 2;
+								}
+							}
 							getUsers(mentions.concat(session.uid), function(mapping) {
 								var entry = {
 									'from'		: session.uid,
