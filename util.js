@@ -32,13 +32,13 @@ function getAbbreviatedTitle(room, callback) {
 							callback(name);
 						} else {
 							// for example, CALCHAT
-							callback(room);
+							callback(rawId);
 						}
 					});
 				}
 			});
 		} else {
-			// for example, POOL
+			// for example, INVALIDROOM
 			callback(null);
 		}
 	});
@@ -101,12 +101,6 @@ function isValid(room, callback) {
 		return;
 	} else {
 		room = stripHigh(room);
-
-		// CALCHAT is a special case
-		if (room == 'CALCHAT') {
-			callback(true, room);
-			return;
-		}
 
 		function stringScore(string) {
 			string = string.toUpperCase();

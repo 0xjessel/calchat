@@ -639,24 +639,43 @@ io.sockets.on('connection', function (socket) {
 								} else {
 									//check if id is a location
 									client0.hgetall('location:'+id, function(err, location) {
-										if (!err) {
+										if (!err && Object.keys(location).length) {
 											added++;
 											rooms[id] = {
 												'name'		: location.name,
 												'title'		: location.longname,
 												'pretty'	: location.name,
 											};
-										} else {
-											error(err, socket);
-											callback();
-										}
 
-										if (added == ids.length) {
-											var objects = [];
-											for (id in rooms) {
-												objects.push(rooms[id]);
+											if (added == ids.length) {
+												var objects = [];
+												for (id in rooms) {
+													objects.push(rooms[id]);
+												}
+												callback(objects);
 											}
-											callback(objects);
+										} else {
+											// For example, CALCHAT
+											client1.hget('validrooms', id, function(err, title) {
+												added++;
+												if (!err && title) {
+													rooms[id] = {
+														'name'		: id,
+														'title'		: title,
+														'pretty'	: id,
+													};
+												} else {
+													error(err, socket);
+												}
+
+												if (added == ids.length) {
+													var objects = [];
+													for (id in rooms) {
+														objects.push(rooms[id]);
+													}
+													callback(objects);
+												}
+											});
 										}
 									});
 								}
