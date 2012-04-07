@@ -123,7 +123,7 @@ exports.chatroom = function(req, res) {
 				console.log(req.user.chatrooms ==  "");
 
 				if (req.session.rooms != undefined) {
-					sessionRooms = req.session.rooms.split(',');
+					sessionRooms = req.session.rooms;
 				}
 				if (req.user.chatrooms != "") {
 					userChatrooms = req.user.chatrooms.split(',');

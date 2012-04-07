@@ -364,7 +364,7 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('get chatlog', roomId);
 		roomId = helper.stripHigh(roomId);
 
-		if (session.uid !== undefined) {
+		if (session !== undefined && session.uid !== undefined) {
 			// make this chatroom most recent in user's list
 			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
 				if (!err && reply[0] != null && reply[1] != null){
