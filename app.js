@@ -465,36 +465,48 @@ io.sockets.on('connection', function (socket) {
 			mentions = Object.keys(temp);
 
 			client2.incr('message:id:next', function(err, mid) {
-				getUsers(mentions.concat(session.uid), function(mapping) {
-					var entry = {
-						'from'		: session.uid,
-						'to'		: room,
-						'text'		: text,
-						'mentions'	: mentions,
-						'id'		: mid,
-					};
-
-					io.sockets.in(room).emit('message', entry, mapping);
-				});
-			
 				if (!err) {
-					client2.hmset('message:'+mid, {
-						'from'		: session.uid,
-						'to'		: room,
-						'text'		: text,
-						'timestamp'	: timestamp,
-						'mentions'	: mentions.join(),
-					});
-					client2.zadd('chatlog:'+room, timestamp, mid);
-			
-					for (var i = 0; i < mentions.length; i++) {
-						var id = mentions[i];
-						client2.exists('user:'+id, function(err, exists) {
-							if (exists) {
-								client2.zadd('mentions:'+id, timestamp, mid);
+					// badge value is 0 for founder, 1 for regular users, 2 for gsi
+					var badge = 0;
+					client2.hmget('user:'+session.uid, 'gsirooms', 'founder', function (err, reply) {
+						if (!err && reply[0] != null && reply[1] != null) {
+							//  0 if founder bit is on, else set badge to 2 if one of the gsirooms is equal to room
+
+							getUsers(mentions.concat(session.uid), function(mapping) {
+								var entry = {
+									'from'		: session.uid,
+									'to'		: room,
+									'text'		: text,
+									'mentions'	: mentions,
+									'id'		: mid,
+									'badge'		: badge
+								};
+
+								io.sockets.in(room).emit('message', entry, mapping);
+							});
+
+							client2.hmset('message:'+mid, {
+								'from'		: session.uid,
+								'to'		: room,
+								'text'		: text,
+								'mentions'	: mentions.join(),
+								'timestamp'	: timestamp,
+								'badge'		: badge
+							});
+							client2.zadd('chatlog:'+room, timestamp, mid);
+					
+							for (var i = 0; i < mentions.length; i++) {
+								var id = mentions[i];
+								client2.exists('user:'+id, function(err, exists) {
+									if (exists) {
+										client2.zadd('mentions:'+id, timestamp, mid);
+									}
+								});
 							}
-						});
-					}
+						} else {
+							error(err, socket);
+						}
+					});
 				} else {
 					error(err, socket);
 				}

@@ -182,6 +182,7 @@ function renderChatMessage(entry, mapping) {
 	var msg = entry.text;
 	var mentions = entry.mentions;
 	var mid = entry.id;
+	var badge = entry.badge;
 
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
@@ -189,6 +190,13 @@ function renderChatMessage(entry, mapping) {
 	var from = fromUid;
 	if (mapping && fromUid in mapping) {
 		from = mapping[fromUid];
+	}
+
+	var label = $('<span>').addClass('label').hide();
+	if (badge == 0) {
+		label.addClass('label-inverse').text('FOUNDER').show();
+	} else if (badge == 2) {
+		label.addClass('label-warning').text('GSI').show();
 	}
 	
 	if (from == 'System') {
@@ -213,7 +221,7 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
-			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), ': '),
+			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), label, ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
 				function() {
 					$('#mentions'+mid).stop().fadeTo(400 ,0, function(){$(this).hide()});
