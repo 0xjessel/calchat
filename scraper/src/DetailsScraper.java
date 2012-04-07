@@ -49,7 +49,8 @@ public class DetailsScraper {
 
 				String location = Utils.trim(daysTimeAndLocation[1]);
 
-				if (location.equals(""))
+				if (location.equals("") || location.equals("OFF CAMPUS")
+						|| location.equals("NO FACILITY"))
 					continue; // don't put this class in the db
 
 				String[] daysTimeSplit = daysTime.split(" ");
@@ -61,14 +62,33 @@ public class DetailsScraper {
 				String buildingNumber = "";
 				String building = locationSplit[0];
 
-				if (locationSplit.length > 1) {
+				if (location.equals("PAC FILM ARC")
+						|| location.equals("BOT GARDEN")
+						|| location.equals("SPIEKER POOL")
+						|| location.equals("HEARST POOL")
+						|| location.equals("KERR FIELD")
+						|| location.equals("RSF FLDHOUSE")
+						|| location.equals("DURHAM THTRE")) {
+					building = location;
+				} else if (location.equals("WHEELER AUD")
+						|| location.equals("BECHTEL AUD")) {
+					buildingNumber = locationSplit[1];
+					building = locationSplit[0];
+				} else if (locationSplit.length > 1) {
 					buildingNumber = locationSplit[0];
 					building = locationSplit[1];
 
-					if (building.equals("AUD")) {
-						String temp = building;
-						building = buildingNumber;
-						buildingNumber = temp;
+					char[] numberChars = buildingNumber.toCharArray();
+					boolean foundNumber = false;
+					for (char c : numberChars) {
+						if (c >= '0' && c <= '9') {
+							foundNumber = true;
+							break;
+						}
+					}
+
+					if (!foundNumber) {
+						System.err.println(location);
 					}
 				}
 
