@@ -185,46 +185,30 @@ io.sockets.on('connection', function (socket) {
     	}
 
         var users = {};
-		var online = [];
 		
         // INFO
         // this for loop is asynchronous (because of redis), so lots of things need to be done:
+        var added = 0;
         for (var i = 0; i < ids.length; i++) {
             // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
-            var closure = function() {
+            function closure() {
                 var id = ids[i];
-                var name = null;
-                var fail = false;
-                client2.hget('user:'+id, 'firstname', function(err, firstname) {                    
-                    name = firstname;
-                    
-                    if (!name) {
-                        fail = true;
-                    }
-                });
-                
-                // 2nd callback function guaranteed to be called after 1st callback function above
-                client2.hget('user:'+id, 'lastname', function(err, lastname) {
-                    if (!fail) {
-                        name = name + ' ' + lastname.charAt(0);
-                    }
-                });
-                
-                // use ping to guarantee call order
-                client2.ping(function(){
-                    if (!fail) {
-                        users[id] = name;
-                    }
+                client2.hgetall('user:'+id, function(err, user) {
+                	added++;
+                	if (!err && Object.keys(user).length) {
+                		users[id] = user.firstname+' '+user.lastname.charAt(0);
+                	} else {
+                		error(err, socket);
+                	}
+
+                	if (added == ids.length) {
+                		callback(users);
+                	}
                 });
             }
             // immediately call the created closure
             closure();
         }
-        
-        // use ping to guarantee this callback is executed after all above callbacks have executed
-        client2.ping(function(){
-            callback(users);
-        });
     }
 	
 	function error(err, socket) {
