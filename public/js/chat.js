@@ -258,7 +258,7 @@ $(document).ready(function () {
 			element.addClass('active');
 		}
 
-		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.title));
+		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.pretty));
 		roomsNav.append(element);
 	}
 	
@@ -405,7 +405,7 @@ window.addEventListener('popstate', function(e) {
 	var path = location.pathname.split('/');
 	var room = path[path.length-1];
 	$('#chats a').each(function() {
-		if(stripLow($(this).data().room.title) == room) {
+		if(stripLow($(this).data().room.pretty) == room) {
 			renderChatroom($(this));
 		}
 	});

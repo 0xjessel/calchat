@@ -30,7 +30,7 @@ exports.dashboard = function(req, res) {
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
 
-		helper.getAbbreviatedTitles(roomIds, function(rooms) {
+		helper.getRoomsInfo(roomIds, function(rooms) {
 			res.render('dashboard', {
 				title: 'Dashboard',
 				layout: 'layout-dashboard',
@@ -61,8 +61,8 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
-		helper.getAbbreviatedTitle(rooms[0], function(room) {
-			res.redirect('/chat/'+helper.stripLow(room));
+		helper.getRoomInfo(rooms[0], function(room) {
+			res.redirect('/chat/'+helper.stripLow(room.pretty));
 		});
 	} else {
 		// error: guest did not add any chats yet
@@ -111,7 +111,7 @@ exports.chatroom = function(req, res) {
 				// convert array to string, update db
 				client2.hset('user:'+req.user.id, 'chatrooms', roomIds.join(), function() {
 					console.log(roomIds);
-					helper.getAbbreviatedTitles(roomIds, function(rooms) {
+					helper.getRoomsInfo(roomIds, function(rooms) {
 						console.log(rooms);
 						res.render('chat', {
 							title: rooms[0].title+' Chatroom',
@@ -132,7 +132,7 @@ exports.chatroom = function(req, res) {
 				}
 				req.session.redirectPath = '/chat/'+req.session.rooms[0];
 
-				helper.getAbbreviatedTitles(req.session.rooms, function(rooms) {
+				helper.getRoomsInfo(req.session.rooms, function(rooms) {
 					res.render('chat', { 
 						title: rooms[0].title+' Chatroom',
 						layout: 'layout-chat',
@@ -160,15 +160,15 @@ exports.archives = function(req, res) {
 	var room = req.params.room;
 
 	helper.isValid(room, function(valid, rawId) {
-		helper.getAbbreviatedTitle(rawId, function(pretty) {
-			if (pretty) {
+		helper.getRoomInfo(rawId, function(room) {
+			if (room) {
 				res.render('archives', {
-					title: pretty+' Archives',
+					title: room.pretty+' Archives',
 					layout: 'layout-archives',
 					loggedIn: req.loggedIn,
 					showChatTab: true,
-					room: rawId,
-					title: pretty,
+					room: room,
+					title: room.pretty,
 					today: new Date().toDateString(),
 					index: 3 //wtf should this be
 				});

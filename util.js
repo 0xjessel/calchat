@@ -66,36 +66,26 @@ function getRoomInfo(roomId, callback) {
 	});
 }
 
-function getAbbreviatedTitle(roomId, callback) {
-	debug('getAbbreviatedTitle', roomId);
-	getRoomInfo(roomId, function(room) {
-		callback(room.pretty);
-	});
-}
-
-function getAbbreviatedTitles(rooms, callback) {
-	debug('getAbbreviatedTitles');
-	if (!rooms.length) {
+function getRoomsInfo(roomIds, callback) {
+	debug('getRoomsInfo');
+	if (!roomIds.length) {
 		callback([]);
 	}
 
 	var added = 0;
-	var titles = [];
-	for (var i = 0; i < rooms.length; i++) {
+	var rooms = [];
+	for (var i = 0; i < roomIds.length; i++) {
 		function closure() {
-			var room = rooms[i];
+			var roomId = roomIds[i];
 			var n = i;
-			getAbbreviatedTitle(room, function(title) {
+			getRoomInfo(roomId, function(room) {
 				added++;
 
 				// preserve order
-				titles[n] = {
-					id: room,
-					title: title,
-				};
+				rooms[n] = room;
 
-				if (added == rooms.length) {
-					callback(titles);
+				if (added == roomIds.length) {
+					callback(rooms);
 				}
 			});
 		}
@@ -185,8 +175,7 @@ function debug() {
 }
 
 exports.getRoomInfo = getRoomInfo;
-exports.getAbbreviatedTitle = getAbbreviatedTitle;
-exports.getAbbreviatedTitles = getAbbreviatedTitles;
+exports.getRoomsInfo = getRoomsInfo;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
 exports.stripHigh = stripHigh;
