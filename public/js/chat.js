@@ -379,12 +379,11 @@ $(document).ready(function () {
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
 		$('#chats .active').remove();
-		var left = current.id;
 		
 		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
 
-		socket.emit('leave room', left, function() {
+		socket.emit('leave room', current.id, rooms.indexOf(current), function() {
 			if (next.length) {
 				renderChatroom(next);
 			} else {

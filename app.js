@@ -56,8 +56,8 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
-					'chatrooms': 'CAMPUS,CALCHAT',
-					'unread': '',
+					'chatrooms': 'CALCHAT',
+					'unread': timeStamp,
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
 					'founder': 0,
@@ -308,33 +308,36 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 	
-	socket.on('leave room', function (room, callback) {
+	socket.on('leave room', function (room, index, callback) {
 		helper.debug('leave room', room);
 		if (session.uid !== undefined){
 			delete nicknames[room][session.uid];
-        
-			// remove room from user's list of chatrooms
-			client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
-				if (!err){
-					var rooms = chatrooms.split(',');
-			
-					//remove room from rooms
-					rooms.splice(rooms.indexOf(room), 1);
-					var newRooms = rooms.join();
-					client2.hset('user:'+session.uid, 'chatrooms', newRooms, function(err, reply) {
-						callback();
-					});
-				} else {
-					error(err, socket);
-					callback();
-				}
-			});
 
-			// remove user from chatroom's list of users
-			client2.zrem('users:'+room, session.uid);
-        
-			io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-			io.sockets.in(room).emit('online', room, nicknames[room]);
+			if (index != -1) {
+				client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
+
+					if (!err && reply[0] != null && reply[1] != null) {
+						var unreads = reply[0].split(',');
+						unreads.splice(index, 1);
+
+						var rooms = reply[1].split(',');
+						rooms.splice(rooms.indexOf(room));
+
+						client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
+							callback();
+						});
+					} else {
+						error(err, socket);
+						callback();
+					}
+				});
+
+				// remove user from chatroom's list of users
+				client2.zrem('users:'+room, session.uid);
+	        
+				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+				io.sockets.in(room).emit('online', room, nicknames[room]);
+			}
 		} else {
 			error("session.uid undefined", socket);
 			callback();
@@ -342,15 +345,31 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	// remove room from the dashboard
-	socket.on('remove room', function (room) {
+	socket.on('remove room', function (room, index) {
 		helper.debug('remove room', room);
+
+		if (index != -1) {
+			client2.hget('user:'+session.uid, 'unread', function (err, reply) {
+				if (!err && reply != null) {
+					var unreads = reply.split(',');
+					unreads.splice(index, 1);
+					client2.hset('user:'+session.uid, 'unread', unreads.join());
+				} else {
+					error(err, socket);
+				}
+			});
+		}
+
 		// remove room from user's list of chatrooms
 		client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
 			if (!err) {
 				var rooms = chatrooms.split(',');
 			
 				//remove room from rooms
-				rooms.splice(rooms.indexOf(room), 1);
+				var i = rooms.indexOf(room);
+				if (i != -1) {
+					rooms.splice(rooms.indexOf(room), 1);
+				}
 			
 				var newRooms = rooms.join();
 				client2.hset('user:'+session.uid, 'chatrooms', newRooms);
@@ -365,8 +384,20 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('get chatlog', roomId);
 		roomId = helper.stripHigh(roomId);
 
-		if (index != -1) {
-			//client2.hgetall()
+		if (session.uid !== undefined) {
+			// make this chatroom most recent in user's list
+			client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
+				if (!err){
+					var rooms = chatrooms.split(',');
+			
+					// move room to front of rooms
+					var index = rooms.indexOf(roomId);
+					rooms.unshift(rooms.splice(index, 1));
+					client2.hset('user:'+session.uid, 'chatrooms', rooms.join());
+				} else {
+					error(err, socket);
+				}
+			});
 		}
 
 		// get last 30 messages
@@ -432,23 +463,6 @@ io.sockets.on('connection', function (socket) {
 	// emit online users as well as update user's chatroom list
 	socket.on('get online', function (room) {
 		helper.debug('get online', room);
-		if (session.uid !== undefined) {
-			// make this chatroom most recent in user's list
-			client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
-				if (!err){
-					var rooms = chatrooms.split(',');
-			
-					// move room to front of rooms
-					rooms.unshift(rooms.splice(rooms.indexOf(room), 1));
-			
-					var newChatrooms = rooms.join();
-
-					client2.hset('user:'+session.uid, 'chatrooms', newChatrooms);
-				} else {
-					error(err, socket);
-				}
-			});
-		}
 		
 		// send updated online users list
 		socket.emit('online', room, nicknames[room]);
@@ -656,17 +670,22 @@ io.sockets.on('connection', function (socket) {
 			for (room in nicknames) {
 				delete nicknames[room][session.uid];
 			}
-        
-			client2.hget('user:'+session.uid, 'chatrooms', function(err, reply) {
-				if (!err) {
-					if (reply) {
-						var rooms = reply.split(',');
-						for (var i = 0; i < rooms.length; i++) {
-							var room = rooms[i];
-							io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-							io.sockets.in(room).emit('online', room, nicknames[room]);
-						}
+
+			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+				if (!err && reply[0] != null && reply[1] != null) {
+					var rooms = reply[0].split(',');
+					var unreads = reply[1].split(',')
+					var time = new Date().getTime();
+					for (var i = 0; i < rooms.length; i++) {
+						var room = rooms[i];
+
+						// update unreads to time of d/c
+						unreads[i] = time;
+
+						io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+						io.sockets.in(room).emit('online', room, nicknames[room]);
 					}
+					client2.hset('user:'+session.uid, 'unread', unreads.join());
 				} else {
 					error(err, socket);
 				}

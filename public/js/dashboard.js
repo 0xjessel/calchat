@@ -9,7 +9,7 @@ $(document).ready(function () {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i].pretty;
-			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span id="'+room+'" class="close close-chat">x</span></a></li>');
+			chatroomsList.append('<li><a href="/chat/'+stripLow(room)+'">'+room+'<span id="'+i+'" data-room="'+room+'" class="close close-chat">x</span></a></li>');
 		}
 	}
 
@@ -22,7 +22,7 @@ $(document).ready(function () {
 	}
 	
 	$('.close-chat').click(function () {
-		socket.emit('remove room', $(this).attr('id'));
+		socket.emit('remove room', $(this).data('room'), $(this).attr('id'));
 		$(this).parent().parent().remove();
 		return false;
 	});
