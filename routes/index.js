@@ -25,6 +25,16 @@ exports.index = function(req, res) {
 };
 
 exports.dashboard = function(req, res) {
+	function finished(rooms) {
+		res.render('dashboard', {
+			title: 'Dashboard',
+			layout: 'layout-dashboard',
+			loggedIn: req.loggedIn,
+			showChatTab: true,
+			rooms: rooms,
+			index: 1,
+		});
+	}
 	helper.debug('dashboard', req.user);
 	if (req.loggedIn) {
 		helper.postAuthenticate(req);
@@ -32,45 +42,44 @@ exports.dashboard = function(req, res) {
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
 		helper.getRoomsInfo(roomIds, function(rooms) {
-			function closure(callback) {
-				if (rooms[0] != null) {
-					client2.hget('user:'+req.user.id, 'unread', function (err, reply) {
-						if (!err) {
-							var unreads = reply.split(',');
-							if (unreads.length > 0) {
-								var count = 0;
-								for (var i = 0; i < rooms.length; i++) {
+			if (rooms[0] != null) {
+				client2.hget('user:'+req.user.id, 'unread', function (err, unread) {
+					if (!err) {
+						var unreads = unread.split(',');
+						if (unreads.length > 0) {
+							var added = 0;
+							for (var i = 0; i < rooms.length; i++) {
+								function closure() {
 									var cur = new Date().getTime();
 									var prev = unreads[i];
 									var room = rooms[i];
-									client2.zcount('chatlog:'+rooms[i], prev, cur, function (err, reply) {
-										console.log('lol: '+reply);
-										room.unread = reply;
-										count++;
-										if (count == rooms.length) {
-											console.log('done');
-											callback();
+									client2.zcount('chatlog:'+room, prev, cur, function (err, count) {
+										added++;
+										if (!err) {
+											console.log('lol: '+count);
+											room.unread = count;
+										}
+										if (added == rooms.length) {
+											//succeed
+											finished(rooms);
 										}
 									});
 								}
-								callback();
+								closure();
 							}
+						} else {
+							// fail
+							finished(rooms);
 						}
-						res.send(404);
-					});
-				}
-			}
-			closure(function () {
-				console.log('callback');
-				res.render('dashboard', {
-					title: 'Dashboard',
-					layout: 'layout-dashboard',
-					loggedIn: req.loggedIn,
-					showChatTab: true,
-					rooms: rooms,
-					index: 1
+					} else {
+						// fail
+						finished(rooms);
+					}
 				});
-			});
+			} else {
+				// fail
+				finished(rooms);
+			}
 		});
 	} else {
 		// error: cannot access /dashboard if not logged in
