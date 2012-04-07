@@ -22,7 +22,7 @@ $(document).ready(function () {
 	}
 	
 	$('.close-chat').click(function () {
-		socket.emit('remove room', uid, $(this).attr('id'));
+		socket.emit('remove room', $(this).attr('id'));
 		$(this).parent().parent().remove();
 		return false;
 	})

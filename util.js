@@ -142,6 +142,11 @@ function isValid(room, callback) {
 	}
 }
 
+function postAuthenticate(req) {
+	req.session.uid = req.user.id;
+	req.session.nick = req.user.firstname + ' ' + req.user.lastname.charAt(0);
+}
+
 function stripHigh(string) {
 	return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
 }
@@ -165,6 +170,7 @@ exports.getAbbreviatedTitle = getAbbreviatedTitle;
 exports.getAbbreviatedTitles = getAbbreviatedTitles;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
+exports.postAuthenticate = postAuthenticate;
 exports.stripHigh = stripHigh;
 exports.stripLow = stripLow;
 exports.debug = debug;

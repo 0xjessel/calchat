@@ -12,7 +12,7 @@ html(lang='en')
   script 
     if (window.location.hash) {
       window.location.hash = '';
-      window.History.replaceState(null, null, window.location.href.slice(0, -1));
+      History.replaceState(null, null, window.location.href.slice(0, -1));
     }
   if loggedIn
     script

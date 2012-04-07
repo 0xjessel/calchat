@@ -27,6 +27,8 @@ exports.index = function(req, res) {
 exports.dashboard = function(req, res) {
 	helper.debug('dashboard', req.user);
 	if (req.loggedIn) {
+		helper.postAuthenticate(req);
+
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
 
@@ -80,6 +82,8 @@ exports.chatroom = function(req, res) {
 	helper.isValid(room, function(valid, rawId) {
 		if (valid) {
 			if (req.loggedIn) {
+				helper.postAuthenticate(req);
+
 				var sessionRooms = req.session.rooms;
 				var userChatrooms = req.user.chatrooms;
 				var roomIds = null;

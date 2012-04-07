@@ -23,7 +23,7 @@ socket.on('connect', function () {
 	for (var i = 0; i < rooms.length; i++) {
 		roomIds.push(rooms[i].id);
 	};
-	socket.emit('initialize', uid, name, roomIds, current.id, function(logs, mentions, title) {
+	socket.emit('initialize', roomIds, current.id, function(logs, mentions, title) {
 		renderChatlogs(logs, mentions, title);
 	});
 });
