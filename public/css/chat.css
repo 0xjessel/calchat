@@ -103,3 +103,13 @@ div.message-mentions a.mention:hover {
 	font-weight: bold;
 	font-size: 75%;
 }
+
+.chat-title .title-text {
+	display: inline;
+	vertical-align: baseline;
+	margin-right: 10px;
+}
+
+h3.title-text {
+	color: dimgrey;
+}

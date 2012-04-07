@@ -56,12 +56,13 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
-					'chatrooms': '',
+					'chatrooms': 'CAMPUS,CALCHAT',
 					'unread': '',
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
-					'type': 1,
+					'founder': 0,
 					'timestamp' : timeStamp,
+					'gsirooms' : "",
 				}, function() {
 					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
@@ -252,45 +253,42 @@ io.sockets.on('connection', function (socket) {
 		var cap = string.substring(0, string.length - 1) + next;
 		return '('+stringScore(cap);
 	}
-	
-	socket.on('initialize', function(rooms, current, callback) {
-		helper.debug('initialize', rooms, current);
-		function joinRooms(rooms) {
-			for (var i = 0; i < rooms.length; i++) {
-				var room = rooms[i];
-				if (!nicknames[room]) {
-					nicknames[room] = {};
-				}
-				socket.join(room);
+
+	socket.on('initialize', function(roomIds, current, callback) {
+		helper.debug('initialize', roomIds, current);
+
+		// join rooms
+		for (var i = 0; i < roomIds.length; i++) {
+			var roomId = roomIds[i];
+			if (!nicknames[roomId]) {
+				nicknames[roomId] = {};
 			}
+			socket.join(roomId);
 		}
 
-		helper.getAbbreviatedTitle(current, function(title) {
-			if (session.uid !== undefined && session.nick !== undefined) {
-				socket.nickname = session.nick;
+		if (session.uid !== undefined && session.nick !== undefined) {
+			socket.nickname = session.nick;
 			
-				joinRooms(rooms);
-			
-				getChatlog(current, 0, function(logs, mentions) {	
-					client2.hget('user:'+session.uid, 'chatrooms', function(err, reply) {
-						if (!err) {
-							if (reply) {
-								var rooms = reply.split(',');
-								for (var i = 0; i < rooms.length; i++) {
-									var room = rooms[i];
-									nicknames[room][session.uid] = socket.nickname;
-									client2.zadd('users:'+room, stringScore(socket.nickname), session.uid);
+			getChatlog(current, 0, function(logs, mentions, room) {	
+				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
+					if (!err) {
+						if (chatrooms) {
+							var roomIds = chatrooms.split(',');
+							for (var i = 0; i < roomIds.length; i++) {
+								var roomId = roomIds[i];
+								nicknames[roomId][session.uid] = socket.nickname;
+								client2.zadd('users:'+roomId, stringScore(socket.nickname), session.uid);
 
-									if (room != current) {
-										io.sockets.in(room).emit('announcement', room, session.nick + ' connected');
-										io.sockets.in(room).emit('online', room, nicknames[room]);
-									}
+								if (roomId != current) {
+									io.sockets.in(roomId).emit('announcement', roomId, session.nick + ' connected');
+									io.sockets.in(roomId).emit('online', roomId, nicknames[roomId]);
 								}
-
-								callback(logs, mentions, title);
-							} else {
-								callback();
 							}
+
+							callback(logs, mentions, room);
+						} else {
+							callback();
+						}
 						
 							// TODO: can we just get rid of that if check on line 213 so we don't need this? 
 							io.sockets.in(current).emit('announcement', current, session.nick + ' connected');
@@ -300,17 +298,14 @@ io.sockets.on('connection', function (socket) {
 							callback();
 						}
 					});
-				});
-			} else {
-				joinRooms(rooms);
 
-				getChatlog(current, 0, function(logs, mentions) {
-					callback(logs, mentions, title);
-				});
-
-				io.sockets.in(current).emit('online', current, nicknames[current]);
-			}
-		});
+			});
+		} else {
+			getChatlog(current, 0, function(logs, mentions, room) {
+				callback(logs, mentions, room);
+			});
+			io.sockets.in(current).emit('online', current, nicknames[current]);
+		}
 	});
 	
 	socket.on('leave room', function (room, callback) {
@@ -366,20 +361,20 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get chatlog', getChatlog);
-	function getChatlog(room, index, callback) {
-		helper.debug('get chatlog', room);
-		room = helper.stripHigh(room);
+	function getChatlog(roomId, index, callback) {
+		helper.debug('get chatlog', roomId);
+		roomId = helper.stripHigh(roomId);
 
 		if (index != -1) {
 			//client2.hgetall()
 		}
 
 		// get last 30 messages
-		client2.zrange('chatlog:'+room, -30, -1, function(err, chatlog) {
+		client2.zrange('chatlog:'+roomId, -30, -1, function(err, chatlog) {
 			if (!err) {
-				helper.getAbbreviatedTitle(room, function(title) {
+				helper.getRoomInfo(roomId, function(room) {
 					if (chatlog.length == 0) {
-						callback({}, {}, title);
+						callback({}, {}, room);
 						return;
 					}
 				
@@ -407,7 +402,7 @@ io.sockets.on('connection', function (socket) {
 								
 									var entry = {
 										'from'		: fromUid,
-										'to'		: room,
+										'to'		: roomId,
 										'text'		: text,
 										'mentions'	: mentions,
 										'id'		: mid,
@@ -419,7 +414,7 @@ io.sockets.on('connection', function (socket) {
 								
 								if (added == chatlog.length) {
 									getUsers(allMentions, function(mapping) {
-										callback(logs, mapping, title);
+										callback(logs, mapping, room);
 									});
 								}
 							});
@@ -630,56 +625,16 @@ io.sockets.on('connection', function (socket) {
 								id = id.substring(0, id.length - 1);
 							}
 
-							// check if id is a course
-							client0.hgetall('class:'+id, function(err, course) {
-								console.log('===');
-								console.log(err);
-								console.log(course);
-								console.log('===');
-								if (!err && Object.keys(course).length) {
-									helper.getAbbreviatedTitle(helper.stripHigh(course.department+course.number), function(pretty) {
-										added++;
-										if (!err) {
-											rooms[id] = {
-												'name'		: course.department+' '+course.number,
-												'title'		: course.title,
-												'pretty'	: pretty,
-											};
-										} else {
-											error(err, socket);
-										}
+							helper.getRoomInfo(id, function(room) {
+								added++;
+								rooms[id] = room;
 
-										if (added == ids.length) {
-											var objects = [];
-											for (id in rooms) {
-												objects.push(rooms[id]);
-											}
-											callback(objects);
-										}
-									});
-								} else {
-									//check if id is a location
-									client0.hgetall('location:'+id, function(err, location) {
-										if (!err) {
-											added++;
-											rooms[id] = {
-												'name'		: location.name,
-												'title'		: location.longname,
-												'pretty'	: location.name,
-											};
-										} else {
-											error(err, socket);
-											callback();
-										}
-
-										if (added == ids.length) {
-											var objects = [];
-											for (id in rooms) {
-												objects.push(rooms[id]);
-											}
-											callback(objects);
-										}
-									});
+								if (added == ids.length) {
+									var objects = [];
+									for (id in rooms) {
+										objects.push(rooms[id]);
+									}
+									callback(objects);
 								}
 							});
 						}

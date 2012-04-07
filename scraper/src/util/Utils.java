@@ -32,7 +32,6 @@ public class Utils {
 	private static Map<String, String> abbreviations;
 	private static Map<String, String> locations;
 	private static Map<String, String> renames;
-
 	private static Thread saveLocationsThread;
 	private static boolean saveLocationsAlive;
 
@@ -66,6 +65,13 @@ public class Utils {
 				abbreviations = syncJedis1.hgetAll("abbreviations");
 				locations = syncJedis1.hgetAll("locations");
 				renames = syncJedis1.hgetAll("renames");
+
+				Map<String, String> validrooms = syncJedis1
+						.hgetAll("validrooms");
+				for (String room : validrooms.keySet()) {
+					setValidRoom(room, room);
+				}
+
 			}
 
 			saveLocationsThread = new Thread(new Runnable() {
@@ -124,6 +130,12 @@ public class Utils {
 		return s.replaceAll("[^A-Za-z0-9:-]", "").toUpperCase();
 	}
 
+	public static void setValidRoom(String scoreby, String value) {
+		synchronized (pipeline0) {
+			pipeline0.zadd("validrooms", stringScore(scoreby), value);
+		}
+	}
+
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
 		String key = String.format("class:%s", id);
@@ -150,18 +162,14 @@ public class Utils {
 		String department = stripHigh(m.department);
 		String number = stripHigh(m.number);
 		String combine = department + number;
-		synchronized (pipeline0) {
-			pipeline0.zadd("validrooms", stringScore(combine), id);
-		}
+		setValidRoom(combine, id);
 
 		// abbreviated validrooms
 		String abbreviation = abbreviations.get(department);
 		if (abbreviation != null) {
 			// assume there's at most 1 abbreviation
 			String combine2 = abbreviation + number;
-			synchronized (pipeline0) {
-				pipeline0.zadd("validrooms", stringScore(combine2), id + "#");
-			}
+			setValidRoom(combine2, id + "#");
 		}
 
 		for (Schedule schedule : m.schedules) {
@@ -182,7 +190,8 @@ public class Utils {
 					continue;
 				}
 				String roomKey = String.format("room:%s:%s:%s",
-						stripHigh(schedule.building), schedule.buildingNumber, day);
+						stripHigh(schedule.building), schedule.buildingNumber,
+						day);
 				String field = stripHigh(schedule.time);
 
 				synchronized (pipeline0) {
@@ -193,7 +202,8 @@ public class Utils {
 	}
 
 	public static String getClassId(ClassModel m) {
-		return String.format("%s%s", stripHigh(m.department), stripHigh(m.number));
+		return String.format("%s%s", stripHigh(m.department),
+				stripHigh(m.number));
 	}
 
 	public static void disconnect() {
@@ -267,7 +277,7 @@ public class Utils {
 			String lat = null, lng = null, location = null;
 			location = locations.get(stripHigh(building));
 
-			String longName = null;
+			String longName = building;
 
 			if (location == null) {
 				String name = null;
@@ -327,12 +337,11 @@ public class Utils {
 
 				pipeline0.hset(hkey, location, stripHigh(building));
 
-				pipeline0.zadd("validrooms", stringScore(stripHigh(building)),
-						stripHigh(building));
+				setValidRoom(stripHigh(building), stripHigh(building));
+
 				if (longName != null
 						&& !stripHigh(building).equals(stripHigh(longName))) {
-					pipeline0.zadd("validrooms", stringScore(stripHigh(longName)),
-							stripHigh(building) + "#");
+					setValidRoom(stripHigh(longName), stripHigh(building) + '#');
 				}
 			}
 

@@ -23,9 +23,7 @@ socket.on('connect', function () {
 	for (var i = 0; i < rooms.length; i++) {
 		roomIds.push(rooms[i].id);
 	};
-	socket.emit('initialize', roomIds, current.id, function(logs, mentions, title) {
-		renderChatlogs(logs, mentions, title);
-	});
+	socket.emit('initialize', roomIds, current.id, renderChatlogs);
 });
 
 socket.on('announcement', function (to, msg) {
@@ -133,7 +131,7 @@ function renderChatroom(anchor) {
 	socket.emit('get online', current.id);			
 }
 
-function renderChatlogs (logs, mapping, title) {
+function renderChatlogs (logs, mapping, room) {
 	debug('renderChatlogs');
 	if (!Object.keys(logs).length) {
 		logs[new Date().getTime()] = {
@@ -157,16 +155,17 @@ function renderChatlogs (logs, mapping, title) {
 	$('#message').prop('disabled', false);
 	$('#message').data('mentions', {});
 
-	$('#login').attr('href', '/authenticate/'+stripLow(title));
+	$('#login').attr('href', '/authenticate/'+stripLow(room.pretty));
 
-	$('.chat-title h2').text(title);
-	History.pushState(null, null, stripLow(title));			
+	$('.chat-title h2').text(room.pretty);
+	$('.chat-title h3').text(room.title);
+	History.pushState(null, null, stripLow(room.pretty));			
 	
 	var newTitle = current.title+' Chatroom';
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
-	$('#archives').attr('href', '/chat/'+stripLow(title)+'/archives');
+	$('#archives').attr('href', '/chat/'+stripLow(room.pretty)+'/archives');
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
 	$('.chat-header .loading').addClass('hidden');
@@ -249,7 +248,6 @@ function getUsers(room, filter, limit, callback) {
 // dom manipulation
 $(document).ready(function () {
 	chatDiv = $('#chat');
-	$('.chat-title h2').text('Loading...');
 
 	// setup chats in left nav sidebar
 	var roomsNav = $('#chats');
@@ -260,7 +258,7 @@ $(document).ready(function () {
 			element.addClass('active');
 		}
 
-		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.title));
+		element.append($('<a>').attr('href', 'javascript:void(0)').attr('id', room.id).data('room', room).append(room.pretty));
 		roomsNav.append(element);
 	}
 	
@@ -407,7 +405,7 @@ window.addEventListener('popstate', function(e) {
 	var path = location.pathname.split('/');
 	var room = path[path.length-1];
 	$('#chats a').each(function() {
-		if(stripLow($(this).data().room.title) == room) {
+		if(stripLow($(this).data().room.pretty) == room) {
 			renderChatroom($(this));
 		}
 	});

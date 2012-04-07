@@ -6,67 +6,86 @@ var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
 
 
-function getAbbreviatedTitle(room, callback) {
-	debug('getAbbreviatedTitle', room);
-	isValid(room, function(valid, rawId) {
+// Returns an object containing the id, official name, pretty name, and title
+function getRoomInfo(roomId, callback) {
+	debug('getRoomInfo', roomId);
+	isValid(roomId, function(valid, rawId) {
 		if (valid) {
-			room = rawId;
-			// first check if room is a class
-			client0.hgetall('class:'+rawId, function(err, reply) {
-				if (!err && Object.keys(reply).length) {
-					var department = reply.department;
-					var number = reply.number;
-					client1.hget('abbreviations', stripHigh(department), function(err, abbreviation) {
+			// check if the room is a class
+			client0.hgetall('class:'+rawId, function(err, klass) {
+				if (!err && Object.keys(klass).length) {
+					var name = klass.department+' '+klass.number;
+					var pretty = null;
+					client1.hget('abbreviations', stripHigh(klass.department), function(err, abbreviation) {
 						if (!err && abbreviation) {
 							// for example, ELENG40 -> EE 40
-							callback(abbreviation + ' ' + number);
+							pretty = abbreviation+' '+klass.number;
 						} else {
 							// for example, ANTHRO1 -> ANTHRO 1
-							callback(department + ' ' + number);
+							pretty = name;
 						}
+
+						callback({
+							'id'		: rawId,
+							'name'		: name,
+							'pretty'	: pretty,
+							'title'		: klass.title,
+						});
 					});
 				} else {
-					// then check if room is a building
-					client0.hget('location:'+rawId, 'name', function(err, name) {
-						if (!err && name) {
-							callback(name);
+					// check if the room is a building
+					client0.hgetall('location:'+rawId, function(err, location) {
+						if (!err && Object.keys(location).length) {
+							callback({
+								'id'		: rawId,
+								'name'		: location.name,
+								'pretty'	: location.name,
+								'title'		: location.longname,
+							});
 						} else {
-							// for example, CALCHAT
-							callback(room);
+							// check if room is a special manual input
+							client1.hget('validrooms', rawId, function(err, title) {
+								if (!err && title) {
+									callback({
+										'id'		: rawId,
+										'name'		: rawId,
+										'pretty'	: rawId,
+										'title'		: title,
+									});
+								} else {
+									callback(null);
+								}
+							});
 						}
 					});
 				}
 			});
 		} else {
-			// for example, POOL
 			callback(null);
 		}
 	});
 }
 
-function getAbbreviatedTitles(rooms, callback) {
-	debug('getAbbreviatedTitles');
-	if (!rooms.length) {
+function getRoomsInfo(roomIds, callback) {
+	debug('getRoomsInfo');
+	if (!roomIds.length) {
 		callback([]);
 	}
 
 	var added = 0;
-	var titles = [];
-	for (var i = 0; i < rooms.length; i++) {
+	var rooms = [];
+	for (var i = 0; i < roomIds.length; i++) {
 		function closure() {
-			var room = rooms[i];
+			var roomId = roomIds[i];
 			var n = i;
-			getAbbreviatedTitle(room, function(title) {
+			getRoomInfo(roomId, function(room) {
 				added++;
 
 				// preserve order
-				titles[n] = {
-					id: room,
-					title: title,
-				};
+				rooms[n] = room;
 
-				if (added == rooms.length) {
-					callback(titles);
+				if (added == roomIds.length) {
+					callback(rooms);
 				}
 			});
 		}
@@ -101,12 +120,6 @@ function isValid(room, callback) {
 		return;
 	} else {
 		room = stripHigh(room);
-
-		// CALCHAT is a special case
-		if (room == 'CALCHAT') {
-			callback(true, room);
-			return;
-		}
 
 		function stringScore(string) {
 			string = string.toUpperCase();
@@ -166,8 +179,8 @@ function debug() {
 	console.log('--');
 }
 
-exports.getAbbreviatedTitle = getAbbreviatedTitle;
-exports.getAbbreviatedTitles = getAbbreviatedTitles;
+exports.getRoomInfo = getRoomInfo;
+exports.getRoomsInfo = getRoomsInfo;
 exports.prependRoom = prependRoom;
 exports.isValid = isValid;
 exports.postAuthenticate = postAuthenticate;
