@@ -316,8 +316,7 @@ public class Utils {
 						.getJSONObject("location");
 
 				longName = json.getJSONArray("results").getJSONObject(0)
-						.getJSONArray("address_components").getJSONObject(0)
-						.getString("long_name");
+						.getString("formatted_address").split("[,:]")[0];
 
 				lat = String.format("%f", locationJson.getDouble("lat"));
 				lng = String.format("%f", locationJson.getDouble("lng"));
