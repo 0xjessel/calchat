@@ -32,30 +32,36 @@ exports.dashboard = function(req, res) {
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
 		helper.getRoomsInfo(roomIds, function(rooms) {
-			if (rooms[0] != null) {
-				client2.hget('user:'+req.user.id, 'unread', function (err, reply) {
-					if (!err) {
-						var unreads = reply.split(',');
-						if (unreads.length > 0) {
-							for (var i = 0; i < rooms.length; i++) {
-								var diff = new Date().getTime() - unreads[i];
-								console.log('diff; '+diff);
-								rooms[i].unread = diff;
+			function closure(callback) {
+				if (rooms[0] != null) {
+					client2.hget('user:'+req.user.id, 'unread', function (err, reply) {
+						if (!err) {
+							var unreads = reply.split(',');
+							if (unreads.length > 0) {
+								var count = 0;
+								for (var i = 0; i < rooms.length; i++) {
+									var cur = new Date().getTime();
+									var prev = unreads[i];
+									var room = rooms[i];
+									client2.zcount('chatlog:'+rooms[i], prev, cur, function (err, reply) {
+										console.log('lol: '+reply);
+										room.unread = reply;
+										count--;
+										if (count == rooms.length) {
+											console.log('done');
+											callback();
+										}
+									});
+								}
+								callback();
 							}
 						}
-
-						res.render('dashboard', {
-							title: 'Dashboard',
-							layout: 'layout-dashboard',
-							loggedIn: req.loggedIn,
-							showChatTab: true,
-							rooms: rooms,
-							index: 1
-						});
-					}
-					res.send(404);
-				});
-			} else {
+						res.send(404);
+					});
+				}
+			}
+			closure(function () {
+				console.log('callback');
 				res.render('dashboard', {
 					title: 'Dashboard',
 					layout: 'layout-dashboard',
@@ -64,7 +70,7 @@ exports.dashboard = function(req, res) {
 					rooms: rooms,
 					index: 1
 				});
-			}
+			});
 		});
 	} else {
 		// error: cannot access /dashboard if not logged in
