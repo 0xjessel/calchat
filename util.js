@@ -94,7 +94,7 @@ function getRoomsInfo(roomIds, callback) {
 }
 
 // prepends room to rooms (use this only if rooms exists!)
-function prependRoom(room, rooms) {
+function prependRoom(room, unreads, rooms) {
 	debug('prependRoom', room, rooms);
 	var index = -1;
 	for (var i = 0; i < rooms.length; i++) {
@@ -104,10 +104,15 @@ function prependRoom(room, rooms) {
 	}
 	if (index == -1) {
 		rooms.unshift(room);
+		if (unreads) {
+			unreads.unshift(new Date().getTime());
+		}
 	} else {
 		rooms.unshift(rooms.splice(index, 1)[0]);
+		if (unreads) {
+			unreads.unshift(unreads.splice(index, 1)[0]);
+		}
 	}
-	return rooms;
 }
 
 // return true if any form of room is valid
@@ -183,6 +188,7 @@ function isValid(roomId, callback) {
 	}
 }
 
+// transfer user data to session data to access in socket.io
 function postAuthenticate(req) {
 	req.session.uid = req.user.id;
 	req.session.nick = req.user.firstname + ' ' + req.user.lastname.charAt(0);

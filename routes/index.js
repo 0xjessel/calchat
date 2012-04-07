@@ -31,7 +31,6 @@ exports.dashboard = function(req, res) {
 
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
-
 		helper.getRoomsInfo(roomIds, function(rooms) {
 			res.render('dashboard', {
 				title: 'Dashboard',
@@ -85,38 +84,58 @@ exports.chatroom = function(req, res) {
 			if (req.loggedIn) {
 				helper.postAuthenticate(req);
 
-				var sessionRooms = req.session.rooms;
-				var userChatrooms = req.user.chatrooms;
+				var sessionRooms = undefined;
+				var userChatrooms = undefined;
+				var unreads = undefined;
 				var roomIds = null;
 
+				console.log(req.user.chatrooms ==  "");
+
+				if (req.session.rooms != undefined) {
+					sessionRooms = req.session.rooms.split(',');
+				}
+				if (req.user.chatrooms != "") {
+					userChatrooms = req.user.chatrooms.split(',');
+				}
+				if (req.user.unread != "") {
+					unreads = req.user.unread.split(',');
+				}
+				if (sessionRooms === undefined && userChatrooms === undefined && req.user.unread === undefined) {
+					req.send(404);
+				}
+
+				console.log(!!userChatrooms);
+				console.log(!!unreads);
+				console.log(!sessionRooms);
 				if (!sessionRooms) {
 					// logging in from /, not first time
 					if (userChatrooms) {
-						roomIds = helper.prependRoom(rawId, userChatrooms.split(','));
+						helper.prependRoom(rawId, unreads, userChatrooms);
 					// logging in from /, first time
 					} else {
-						roomIds = [rawId];
+						userChatrooms = [rawId];
+						unreads = [new Date().getTime()];
 					}
 				} else {
 					req.session.redirectPath = undefined;
 					// logging in from /chat, not first time
 					if (userChatrooms) {
 						sessionRooms.reverse();
-						roomIds = userChatrooms.split(',');
 						for (var i = 0; i < sessionRooms.length; i++) {
-							roomIds = helper.prependRoom(sessionRooms[i], roomIds);
+							helper.prependRoom(sessionRooms[i], unreads, userChatrooms);
 						}
 						req.session.rooms = null;
 					// logging in from /chat, first time
 					} else {
-						roomIds = sessionRooms;
+						userChatrooms = sessionRooms;
 					}
 				}
 
 				// convert array to string, update db
-				client2.hset('user:'+req.user.id, 'chatrooms', roomIds.join(), function() {
-					console.log(roomIds);
-					helper.getRoomsInfo(roomIds, function(rooms) {
+				console.log('sup: '+userChatrooms.length);
+				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unread', unreads.join(), function() {
+					console.log(userChatrooms);
+					helper.getRoomsInfo(userChatrooms, function(rooms) {
 						console.log(rooms);
 						res.render('chat', {
 							title: rooms[0].title+' Chatroom',
@@ -131,7 +150,7 @@ exports.chatroom = function(req, res) {
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					req.session.rooms = helper.prependRoom(rawId, req.session.rooms);
+					req.session.rooms = helper.prependRoom(rawId, undefined, req.session.rooms);
 				} else {
 					req.session.rooms = [rawId];
 				}

@@ -115,6 +115,9 @@ function renderChatroom(anchor) {
 	debug('renderChatroom');
 	current = anchor.data('room');
 
+	$('.chat-title h2').text('Loading...');
+	$('.chat-title h3').text('');
+
 	$('#lines').empty();
 	$('#online li:not(.nav-header)').remove();
 	anchor.find('.badge').remove();
@@ -270,8 +273,6 @@ $(document).ready(function () {
 
 	$('#chats a').click(function () {
 		if ($(this).data('room') != current) {
-			$('.chat-title h2').text('Loading...');
-			$('.chat-title h3').text('');
 			renderChatroom($(this));	
 		}
 		return false;
@@ -385,15 +386,11 @@ $(document).ready(function () {
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
 		$('#chats .active').remove();
-		var left = current.id;
 		
 		var next = $('#chats a:first');
 		$('#message').prop('disabled', true);
 
-		$('.chat-title h2').text('Loading...');
-		$('.chat-title h3').text('');
-
-		socket.emit('leave room', left, function() {
+		socket.emit('leave room', current.id, function() {
 			if (next.length) {
 				renderChatroom(next);
 			} else {
