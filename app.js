@@ -483,7 +483,7 @@ io.sockets.on('connection', function (socket) {
 				var user = mapping[session.uid];
 				var rooms = user.gsirooms.split(",");
 				for (var i = 0; i < rooms.length; i++){
-					if (rooms[i] == room){
+					if (rooms[i] == roomId){
 						isGSI = true;
 					}
 				}

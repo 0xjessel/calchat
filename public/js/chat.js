@@ -161,13 +161,21 @@ function renderChatlogs (logs, mapping, room) {
 	$('#message').data('mentions', {});
 
 	$('#login').attr('href', '/authenticate/'+room.url);
-
-	$('.chat-title h2').text(room.pretty);
-	$('.chat-title h3').text(room.title);
+	var pretty = room.pretty;
+	var title = room.title;
+	if (room.type == 'private') {
+		var me = pretty[0] == name;
+		pretty = room.pretty.split(':');
+		pretty = me ? pretty[1] : pretty[0];
+		title = room.title.split(':');
+		title = me ? title[1] : title[0];
+	}
+	$('.chat-title h2').text(pretty);
+	$('.chat-title h3').text(title);
 	
 	History.pushState(null, null, '/chat/'+room.url);			
 	
-	var newTitle = current.pretty;
+	var newTitle = pretty;
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
@@ -281,16 +289,21 @@ $(document).ready(function () {
 	var roomsNav = $('#chats');
 	for (var i = 0; i < rooms.length; i++) {
 		var room = rooms[i];
+		var pretty = room.pretty;
 		var element = $('<li>');
 		if (i == 0) {
 			element.addClass('active');
+		}
+		if (room.type == 'private') {
+			pretty = pretty.split(':');
+			pretty = (name == pretty[0]) ? pretty[1] : pretty[0];
 		}
 
 		element.append($('<a>')
 			.attr('href', 'javascript:void(0)')
 			.attr('id', room.id)
 			.data('room', room)
-			.append(room.pretty));
+			.append(pretty));
 		roomsNav.append(element);
 	}
 	
