@@ -12,7 +12,6 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
 function mentionSMS(to, mid) {
-	console.log('mentionSMS asldkfjalsdkjfalsdkjflasdkfjlasdfjal');
 	// get to's phone number
 	client2.hget('user:'+to, 'phone', function (err, reply) {
 		if (!err && reply != null) {
@@ -22,17 +21,19 @@ function mentionSMS(to, mid) {
 					var fromUid = replies[0];
 					client2.hget('user:'+fromUid, 'nick', function (err, reply) {
 						if (!err && reply != null) {
-							console.log('money asdkfjlsakdfjlskdfj');
 							var from = reply;
 							var room = replies[1];
 							var txt = replies[2];
-							var link = "calchat.net:3000/chat/"+room;
-							var msg = 'CalChat - '+from+' mentioned you in '+room+'!  Message: '+txt+' - '+link;
+							var footerLink = " - calchat.net:3000/chat/"+room;
+							var msg = 'CalChat - '+from+' mentioned you in '+room+'!  Message: ';
+							var msgSize = 160 - msg.length;							
+							if (txt.length > msgSize) {
+								txt = txt.substring(0, msgSize - 2);
+								txt = txt+'..';
+							}
+							msg = msg+txt;
 							sendSMS(phoneNum, msg, null, function (sms) {
-								sms.on('processed', function (reqParams, response) {
-									console.log('message processed, request params follow');
-									console.log(reqParams);
-								})
+								console.log('done');
 							})
 						} else {
 							console.log('getting nick from user:fromUid '+err + reply);
@@ -42,11 +43,10 @@ function mentionSMS(to, mid) {
 					console.log('getting message contents '+err+reply);
 				}
 			});
+		} else {
+			// user has no phone number associated
 		}
 	});
-	// get mid message and whose it from
-	// call sendSMS
-
 }
 
 function sendSMS(number, message, opts, callback) {
