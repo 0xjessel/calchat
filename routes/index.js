@@ -26,7 +26,6 @@ exports.index = function(req, res) {
 
 exports.dashboard = function(req, res) {
 	function finished(rooms) {
-		console.log('finished');
 		res.render('dashboard', {
 			title: 'Dashboard',
 			layout: 'layout-dashboard',
@@ -53,9 +52,8 @@ exports.dashboard = function(req, res) {
 								function closure() {
 									var cur = new Date().getTime();
 									var prev = unreads[i];
-									var room = rooms[i].id;
-									client2.zcount('chatlog:'+room, prev, cur, function (err, count) {
-										console.log(count);
+									var room = rooms[i];
+									client2.zcount('chatlog:'+room.id, prev, cur, function (err, count) {
 										added++;
 										if (!err) {			
 											room.unread = count;
