@@ -1,21 +1,32 @@
 var socket = io.connect();
+var chatDiv;
 
 $(document).ready(function () {
-    var chatDiv = $('#chat');
+    chatDiv = $('#chat');
 	$('.breadcrumb li a').attr('href', '/chat/'+room.url);
 
 	getArchive(begin, end);
 
-	$('.prev').click(function() {
+	$('#goBack').click(function() {
 		var begin = new Date(begin);
 		begin.setDate(begin.getDate()-1);
 		var end = new Date(end);
 		end.setDate(end.getDate()-1);
 		getArchive(begin, end);
 	});
+
+	$('#goForward').click(function() {
+		var begin = new Date(begin);
+		begin.setDate(begin.getDate()+1);
+		var end = new Date(end);
+		end.setDate(end.getDate()+1);
+		getArchive(begin, end);
+	});
 });
 
 function getArchive(start, finish) {
+	console.log(new Date(start));
+	console.log(new Date(finish));
 	socket.emit('get chatlog', room.id, start, finish, function(logs, mapping, room) {
 		for (timestamp in logs) {
 			// not showing timestamp for now
