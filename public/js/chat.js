@@ -197,13 +197,14 @@ function renderChatlogs (logs, mapping, room) {
 			'text'	: 'First!! Say something to get this room started.',
 		};
 	}
+	var lines = $('#lines');
 	for (timestamp in logs) {
 		// not showing timestamp for now
 
 		var entry = logs[timestamp];
 
 		var element = renderChatMessage(entry, mapping);
-		$('#lines').append(element);
+		lines.append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
 	
