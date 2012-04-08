@@ -654,7 +654,7 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('disconnect');
 		if (!socket.nickname) return;
         
-		if (session.uid !== undefined) {
+		if (session && session.uid !== undefined) {
 			for (room in nicknames) {
 				delete nicknames[room][session.uid];
 			}
@@ -665,8 +665,8 @@ io.sockets.on('connection', function (socket) {
 					var unreads = reply[1].split(',')
 					var time = new Date().getTime();
 
-					// do not run if array is [""] (which happens b/c "".split(',') becomes [""])
-					if (rooms.length > 1) {
+					// do not run if array is [''] (which happens b/c ''.split(',') becomes [''])
+					if (rooms.length && reply[0]) {
 						for (var i = 0; i < rooms.length; i++) {
 							var room = rooms[i];
 

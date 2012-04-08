@@ -103,13 +103,13 @@ function message (entry, mapping) {
 		scrollToBottom();
 	} else {
 		// incr badge
-		unread[to]++;
-		var badge = $('#'+to+' .badge');
+		unread[entry.to]++;
+		var badge = $('#'+entry.to+' .badge');
 
 		if (badge.length == 0) {
-			$('#'+to).append('<span class="badge badge-error">'+unread[to]+'</span>');
+			$('#'+entry.to).append('<span class="badge badge-error">'+unread[entry.to]+'</span>');
 		} else {
-			badge.text(unread[to]);
+			badge.text(unread[entry.to]);
 		}
 	}
 }
