@@ -190,8 +190,10 @@ function isValid(roomId, callback) {
 
 // transfer user data to session data to access in socket.io
 function postAuthenticate(req) {
-	req.session.uid = req.user.id;
-	req.session.nick = req.user.firstname + ' ' + req.user.lastname.charAt(0);
+	if (req.user) {
+		req.session.uid = req.user.id;
+		req.session.nick = req.user.firstname + ' ' + req.user.lastname.charAt(0);
+	}
 }
 
 function stripHigh(string) {

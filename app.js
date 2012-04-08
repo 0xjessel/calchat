@@ -28,6 +28,9 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 redis.debug_mode = false;
 
+var SPECIAL_NONE		= 0;
+var SPECIAL_FOUNDER		= 1;
+
 /**
 * Facebook Connect
 */
@@ -49,7 +52,7 @@ everyauth.facebook
 	var promise = this.Promise();
 	var timeStamp = new Date().getTime();
 	client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
-		if (err == null) { // no errors
+		if (!err) { // no errors
 			if (Object.keys(reply).length == 0) { 
 				// no user found, create new user
 				client2.hmset('user:'+fbUserMetadata.id, {
@@ -60,7 +63,7 @@ everyauth.facebook
 					'unread': timeStamp,
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
 					'oauth': accessToken,
-					'founder': 0,
+					'special': SPECIAL_NONE,
 					'timestamp' : timeStamp,
 					'gsirooms' : "",
 				}, function() {
@@ -196,7 +199,11 @@ io.sockets.on('connection', function (socket) {
                 client2.hgetall('user:'+id, function(err, user) {
                 	added++;
                 	if (!err && Object.keys(user).length) {
-                		users[id] = user.firstname+' '+user.lastname.charAt(0);
+                		users[id] = {
+                			name		: user.firstname+' '+user.lastname.charAt(0),
+                			gsirooms	: user.gsirooms,
+                			special		: user.special,
+                		}
                 	} else {
                 		error(err, socket);
                 	}
@@ -397,17 +404,16 @@ io.sockets.on('connection', function (socket) {
 					for (var i = 0; i < chatlog.length; i++) {
 						function closure() {
 							var mid = chatlog[i];
-							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', 'badge', function(err, message) {
+							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
 								added++;
 								if (!err){
 									var timestamp = message[0];
 									var fromUid = message[1];
 									var text = message[2];
 									var mentions = message[3]; // turn into array later
-									var badge = message[4];
 
 									if (mentions) {
-										mentions = mentions.split();
+										mentions = mentions.split(',');
 									} else {
 										mentions = [];
 									}
@@ -420,7 +426,6 @@ io.sockets.on('connection', function (socket) {
 										'text'		: text,
 										'mentions'	: mentions,
 										'id'		: mid,
-										'badge'		: badge
 									};
 									logs[timestamp] = entry;
 								} else {
@@ -468,52 +473,35 @@ io.sockets.on('connection', function (socket) {
 
 			client2.incr('message:id:next', function(err, mid) {
 				if (!err) {
-					// badge value is 0 for founder, 1 for regular users, 2 for gsi
-					var badge = 0;
-					client2.hmget('user:'+session.uid, 'gsirooms', 'founder', function (err, reply) {
-						if (!err && reply[0] != null && reply[1] != null) {
-							//  0 if founder bit is on, else set badge to 2 if one of the gsirooms is equal to room
-							var gsiRooms = reply[0].split(',');
-							for (var i=0; i<gsiRooms.length; i++){
-								if (gsiRooms[i] == room){
-									badge = 2;
-								}
-							}
-							getUsers(mentions.concat(session.uid), function(mapping) {
-								var entry = {
-									'from'		: session.uid,
-									'to'		: room,
-									'text'		: text,
-									'mentions'	: mentions,
-									'id'		: mid,
-									'badge'		: badge
-								};
+					getUsers(mentions.concat(session.uid), function(mapping) {
+						var entry = {
+							'from'		: session.uid,
+							'to'		: room,
+							'text'		: text,
+							'mentions'	: mentions,
+							'id'		: mid,
+						};
 
-								io.sockets.in(room).emit('message', entry, mapping);
-							});
-
-							client2.hmset('message:'+mid, {
-								'from'		: session.uid,
-								'to'		: room,
-								'text'		: text,
-								'mentions'	: mentions.join(),
-								'timestamp'	: timestamp,
-								'badge'		: badge
-							});
-							client2.zadd('chatlog:'+room, timestamp, mid);
-					
-							for (var i = 0; i < mentions.length; i++) {
-								var id = mentions[i];
-								client2.exists('user:'+id, function(err, exists) {
-									if (exists) {
-										client2.zadd('mentions:'+id, timestamp, mid);
-									}
-								});
-							}
-						} else {
-							error(err, socket);
-						}
+						io.sockets.in(room).emit('message', entry, mapping);
 					});
+
+					client2.hmset('message:'+mid, {
+						'from'		: session.uid,
+						'to'		: room,
+						'text'		: text,
+						'mentions'	: mentions.join(),
+						'timestamp'	: timestamp,
+					});
+					client2.zadd('chatlog:'+room, timestamp, mid);
+					
+					for (var i = 0; i < mentions.length; i++) {
+						var id = mentions[i];
+						client2.exists('user:'+id, function(err, exists) {
+							if (exists) {
+								client2.zadd('mentions:'+id, timestamp, mid);
+							}
+						});
+					}
 				} else {
 					error(err, socket);
 				}

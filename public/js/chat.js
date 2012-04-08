@@ -12,6 +12,9 @@ for (var i = 0; i < rooms.length; i++) {
 }
 var History = window.History;
 
+var SPECIAL_NONE		= 0;
+var SPECIAL_FOUNDER		= 1;
+
 function debug(msg) {
 	console.log(msg);
 }
@@ -180,23 +183,35 @@ function renderChatlogs (logs, mapping, room) {
 
 function renderChatMessage(entry, mapping) {
 	var fromUid = entry.from;
+	var toRoom = entry.to;
 	var msg = entry.text;
 	var mentions = entry.mentions;
 	var mid = entry.id;
-	var badge = entry.badge;
 
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
 	var from = fromUid;
+	var gsi = false;
+	var special = SPECIAL_NONE;
 	if (mapping && fromUid in mapping) {
-		from = mapping[fromUid];
+		from = mapping[fromUid].name;
+		special = mapping[fromUid].special;
+		var gsirooms = mapping[fromUid].gsirooms.split(',');
+		for (var i = 0; i < gsirooms.length; i++) {
+			console.log(gsirooms[i]);
+			console.log(toRoom);
+			if (gsirooms[i] == toRoom) {
+				gsi = true;
+				break;
+			}
+		};
+		special = mapping[fromUid].special;
 	}
-
 	var label = $('<span>').addClass('label').hide();
-	if (badge == 0) {
+	if (special == SPECIAL_FOUNDER) {
 		label.addClass('label-inverse').text('FOUNDER').show();
-	} else if (badge == 2) {
+	} else if (gsi) {
 		label.addClass('label-warning').text('GSI').show();
 	}
 	
@@ -209,7 +224,8 @@ function renderChatMessage(entry, mapping) {
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
 
-			var element = $('<span>').addClass('mention').attr('id', id).append(getUserLink(id).addClass('mention').text(' @'+mapping[id]+' '));
+			var element = $('<span>').addClass('mention').attr('id', id).append(
+				getUserLink(id).addClass('mention').text(' @'+mapping[id].name+' '));
 
 			totalWidth += $('#'+id).outerWidth();
 			if (i == 0) {
