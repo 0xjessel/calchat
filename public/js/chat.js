@@ -95,6 +95,7 @@ socket.on('error', function (e) {
 socket.on('message', message);
 function message (entry, mapping) {
 	debug('message');
+	console.log(entry);
 	if (entry.to == current.id) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(entry, mapping);
@@ -104,10 +105,11 @@ function message (entry, mapping) {
 	} else {
 		// incr badge
 		unread[entry.to]++;
-		var badge = $('#'+entry.to+' .badge');
+		var id = entry.to.replace(':', '');
+		var badge = $('#'+id+' .badge');
 
 		if (badge.length == 0) {
-			$('#'+entry.to).append('<span class="badge badge-error">'+unread[entry.to]+'</span>');
+			$('#'+id).append('<span class="badge badge-error">'+unread[entry.to]+'</span>');
 		} else {
 			badge.text(unread[entry.to]);
 		}
@@ -290,6 +292,7 @@ $(document).ready(function () {
 	for (var i = 0; i < rooms.length; i++) {
 		var room = rooms[i];
 		var pretty = room.pretty;
+		var id = room.id;
 		var element = $('<li>');
 		if (i == 0) {
 			element.addClass('active');
@@ -297,11 +300,12 @@ $(document).ready(function () {
 		if (room.type == 'private') {
 			pretty = pretty.split(':');
 			pretty = (name == pretty[0]) ? pretty[1] : pretty[0];
+			id = id.replace(':', '');
 		}
 
 		element.append($('<a>')
 			.attr('href', 'javascript:void(0)')
-			.attr('id', room.id)
+			.attr('id', id)
 			.data('room', room)
 			.append(pretty));
 		roomsNav.append(element);
