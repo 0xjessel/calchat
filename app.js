@@ -264,6 +264,7 @@ io.sockets.on('connection', function (socket) {
 
 		if (session !== undefined && session.uid !== undefined && session.nick !== undefined) {
 			socket.nickname = session.nick;
+			socket.uid = session.uid;
 			
 			getChatlog(current, function(logs, mentions, room) {	
 				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
@@ -499,32 +500,37 @@ io.sockets.on('connection', function (socket) {
 			client2.incr('message:id:next', function(err, mid) {
 				if (!err) {
 					helper.getRoomInfo(roomId, function(room) {
-						var serverid = roomId;
-						var clientid = roomId;
-						if (room.type == 'user') {
-							serverid = room.getserverid(session.uid);
-							clientid = room.getclientid(session.uid);
-						}
 						getUsers(mentions.concat(session.uid), function(mapping) {
 							var entry = {
 								'from'		: session.uid,
-								'to'		: clientid,
+								'to'		: roomId,
 								'text'		: text,
 								'mentions'	: mentions,
 								'id'		: mid,
 							};
 							
-							io.sockets.in(serverid).emit('message', entry, mapping);
+							if (room.type == 'private') {
+								var other = room.other(session.uid);
+								for (var key in io.sockets.sockets) {
+									var othersocket = io.sockets.socket(key);
+									if (othersocket.uid == other) {
+										othersocket.emit('private chat', roomId, entry, mapping);
+										break;
+									}
+								}
+							}
+							
+							io.sockets.in(roomId).emit('message', entry, mapping);
 						});
 						
 						client2.hmset('message:'+mid, {
 							'from'		: session.uid,
-							'to'		: serverid,
+							'to'		: roomId,
 							'text'		: text,
 							'mentions'	: mentions.join(),
 							'timestamp'	: timestamp,
 						});
-						client2.zadd('chatlog:'+serverid, timestamp, mid);
+						client2.zadd('chatlog:'+roomId, timestamp, mid);
 						
 						for (var i = 0; i < mentions.length; i++) {
 							var id = mentions[i];

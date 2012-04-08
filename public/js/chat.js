@@ -92,6 +92,10 @@ socket.on('error', function (e) {
 	});
 });
 
+socket.on('private chat', function(roomId, messageEntry, mapping) {
+	alert('New private chat in room '+roomId+': '+messageEntry.text);
+});
+
 socket.on('message', message);
 function message (entry, mapping) {
 	debug('message');
