@@ -90,3 +90,11 @@ h1, h2, h3 {
 	top:50%;
 	margin-top:-7px;
 }
+
+.chats-icon {
+	margin-left:20px;
+}
+
+.chats-name {
+	margin-left:5px;
+}
