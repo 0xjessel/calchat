@@ -307,7 +307,7 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
-		if (session.uid !== undefined){
+		if (session !== undefined && session.uid !== undefined){
 			delete nicknames[room][session.uid];
 
 			client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
@@ -518,6 +518,15 @@ io.sockets.on('connection', function (socket) {
 										break;
 									}
 								}
+								
+								client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
+									if (!err) {
+										var roomsArray = user[0].split(',');
+										var unreadsArray = user[1].split(',');
+										helper.prependRoom(roomId, unreadsArray, roomsArray);
+										client2.hmset('user:'+other, 'chatrooms', roomsArray, 'unreads', unreadsArray);
+									}
+								});
 							}
 							
 							io.sockets.in(roomId).emit('message', entry, mapping);
@@ -704,7 +713,7 @@ io.sockets.on('connection', function (socket) {
 			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
 				if (!err && reply[0] != null && reply[1] != null) {
 					var rooms = reply[0].split(',');
-					var unreads = reply[1].split(',')
+					var unreads = reply[1].split(',');
 					var time = new Date().getTime();
 
 					// do not run if array is [''] (which happens b/c ''.split(',') becomes [''])
