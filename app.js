@@ -513,6 +513,10 @@ io.sockets.on('connection', function (socket) {
 			var isGSI = false;
 			getUsers(mentions.concat(session.uid), function(mapping){
 				if (msg.length > 256){
+					var othersocket = getSockets([session.uid])[0];
+					if (othersocket){
+						othersocket.emit('toolong');
+					}
 					return;
 				}
 				helper.getRoomInfo(roomId, function(room) {

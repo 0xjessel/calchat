@@ -124,6 +124,14 @@ socket.on('kick', function(from, by, msg) {
 		'Take me back. I\'m sorry, I\'ve learned my lesson.');
 });
 
+socket.on('toolong', function(){
+	message({
+		'from'	: 'System',
+		'to'	: current.id,
+		'text'	: 'Unable to send message because the message length is too long',
+	});
+});
+
 socket.on('message', message);
 function message (entry, mapping) {
 	debug('message');
