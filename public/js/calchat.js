@@ -176,7 +176,7 @@ function getIcon(type) {
 		case 'special':
 			return $('<i>').addClass('icon-gift');
 		case 'private':
-			return $('<i>').addClass('icon-user');
+			return $('<i>').addClass('icon-comment');
 		default:
 			return null;
 	}
