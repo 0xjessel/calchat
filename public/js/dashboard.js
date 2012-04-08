@@ -10,8 +10,7 @@ $(document).ready(function () {
 		var privateList = $('#privatechats');
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i];
-			
-			var private = (room.id.split(':').length == 2) ? true : false;
+
 			var unread = room.unread;
 			var unreadBadge = $('<span>').hide().addClass('badge').addClass('badge-error').text(unread);
 			
@@ -19,8 +18,15 @@ $(document).ready(function () {
 				unreadBadge.show();
 			}
 
-			var li = $('<li>').append($('<a>').attr('href', '/chat/'+room.url).text(room.pretty).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', room.id).text('x')));
-			if (private) {
+			var pretty = room.pretty;
+			var isPrivate = (room.type == 'private');
+			if (isPrivate) {
+				pretty = pretty.split(':');
+				pretty = (pretty[0] == name) ? pretty[1] : pretty[0];
+			}
+
+			var li = $('<li>').append($('<a>').attr('href', '/chat/'+room.url).text(pretty).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', room.id).text('x')));
+			if (isPrivate) {
 				privateList.append(li);
 			} else {
 				chatroomsList.append(li);

@@ -10,6 +10,7 @@ html(lang='en')
   script
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
+    var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
   script(src='/js/libs/jquery.history.js')
   script(src='/js/geo.js')
   script(src='/js/dashboard.js')
