@@ -262,7 +262,7 @@ function renderChatMessage(entry, mapping) {
 
 function getUserLink(id) {
 	if (uid == id) {
-		return $('<a>');
+		return $('<a>').attr('href', 'javascript:void(0)');
 	}
 	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
 }
