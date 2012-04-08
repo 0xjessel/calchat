@@ -209,10 +209,15 @@ function renderChatlogs (logs, mapping, room) {
 	var title = room.title;
 	if (room.type == 'private') {
 		pretty = room.pretty.split(':');
-		var me = pretty[0] == name;
+		var me = (pretty[0] == name);
+		var uids = room.id.split(':');
+		var otherUID = (uid == uids[0]) ? uids[1] : uids[0];
 		pretty = me ? pretty[1] : pretty[0];
 		title = room.title.split(':');
 		title = me ? title[1] : title[0];
+		$('#fb-link').remove();
+		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+otherUID+'"><img src="/img/fb-small.png"></a>');
+		$('#fb-link').tooltip();
 	}
 	$('.chat-title h2').text(pretty);
 	$('.chat-title h3').text(title);
@@ -301,7 +306,7 @@ function renderChatMessage(entry, mapping) {
 }
 
 function getUserLink(id) {
-	if (uid == id) {
+	if (uid == id || (uid == null && name == 'null')) {
 		return $('<a>').attr('href', 'javascript:void(0)');
 	}
 	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
