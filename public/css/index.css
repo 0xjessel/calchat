@@ -10,3 +10,12 @@
 #login:hover {
 	background-position: 0 0;
 }
+
+h6 {
+	color:grey;
+	text-transform:capitalize;
+}
+
+.hero-unit {
+	background-image: url('/img/grid_noise.png');
+}
