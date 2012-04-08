@@ -102,7 +102,7 @@ exports.chat = function(req, res) {
 	}
 	if (rooms && rooms.length) {
 		helper.getRoomInfo(rooms[0], function(room) {
-			res.redirect('/chat/'+helper.stripLow(room.pretty));
+			res.redirect('/chat/'+room.url);
 		});
 	} else {
 		// error: guest did not add any chats yet
