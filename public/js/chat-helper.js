@@ -12,12 +12,12 @@ function renderChatMessage(entry, mapping) {
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
-	var from = mapping[fromUid].name;
 	var label = getLabel(fromUid, toRoom, mapping);
 	
-	if (from == 'System') {
+	if (fromUid == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
+     	var from = mapping[fromUid].name;
 		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+mid);
 
 		var totalWidth = 0;

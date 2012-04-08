@@ -47,7 +47,7 @@ function getArchive(start, finish) {
 		if (Object.keys(logs).length == 0) {
 			logs[new Date().getTime()] = {
 				'from'	: 'System',
-				'to'	: 0,
+				'to'	: room.id,
 				'text'	: 'No messages for this day'
 			};
 		}
