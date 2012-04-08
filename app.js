@@ -63,7 +63,7 @@ everyauth.facebook
 					'phone': "",
 					'chatrooms': 'CALCHAT',
 					'unread': timeStamp,
-					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.chatAt(0),
+					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
 					'oauth': accessToken,
 					'special': SPECIAL_NONE,
 					'timestamp' : timeStamp,
