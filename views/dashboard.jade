@@ -4,10 +4,11 @@ div.container-fluid
   div.alert.alert-error.hidden
   div.row-fluid
     div.span12
-      div.hero-unit
+      div.span1
         div.picture
-          img(src='http://graph.facebook.com/'+user.id+'/picture?type=large', width='90%').avatar
-        h1 Welcome, #{user.firstname + ' ' + user.lastname.charAt(0)}
+          img(src='http://graph.facebook.com/'+user.id+'/picture?type=square').avatar
+      div.span11
+        h2 Welcome, #{user.firstname + ' ' + user.lastname.charAt(0)}
         p This is your CalChat dashboard where you can manage your account and chatrooms.  You can add and delete chatrooms from here as well as access your preferences.
         p
           a(href='/preferences') Preferences
