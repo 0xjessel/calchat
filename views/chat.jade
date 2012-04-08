@@ -7,17 +7,23 @@ div.container-fluid
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar.unstyled.rooms#chats
           li.nav-header 
-            | Chatrooms
+            i.icon-comment
+            span.header-text
+              | Chatrooms
             img(src='/img/loading.gif').loading
         ul.nav.nav-list.sidebar.unstyled.rooms#private
           li.nav-header 
-            | Private Chats
+            i.icon-user
+            span.header-text
+              | Private Chats
             img(src='/img/loading.gif').loading
 
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar.unstyled#online
           li.nav-header 
-            | Online
+            i.icon-off
+            span.header-text
+              | Online
             img(src='/img/loading.gif').loading
 
     div.span9

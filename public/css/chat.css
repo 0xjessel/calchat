@@ -146,3 +146,15 @@ h3.title-text {
 	vertical-align:super;
 	margin-right:8px;
 }
+
+.header-text {
+	margin-left:5px;
+}
+
+.chats-icon {
+	margin-left:20px;
+}
+
+.chats-name {
+	margin-left:5px;
+}
