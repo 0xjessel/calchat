@@ -2,6 +2,7 @@ var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
 function renderChatMessage(entry, mapping) {
+	console.log(mapping);
 	var fromUid = entry.from;
 	var toRoom = entry.to;
 	var msg = entry.text;
@@ -11,7 +12,7 @@ function renderChatMessage(entry, mapping) {
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
-	var from = fromUid;
+	var from = mapping[fromUid].name;
 	var label = getLabel(fromUid, toRoom, mapping);
 	
 	if (from == 'System') {
@@ -68,7 +69,7 @@ function getLabel(fromUid, toRoom, mapping) {
 	var gsi = false;
 	var special = SPECIAL_NONE;
 	if (mapping && fromUid in mapping) {
-		from = mapping[fromUid].name;
+		var from = mapping[fromUid].name;
 		special = mapping[fromUid].special;
 		var gsirooms = mapping[fromUid].gsirooms.split(',');
 		for (var i = 0; i < gsirooms.length; i++) {
