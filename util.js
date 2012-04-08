@@ -179,6 +179,7 @@ function isValid(roomId, callback) {
 		// try to find room in the database
 		var score = stringScore(roomId);
 		client0.zrangebyscore('validrooms', score, score, function(err, rooms) {
+			console.log(rooms);
 			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
 			if (!err && rooms.length) {
 				var sameLastChars = [];
