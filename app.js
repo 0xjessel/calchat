@@ -59,6 +59,7 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
+					'email': fbUserMetadata.email,
 					'chatrooms': 'CALCHAT',
 					'unread': timeStamp,
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
