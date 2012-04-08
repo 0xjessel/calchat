@@ -34,7 +34,8 @@ function renderChatMessage(entry, mapping) {
 
 			mentionsElement.append(element);
 
-			var link = $('<div>').append(getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).remove().html();
+			var link = $('<div>').append(
+				getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).html();
 
 			msg = msg.replace(mapping[id].name, link);
 		}

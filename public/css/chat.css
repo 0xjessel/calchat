@@ -103,6 +103,17 @@ p.message > span.mentions {
 	background: #eee;
 }
 
+span.text a.mention {
+	color: dimgrey;
+	font-weight: bold;
+}
+
+span.text a.mention:hover {
+	text-decoration: none;
+	color: darkgrey;
+	font-weight: bold;
+}
+
 div.message-mentions a.mention {
 	color: dimgrey;
 	font-weight: bold;
