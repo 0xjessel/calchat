@@ -130,6 +130,7 @@ function renderChatroom(anchor) {
 	$('#lines').empty();
 	$('#online li:not(.nav-header)').remove();
 	anchor.find('.badge').remove();
+	unread[current.id] = 0;
 	
 	$('.loading').removeClass('hidden');
 	$('.actions').addClass('hidden');
