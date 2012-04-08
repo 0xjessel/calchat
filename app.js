@@ -47,7 +47,7 @@ everyauth.facebook.sendResponse(function(res, data) {
 everyauth.facebook
 .appId('297402036983700')
 .appSecret('aad4c11b1b2ccbad5ea5d3632cc5d920')
-.scope('email, user_about_me, read_friendlists')
+.scope('email, user_about_me')
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
 	var timeStamp = new Date().getTime();
