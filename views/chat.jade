@@ -5,9 +5,13 @@ div.container-fluid
     div.span3
       // sidebar content
       div.well.sidebar-nav
-        ul.nav.nav-list.sidebar.unstyled#chats
+        ul.nav.nav-list.sidebar.unstyled.rooms#chats
           li.nav-header 
             | Chatrooms
+            img(src='/img/loading.gif').loading
+        ul.nav.nav-list.sidebar.unstyled.rooms#private
+          li.nav-header 
+            | Private Chats
             img(src='/img/loading.gif').loading
 
       div.well.sidebar-nav

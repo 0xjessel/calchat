@@ -134,9 +134,9 @@ function renderChatroom(anchor) {
 	
 	$('.loading').removeClass('hidden');
 	$('.actions').addClass('hidden');
-	$('#chats .active').removeClass('active');
+	$('.rooms .active').removeClass('active');
 	anchor.parent().addClass('active');
-	$('#chats .loading').addClass('hidden');
+	$('.rooms .loading').addClass('hidden');
 	
 	$('#message').prop('disabled', true);
 
@@ -293,7 +293,8 @@ $(document).ready(function () {
 	chatDiv = $('#chat');
 
 	// setup chats in left nav sidebar
-	var roomsNav = $('#chats');
+	var chatNav = $('#chats');
+	var privateNav = $('#private');
 	for (var i = 0; i < rooms.length; i++) {
 		var room = rooms[i];
 		var pretty = room.pretty;
@@ -313,12 +314,17 @@ $(document).ready(function () {
 			.attr('id', id)
 			.data('room', room)
 			.append(pretty));
-		roomsNav.append(element);
+		
+		if (room.type == 'private') {
+			privateNav.append(element);
+		} else {
+			chatNav.append(element);
+		}
 	}
 	
-	$('#chats .loading').addClass('hidden');
+	$('.rooms .loading').addClass('hidden');
 
-	$('#chats a').click(function () {
+	$('.rooms a').click(function () {
 		if ($(this).data('room') != current) {
 			renderChatroom($(this));	
 		}
@@ -432,9 +438,17 @@ $(document).ready(function () {
 
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
-		$('#chats .active').remove();
 		
-		var next = $('#chats a:first');
+		var parent = $('.rooms .active').parents('.rooms');
+		console.log(parent);
+		$('.rooms .active').remove();
+		var next = parent.find('a:first');
+		
+		if (!next.length) {
+			parent = parent.siblings('.rooms');
+			next = parent.find('a:first');
+		}
+		
 		$('#message').prop('disabled', true);
 
 		socket.emit('leave room', current.id, function() {

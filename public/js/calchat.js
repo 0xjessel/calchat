@@ -33,12 +33,6 @@ $(document).ready(function () {
 					var firstLine = $('<div>').append(
 						$('<span>').append('<p>').addClass('room-pretty').text(room.pretty));
 
-					var name = room.name;
-					if (room.pretty != name) {
-						firstLine.append(
-							$('<span>').append('<p>').addClass('room-name').text(' ('+name+')'));
-					}
-
 					var html = $('<div>').append(
 						firstLine,
 						$('<div>').append('<p>').addClass('room-title').text(room.title));

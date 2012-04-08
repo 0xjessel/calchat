@@ -524,7 +524,7 @@ io.sockets.on('connection', function (socket) {
 										var roomsArray = user[0].split(',');
 										var unreadsArray = user[1].split(',');
 										helper.prependRoom(roomId, unreadsArray, roomsArray);
-										client2.hmset('user:'+other, 'chatrooms', roomsArray, 'unreads', unreadsArray);
+										client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
 									}
 								});
 							}
