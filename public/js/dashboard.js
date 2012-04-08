@@ -4,7 +4,7 @@ $(document).ready(function () {
 
 	var container = $('.container-fluid');
 	if (rooms[0] == null) {
-		container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
+		container.prepend('<div class="alert alert-error"><a class="close fade in" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
 	} else {
 		var chatroomsList = $('#chatrooms');
 		var privateList = $('#privatechats');
