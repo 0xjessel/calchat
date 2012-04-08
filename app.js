@@ -485,102 +485,129 @@ io.sockets.on('connection', function (socket) {
 	socket.on('message', function (roomId, msg, mentions) {
 		helper.debug('message', roomId, msg, mentions);
 		
-		console.log(io.sockets.in(roomId));
+		var timestamp = new Date().getTime();
 		
 		var text = msg;
 		text = sanitize(text).xss();
 		text = sanitize(text).entityEncode();
 		if (session !== undefined && session.uid !== undefined) {
-			var timestamp = new Date().getTime();
-			var isGSI = false;
-			getUsers(mentions.concat(session.uid), function(mapping){
-				helper.getRoomInfo(roomId, function(room) {
-					var user = mapping[session.uid];
-					var rooms = user.gsirooms.split(',');
-					for (var i = 0; i < rooms.length; i++){
-						if (rooms[i] == roomId){
-							isGSI = true;
-						}
-					}
-					if (isGSI && msg.charAt(0) == '/') {
-						var commandEnd = msg.indexOf(' ');
-						if (commandEnd == -1) commandEnd = msg.length;
-						var command = msg.substring(1, commandEnd);
-						var commandMsg = msg.substring(commandEnd).trim();
-						
-						switch(command.toUpperCase()) {
-							case 'KICK':
-							case 'BAN':
-							
-							var othersockets = getSockets(mentions, session.uid);
-							for (var i = 0; i < othersockets.length; i++) {
-								var s = othersockets[i];
-								s.emit(command.toLowerCase(), room, user, commandMsg);
-							};
-							
-							var capitalcommand = command.charAt(0).toUpperCase()+command.substring(1);
-							socket.emit('announcement', roomId, capitalcommand+' '+othersockets.length+' user(s) with message: '+commandMsg);
-							
+			helper.getRoomInfo(roomId, function(room) {
+				// check for ban
+				client2.hget('banlist:'+room.id, session.uid, function(err, ban) {
+					if (!err && ban != null) {
+						// banned
+						var banlength = timestamp - ban;
+						var totalbanlength = 5 * 60 * 1000;
+						if (ban == -1 || banlength < totalbanlength) { // 5 minutes
+							var banlengthstring = ban == -1 ? 'ever' : Math.round((totalbanlength-banlength)/(60*1000))+' minutes';
+							socket.emit('error', 'Message not sent. You\'ve been banned from chatting in this room for '+banlengthstring+'.');
 							return;
-							default:
-							break;
+						} else {
+							
 						}
 					}
-					var temp = {};
-					for (var i = 0; i < mentions.length; i++) {
-						temp[mentions[i]] = null;
-					};
-					mentions = Object.keys(temp);
-
-					client2.incr('message:id:next', function(err, mid) {
-						if (!err) {
-							var entry = {
-								'from'		: session.uid,
-								'to'		: roomId,
-								'text'		: text,
-								'mentions'	: mentions,
-								'id'		: mid,
-							};
-							
-							if (room.type == 'private') {
-								var other = room.other(session.uid);
-								var othersocket = getSockets([other])[0];
-								if (othersocket) {
-									othersocket.emit('private chat', roomId, entry, mapping);
-								}
-
-								client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
-									if (!err) {
-										var roomsArray = user[0].split(',');
-										var unreadsArray = user[1].split(',');
-										helper.prependRoom(roomId, unreadsArray, roomsArray);
-										client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
-									}
-								});
+					
+					var isGSI = false;
+					getUsers(mentions.concat(session.uid), function(mapping){
+						var user = mapping[session.uid];
+						var rooms = user.gsirooms.split(',');
+						for (var i = 0; i < rooms.length; i++){
+							if (rooms[i] == roomId){
+								isGSI = true;
 							}
-							
-							io.sockets.in(roomId).emit('message', entry, mapping);
-							
-							client2.hmset('message:'+mid, {
-								'from'		: session.uid,
-								'to'		: roomId,
-								'text'		: text,
-								'mentions'	: mentions.join(),
-								'timestamp'	: timestamp,
-							});
-							client2.zadd('chatlog:'+roomId, timestamp, mid);
-							
-							for (var i = 0; i < mentions.length; i++) {
-								var id = mentions[i];
-								client2.exists('user:'+id, function(err, exists) {
-									if (exists) {
-										client2.zadd('mentions:'+id, timestamp, mid);
-									}
-								});
-							}
-						} else {
-							error(err, socket);
 						}
+						if (isGSI && msg.charAt(0) == '/') {
+							var commandend = msg.indexOf(' ');
+							if (commandend == -1) commandend = msg.length;
+							var command = msg.substring(1, commandend);
+							var commandmsg = msg.substring(commandend).trim();
+							
+							switch(command.toUpperCase()) {
+								case 'KICK':
+								case 'BAN':
+								case 'WARN':
+								
+								// send command message to each mentioned socket
+								var othersockets = getSockets(mentions, session.uid);
+								var commandsdone = othersockets.length;
+								for (var i = 0; i < othersockets.length; i++) {
+									var s = othersockets[i];
+									s.emit(command.toLowerCase(), room, user, commandmsg);
+								};
+								
+								if (command.toUpperCase() == 'BAN' || command.toUpperCase() == 'WARN') {
+									commandsdone = mentions.length;
+									for (var i = 0; i < mentions.length; i++) {
+										var mention = mentions[i];
+										
+										client2.hset('banlist:'+room.id, mention, command.toUpperCase() == 'BAN' ? -1 : timestamp);
+									};
+								}
+								
+								var capitalcommand = command.charAt(0).toUpperCase()+command.substring(1);
+								socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
+								
+								return;
+								default:
+								break;
+							}
+						}
+						var temp = {};
+						for (var i = 0; i < mentions.length; i++) {
+							temp[mentions[i]] = null;
+						};
+						mentions = Object.keys(temp);
+
+						client2.incr('message:id:next', function(err, mid) {
+							if (!err) {
+								var entry = {
+									'from'		: session.uid,
+									'to'		: roomId,
+									'text'		: text,
+									'mentions'	: mentions,
+									'id'		: mid,
+								};
+								
+								if (room.type == 'private') {
+									var other = room.other(session.uid);
+									var othersocket = getSockets([other])[0];
+									if (othersocket) {
+										othersocket.emit('private chat', roomId, entry, mapping);
+									}
+
+									client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
+										if (!err) {
+											var roomsArray = user[0].split(',');
+											var unreadsArray = user[1].split(',');
+											helper.prependRoom(roomId, unreadsArray, roomsArray);
+											client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
+										}
+									});
+								}
+								
+								io.sockets.in(roomId).emit('message', entry, mapping);
+								
+								client2.hmset('message:'+mid, {
+									'from'		: session.uid,
+									'to'		: roomId,
+									'text'		: text,
+									'mentions'	: mentions.join(),
+									'timestamp'	: timestamp,
+								});
+								client2.zadd('chatlog:'+roomId, timestamp, mid);
+								
+								for (var i = 0; i < mentions.length; i++) {
+									var id = mentions[i];
+									client2.exists('user:'+id, function(err, exists) {
+										if (exists) {
+											client2.zadd('mentions:'+id, timestamp, mid);
+										}
+									});
+								}
+							} else {
+								error(err, socket);
+							}
+						});
 					});
 				});
 			});

@@ -110,7 +110,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 	privateMsgs[privateMsgs.length] = messageEntry.from;
 	
-	notify(1,
+	notify(0,
 		'New Private Chat from '+mapping[messageEntry.from].name+'!',
 		messageEntry.text,
 		'/chat/'+roomId,
@@ -119,17 +119,22 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 socket.on('kick', function(from, by, msg) {
 	$('#close').click();
-	notify(2,
-		'You were temporarily kicked from '+from.pretty,
+	notify(1,
+		'You are temporarily kicked from '+from.pretty,
 		by.name+': '+msg,
 		'/chat/'+from.id,
 		'Take me back I\'ve learned my lesson');
 });
 
+socket.on('warn', function(from, by, msg) {
+	notify(2,
+		'You are temporarily banned from '+from.pretty,
+		by.name+': '+msg);
+});
+
 socket.on('ban', function(from, by, msg) {
-	$('#close').click();
 	notify(3,
-		'You were permanently banned from '+from.pretty,
+		'You are permanently banned from '+from.pretty,
 		by.name+': '+msg);
 });
 
