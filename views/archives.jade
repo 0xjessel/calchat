@@ -1,7 +1,6 @@
 include includes/navbar
 
 div.container-fluid
-  div.alert.alert-error.hidden
   div.row-fluid
     div.span12
       div.hero-unit
@@ -13,4 +12,12 @@ div.container-fluid
           li Archives
             span.divider
               | /
-          li.active #{today}
+          li.active #{new Date(begin).toDateString()}
+        div#chat
+          div#messages
+            div#lines
+        ul.pager
+          li.previous
+            a(href='#' class='prev') &larr; Yesterday
+          li.next
+            a(href='#' class='next') Tomorrow &rarr;
