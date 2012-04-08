@@ -187,14 +187,18 @@ exports.chatroom = function(req, res) {
 				req.session.redirectPath = '/chat/'+req.session.rooms[0];
 
 				helper.getRoomsInfo(req.session.rooms, function(rooms) {
-					res.render('chat', { 
-						title: rooms[0].pretty+' Chatroom',
-						layout: 'layout-chat',
-						loggedIn: req.loggedIn,
-						showChatTab: true,
-						rooms: rooms,
-						index: 2,
-					});
+					if (rooms.length) {
+						res.render('chat', { 
+							title: rooms[0].pretty+' Chatroom',
+							layout: 'layout-chat',
+							loggedIn: req.loggedIn,
+							showChatTab: true,
+							rooms: rooms,
+							index: 2,
+						});
+					} else {
+						res.redirect('/dashboard?invalid='+room);
+					}
 				});
 				return;
 			}
