@@ -265,7 +265,7 @@ io.sockets.on('connection', function (socket) {
 		if (session !== undefined && session.uid !== undefined && session.nick !== undefined) {
 			socket.nickname = session.nick;
 			
-			getChatlog(current, 0, function(logs, mentions, room) {	
+			getChatlog(current, function(logs, mentions, room) {	
 				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
 					if (!err) {
 						if (chatrooms) {
@@ -297,7 +297,7 @@ io.sockets.on('connection', function (socket) {
 
 			});
 		} else {
-			getChatlog(current, 0, function(logs, mentions, room) {
+			getChatlog(current, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
 			io.sockets.in(current).emit('online', current, nicknames[current]);
