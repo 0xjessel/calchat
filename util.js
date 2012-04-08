@@ -70,6 +70,10 @@ function getRoomInfo(roomId, callback) {
 														var readable = function(uid) {
 															return user1.id == uid || user2.id == uid;
 														};
+														var other = function(uid) {
+															if (uid == user1.id) return user2.id;
+															else return user1.id;
+														};
 														callback({
 															id			: rawId,
 															url			: stripLow(rawId),
@@ -77,6 +81,7 @@ function getRoomInfo(roomId, callback) {
 															title		: 'Private Chat with '+name1+':'+'Private Chat with '+name2,
 															type		: 'private',
 															readable	: readable,
+															other		: other,
 														});
 													} else {
 														callback(null);
