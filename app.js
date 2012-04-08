@@ -184,7 +184,7 @@ io.sockets.on('connection', function (socket) {
     
     function getUsers(ids, callback) {
 		helper.debug('getUsers', ids);
-    	if (!ids) {
+    	if (!ids || !Object.keys(ids).length) {
     		callback({});
     	}
 
@@ -388,62 +388,77 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		// get last 30 messages
-		client2.zrange('chatlog:'+roomId, -30, -1, function(err, chatlog) {
-			if (!err) {
-				helper.getRoomInfo(roomId, function(room) {
-					if (chatlog.length == 0) {
-						callback({}, {}, room);
-						return;
-					}
+		helper.getRoomInfo(roomId, function(room) {
+			if (room.type == 'private') {
+				if (!session || !session.uid) {
+					error('No permissions: Guests cannot access '+room.id, socket);
+					callback({}, {}, room);
+					return;
+				}
 				
-					var logs = {};
-					var allMentions = [];
-					var added = 0;
-					for (var i = 0; i < chatlog.length; i++) {
-						function closure() {
-							var mid = chatlog[i];
-							client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
-								added++;
-								if (!err){
-									var timestamp = message[0];
-									var fromUid = message[1];
-									var text = message[2];
-									var mentions = message[3]; // turn into array later
-
-									if (mentions) {
-										mentions = mentions.split(',');
-									} else {
-										mentions = [];
-									}
-
-									allMentions = allMentions.concat(mentions, fromUid);
-								
-									var entry = {
-										'from'		: fromUid,
-										'to'		: roomId,
-										'text'		: text,
-										'mentions'	: mentions,
-										'id'		: mid,
-									};
-									logs[timestamp] = entry;
-								} else {
-									error(err, socket);
-								}
-								
-								if (added == chatlog.length) {
-									getUsers(allMentions, function(mapping) {
-										callback(logs, mapping, room);
-									});
-								}
-							});
-						}
-						closure();
-					}
-				});
-			} else {
-				error(err, socket);
-				callback();
+				if(!room.readable(session.uid)) {
+					// not permitted
+					error('No permissions: '+session.uid+' cannot access '+room.id, socket);
+					callback({}, {}, room);
+					return;
+				}
 			}
+			
+			client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
+				if (!err) {
+						if (chatlog.length == 0) {
+							callback({}, {}, room);
+							return;
+						}
+					
+						var logs = {};
+						var allMentions = [];
+						var added = 0;
+						for (var i = 0; i < chatlog.length; i++) {
+							function closure() {
+								var mid = chatlog[i];
+								client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
+									added++;
+									if (!err){
+										var timestamp = message[0];
+										var fromUid = message[1];
+										var text = message[2];
+										var mentions = message[3]; // turn into array later
+
+										if (mentions) {
+											mentions = mentions.split(',');
+										} else {
+											mentions = [];
+										}
+
+										allMentions = allMentions.concat(mentions, fromUid);
+									
+										var entry = {
+											'from'		: fromUid,
+											'to'		: room.id,
+											'text'		: text,
+											'mentions'	: mentions,
+											'id'		: mid,
+										};
+										logs[timestamp] = entry;
+									} else {
+										error(err, socket);
+									}
+									
+									if (added == chatlog.length) {
+										getUsers(allMentions, function(mapping) {
+											callback(logs, mapping, room);
+										});
+									}
+								});
+							}
+							closure();
+						}
+				} else {
+					error(err, socket);
+					callback({}, [], room);
+				}
+			});
 		});
 	}
 
@@ -455,8 +470,8 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('online', room, nicknames[room]);
 	});
 
-	socket.on('message', function (room, msg, mentions) {
-		helper.debug('message', room, msg, mentions);
+	socket.on('message', function (roomId, msg, mentions) {
+		helper.debug('message', roomId, msg, mentions);
 		var text = msg;
 		text = sanitize(text).xss();
 		text = sanitize(text).entityEncode();
@@ -471,35 +486,43 @@ io.sockets.on('connection', function (socket) {
 
 			client2.incr('message:id:next', function(err, mid) {
 				if (!err) {
-					getUsers(mentions.concat(session.uid), function(mapping) {
-						var entry = {
-							'from'		: session.uid,
-							'to'		: room,
-							'text'		: text,
-							'mentions'	: mentions,
-							'id'		: mid,
-						};
-
-						io.sockets.in(room).emit('message', entry, mapping);
-					});
-
-					client2.hmset('message:'+mid, {
-						'from'		: session.uid,
-						'to'		: room,
-						'text'		: text,
-						'mentions'	: mentions.join(),
-						'timestamp'	: timestamp,
-					});
-					client2.zadd('chatlog:'+room, timestamp, mid);
-					
-					for (var i = 0; i < mentions.length; i++) {
-						var id = mentions[i];
-						client2.exists('user:'+id, function(err, exists) {
-							if (exists) {
-								client2.zadd('mentions:'+id, timestamp, mid);
-							}
+					helper.getRoomInfo(roomId, function(room) {
+						var serverid = roomId;
+						var clientid = roomId;
+						if (room.type == 'user') {
+							serverid = room.getserverid(session.uid);
+							clientid = room.getclientid(session.uid);
+						}
+						getUsers(mentions.concat(session.uid), function(mapping) {
+							var entry = {
+								'from'		: session.uid,
+								'to'		: clientid,
+								'text'		: text,
+								'mentions'	: mentions,
+								'id'		: mid,
+							};
+							
+							io.sockets.in(serverid).emit('message', entry, mapping);
 						});
-					}
+						
+						client2.hmset('message:'+mid, {
+							'from'		: session.uid,
+							'to'		: serverid,
+							'text'		: text,
+							'mentions'	: mentions.join(),
+							'timestamp'	: timestamp,
+						});
+						client2.zadd('chatlog:'+serverid, timestamp, mid);
+						
+						for (var i = 0; i < mentions.length; i++) {
+							var id = mentions[i];
+							client2.exists('user:'+id, function(err, exists) {
+								if (exists) {
+									client2.zadd('mentions:'+id, timestamp, mid);
+								}
+							});
+						}
+					});
 				} else {
 					error(err, socket);
 				}

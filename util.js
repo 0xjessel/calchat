@@ -4,6 +4,8 @@ var client0 = redis.createClient(null, redisUrl);
 client0.select(0);
 var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
+var client2 = redis.createClient(null, redisUrl);
+client2.select(2);
 
 
 // Returns an object containing the id, official name, pretty name, and title
@@ -26,10 +28,11 @@ function getRoomInfo(roomId, callback) {
 						}
 
 						callback({
-							'id'		: rawId,
-							'name'		: name,
-							'pretty'	: pretty,
-							'title'		: klass.title,
+							id			: rawId,
+							url			: stripLow(pretty),
+							pretty		: pretty,
+							title		: klass.title,
+							type		: 'class',
 						});
 					});
 				} else {
@@ -37,23 +40,55 @@ function getRoomInfo(roomId, callback) {
 					client0.hgetall('location:'+rawId, function(err, location) {
 						if (!err && Object.keys(location).length) {
 							callback({
-								'id'		: rawId,
-								'name'		: location.name,
-								'pretty'	: location.name,
-								'title'		: location.longname,
+								id			: rawId,
+								url			: stripLow(location.name),
+								pretty		: location.name,
+								title		: location.longname,
+								type		: 'building',
 							});
 						} else {
 							// check if room is a special manual input
 							client1.hget('validrooms', rawId, function(err, title) {
 								if (!err && title) {
 									callback({
-										'id'		: rawId,
-										'name'		: rawId,
-										'pretty'	: rawId,
-										'title'		: title,
+										id			: rawId,
+										url			: stripLow(rawId),
+										pretty		: rawId,
+										title		: title,
+										type		: 'manual',
 									});
 								} else {
-									callback(null);
+									//check if room is another user id
+									if (rawId.indexOf(':') != -1) {
+										var uids = rawId.split(':');
+										client2.hgetall('user:'+uids[0], function(err, user1) {
+											if (!err && Object.keys(user1).length) {
+												client2.hgetall('user:'+uids[1], function(err, user2) {
+													if (!err && Object.keys(user2).length) {
+														var name1 = user1.firstname+' '+user1.lastname[0];
+														var name2 = user2.firstname+' '+user2.lastname[0];
+														var readable = function(uid) {
+															return user1.id == uid || user2.id == uid;
+														};
+														callback({
+															id			: rawId,
+															url			: stripLow(rawId),
+															pretty		: name1+':'+name2,
+															title		: 'Private Chat with '+name1+':'+'Private Chat with '+name2,
+															type		: 'private',
+															readable	: readable,
+														});
+													} else {
+														callback(null);
+													}
+												});
+											} else {
+												callback(null);
+											}
+										});
+									} else {
+										callback(null);
+									}
 								}
 							});
 						}
@@ -140,8 +175,7 @@ function isValid(roomId, callback) {
 		var score = stringScore(roomId);
 		client0.zrangebyscore('validrooms', score, score, function(err, rooms) {
 			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
-			var valid = !err && rooms.length;
-			if (valid) {
+			if (!err && rooms.length) {
 				var sameLastChars = [];
 				for (var i = 0; i < rooms.length; i++) {
 					var room = rooms[i];
@@ -181,8 +215,25 @@ function isValid(roomId, callback) {
 
 				callback(true, sameLastChars[0].suggestion);
 			} else {
-				// not valid
-				callback(false);
+				// not in validrooms db. Check if it is a private chat to another user
+				if (roomId.indexOf(':') != -1) {
+					var uids = roomId.split(':');
+					client2.exists('user:'+uids[0], function(err, exists) {
+						if (!err && exists) {
+							client2.exists('user:'+uids[1], function(err, exists) {
+								if (!err && exists) {
+									callback(true, roomId);
+								} else {
+									callback(false);
+								}
+							});
+						} else {
+							callback(false);
+						}
+					});
+				} else {
+					callback(false);
+				}
 			}
 		});
 	}
@@ -197,11 +248,11 @@ function postAuthenticate(req) {
 }
 
 function stripHigh(string) {
-	return string.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+	return string.replace(/[^A-Za-z0-9:]/g, '').toUpperCase();
 }
 
 function stripLow(string) {
-	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
 }
 
 function debug() {

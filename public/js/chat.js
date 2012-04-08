@@ -139,6 +139,7 @@ function renderChatroom(anchor) {
 
 function renderChatlogs (logs, mapping, room) {
 	debug('renderChatlogs');
+	if (!logs) logs = {};
 	if (!Object.keys(logs).length) {
 		logs[new Date().getTime()] = {
 			'from'	: 'System',
@@ -159,17 +160,17 @@ function renderChatlogs (logs, mapping, room) {
 	$('#message').prop('disabled', false);
 	$('#message').data('mentions', {});
 
-	$('#login').attr('href', '/authenticate/'+stripLow(room.pretty));
+	$('#login').attr('href', '/authenticate/'+room.url);
 
 	$('.chat-title h2').text(room.pretty);
 	$('.chat-title h3').text(room.title);
-	History.pushState(null, null, stripLow(room.pretty));			
+	History.pushState(null, null, room.url);			
 	
 	var newTitle = current.pretty;
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
-	$('#archives').attr('href', '/chat/'+stripLow(room.pretty)+'/archives');
+	$('#archives').attr('href', '/chat/'+room.url+'/archives');
 	$('#share').attr('href', 'https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(document.URL));
 
 	$('.chat-header .loading').addClass('hidden');
@@ -429,10 +430,9 @@ window.addEventListener('popstate', function(e) {
 		return;
 	}
 	var path = location.pathname.split('/');
-	var room = path[path.length-1];
-	alert(room);
+	var roomurl = path[path.length-1];
 	$('#chats a').each(function() {
-		if(stripLow($(this).data().room.pretty) == room) {
+		if(room.url == roomurl) {
 			renderChatroom($(this));
 		}
 	});

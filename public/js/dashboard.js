@@ -8,14 +8,14 @@ $(document).ready(function () {
 	} else {
 		var chatroomsList = $('#chatrooms');
 		for (var i = 0; i < rooms.length; i++) {
-			var room = rooms[i].pretty;
+			var room = rooms[i];
 			var unread = rooms[i].unread;
 			var unreadBadge = $('<span>').hide().addClass('badge').addClass('badge-error').text(unread);
 
 			if (unread > 0) {
 				unreadBadge.show();
 			}
-			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+stripLow(room)).text(room).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', rooms[i].id).text('x'))));
+			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+room.url).text(room.pretty).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', room.id).text('x'))));
 		}
 	}
 

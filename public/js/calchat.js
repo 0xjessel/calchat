@@ -74,5 +74,5 @@ $(document).ready(function () {
 });
 
 function stripLow(string) {
-	return string.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
+	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
 }
