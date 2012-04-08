@@ -119,6 +119,7 @@ exports.chatroom = function(req, res) {
 	
 	helper.isValid(room, function(valid, rawId) {
 		if (valid) {
+			console.log('rawId',rawId);
 			if (req.loggedIn) {
 				helper.postAuthenticate(req);
 
