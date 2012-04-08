@@ -77,7 +77,7 @@ p.message a.from:hover {
 	font-weight:bold;
 }
 
-p.message .label {
+.label {
 	display:inline-block;
 	margin-left:5px;
 	margin-right:2px;
