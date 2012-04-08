@@ -249,6 +249,17 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('capStringScore', string, cap);
 		return '('+stringScore(cap, false);
 	}
+	
+	function getSockets(uids) {
+		var sockets = [];
+		for (var key in io.sockets.sockets) {
+			var socket = io.sockets.socket(key);
+			if (uids.indexOf(socket.uid) != -1) {
+				sockets.push(socket);
+			}
+		}
+		return sockets;
+	}
 
 	socket.on('initialize', function(roomIds, current, callback) {
 		helper.debug('initialize', roomIds, current);
@@ -473,32 +484,56 @@ io.sockets.on('connection', function (socket) {
 
 	socket.on('message', function (roomId, msg, mentions) {
 		helper.debug('message', roomId, msg, mentions);
+		
+		console.log(io.sockets.in(roomId));
+		
 		var text = msg;
 		text = sanitize(text).xss();
 		text = sanitize(text).entityEncode();
-		if (session.uid !== undefined) {
+		if (session !== undefined && session.uid !== undefined) {
 			var timestamp = new Date().getTime();
 			var isGSI = false;
 			getUsers(mentions.concat(session.uid), function(mapping){
-				var user = mapping[session.uid];
-				var rooms = user.gsirooms.split(',');
-				for (var i = 0; i < rooms.length; i++){
-					if (rooms[i] == roomId){
-						isGSI = true;
+				helper.getRoomInfo(roomId, function(room) {
+					var user = mapping[session.uid];
+					var rooms = user.gsirooms.split(',');
+					for (var i = 0; i < rooms.length; i++){
+						if (rooms[i] == roomId){
+							isGSI = true;
+						}
 					}
-				}
-				if (isGSI && msg.indexOf('/') == 0) {
-					return;
-				}
-				var temp = {};
-				for (var i = 0; i < mentions.length; i++) {
-					temp[mentions[i]] = null;
-				};
-				mentions = Object.keys(temp);
+					if (isGSI && msg.charAt(0) == '/') {
+						var commandEnd = msg.indexOf(' ');
+						if (commandEnd == -1) commandEnd = msg.length;
+						var command = msg.substring(1, commandEnd);
+						var commandMsg = msg.substring(commandEnd).trim();
+						
+						switch(command.toUpperCase()) {
+							case 'KICK':
+							
+							var othersockets = getSockets(mentions);
+							for (var i = 0; i < othersockets.length; i++) {
+								var s = othersockets[i];
+								s.emit('kick', room, user, commandMsg);
+							};
+							
+							socket.emit('announcement', roomId, 'Kicked '+othersockets.length+' people with message: '+commandMsg);
+							
+							return;
+							case 'BAN':
+							return;
+							default:
+							break;
+						}
+					}
+					var temp = {};
+					for (var i = 0; i < mentions.length; i++) {
+						temp[mentions[i]] = null;
+					};
+					mentions = Object.keys(temp);
 
-				client2.incr('message:id:next', function(err, mid) {
-					if (!err) {
-						helper.getRoomInfo(roomId, function(room) {
+					client2.incr('message:id:next', function(err, mid) {
+						if (!err) {
 							var entry = {
 								'from'		: session.uid,
 								'to'		: roomId,
@@ -509,14 +544,11 @@ io.sockets.on('connection', function (socket) {
 							
 							if (room.type == 'private') {
 								var other = room.other(session.uid);
-								for (var key in io.sockets.sockets) {
-									var othersocket = io.sockets.socket(key);
-									if (othersocket.uid == other) {
-										othersocket.emit('private chat', roomId, entry, mapping);
-										break;
-									}
+								var othersocket = getSockets([other])[0];
+								if (othersocket) {
+									othersocket.emit('private chat', roomId, entry, mapping);
 								}
-								
+
 								client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
 									if (!err) {
 										var roomsArray = user[0].split(',');
@@ -546,12 +578,12 @@ io.sockets.on('connection', function (socket) {
 									}
 								});
 							}
-						});
-} else {
-	error(err, socket);
-}
-});
-});
+						} else {
+							error(err, socket);
+						}
+					});
+				});
+			});
 		} else {
 			error("session.uid not defined", socket);
 		}
