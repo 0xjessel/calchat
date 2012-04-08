@@ -189,11 +189,11 @@ function renderChatlogs (logs, mapping, room) {
 	$('#message').data('mentions', {});
 
 	$('#login').attr('href', '/authenticate/'+room.url);
-	var pretty = room.pretty.split(':');
+	var pretty = room.pretty;
 	var title = room.title;
 	if (room.type == 'private') {
-		var me = pretty[0] == name;
 		pretty = room.pretty.split(':');
+		var me = pretty[0] == name;
 		pretty = me ? pretty[1] : pretty[0];
 		title = room.title.split(':');
 		title = me ? title[1] : title[0];
