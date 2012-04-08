@@ -199,8 +199,6 @@ function renderChatMessage(entry, mapping) {
 		special = mapping[fromUid].special;
 		var gsirooms = mapping[fromUid].gsirooms.split(',');
 		for (var i = 0; i < gsirooms.length; i++) {
-			console.log(gsirooms[i]);
-			console.log(toRoom);
 			if (gsirooms[i] == toRoom) {
 				gsi = true;
 				break;
@@ -356,7 +354,7 @@ $(document).ready(function () {
 					
 				for (var i = 0; i < ids.length; i++) {
 					var id = ids[i];
-					var name = mapping[id];
+					var name = mapping[id].name;
 					var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
 					var html = $('<div>').append($('<img class="avatar" width="30px" height="30px" src='+pic+'>')).append(name);
 					
