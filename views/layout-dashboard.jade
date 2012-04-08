@@ -13,10 +13,11 @@ html(lang='en')
     var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
   script(src='/js/libs/jquery.history.js')
   script(src='/js/geo.js')
-  script(src='/js/dashboard.js')
   script(src='/js/libs/bootstrap/alert.js')
   script 
     if (window.location.hash) {
       window.location.hash = '';
       History.replaceState(null, null, window.location.href.slice(0, -1));
     }
+  script(src='/js/chat-helper.js')
+  script(src='/js/dashboard.js')
