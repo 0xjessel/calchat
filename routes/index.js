@@ -39,7 +39,7 @@ exports.dashboard = function(req, res) {
 	if (req.loggedIn) {
 		helper.postAuthenticate(req);
 
-		client2.hget('user:')
+		//client2.hget('user:')
 
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
