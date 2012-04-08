@@ -365,7 +365,7 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get chatlog', getChatlog);
-	function getChatlog(roomId, index, callback) {
+	function getChatlog(roomId, callback) {
 		helper.debug('get chatlog', roomId);
 		roomId = helper.stripHigh(roomId);
 

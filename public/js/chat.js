@@ -133,7 +133,7 @@ function renderChatroom(anchor) {
 	
 	$('#message').prop('disabled', true);
 
-	socket.emit('get chatlog', current.id, rooms.indexOf(current), renderChatlogs);
+	socket.emit('get chatlog', current.id, renderChatlogs);
 	socket.emit('get online', current.id);			
 }
 
