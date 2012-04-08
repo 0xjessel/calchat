@@ -32,10 +32,11 @@ $(document).ready(function () {
 
 					var firstLine = $('<div>').append(
 						$('<span>').append('<p>').addClass('room-pretty').text(room.pretty));
+					var secondLine = $('<div>').append('<p>').addClass('room-title').text(room.title);
 
 					var html = $('<div>').append(
 						firstLine,
-						$('<div>').append('<p>').addClass('room-title').text(room.title));
+						secondLine);
 
 					room.value = html.html();
 				};

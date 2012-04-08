@@ -189,9 +189,9 @@ public class Utils {
 				if (day.equals("")) {
 					continue;
 				}
-				String roomKey = String.format("room:%s:%s:%s",
-						stripHigh(schedule.building), schedule.buildingNumber,
-						day);
+				String roomKey = String.format("room:%s%s:%s",
+						stripHigh(schedule.buildingNumber),
+						stripHigh(schedule.building), day);
 				String field = stripHigh(schedule.time);
 
 				synchronized (pipeline0) {
