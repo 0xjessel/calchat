@@ -37,6 +37,14 @@ h1, h2, h3 {
 	margin-right:auto;
 }
 
+.private-alert {
+	width:auto;
+	position:fixed;
+	left:15px;
+	bottom:15px;
+	z-index:3;
+}
+
 .sidebar-nav {
 	padding: 9px 0;
 }

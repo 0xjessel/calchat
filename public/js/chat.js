@@ -7,6 +7,7 @@ var currentOnline = {};
 var chatDiv;
 var selfAnnounced = false;
 var unread = {};
+var privateMsgs = [];
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
@@ -93,7 +94,27 @@ socket.on('error', function (e) {
 });
 
 socket.on('private chat', function(roomId, messageEntry, mapping) {
-	alert('New private chat in room '+roomId+': '+messageEntry.text);
+	for (var i = 0; i < rooms.length; i++) {
+		if (roomId == rooms[i].id) {
+			return;
+		}
+	}
+
+	if (privateMsgs.indexOf(messageEntry.from) != -1) {
+		return;
+	}
+
+	var sidebar = $('.span3');
+	var alert = $('<div>').addClass('alert').addClass('alert-info').addClass('fade in').addClass('private-alert');
+	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
+		, $('<h4>').addClass('alert-heading').text('New private chat from '+mapping[messageEntry.from].name+'!')
+		, $('<p>').text(messageEntry.text)
+		, $('<p>').append(
+			$('<a>').addClass('btn').addClass('btn-primary').attr('href', '/chat/'+roomId).text('Go to private chat')
+			)
+		);
+	sidebar.append(alert);
+	privateMsgs[privateMsgs.length] = messageEntry.from;
 });
 
 socket.on('message', message);
@@ -168,7 +189,7 @@ function renderChatlogs (logs, mapping, room) {
 	$('#message').data('mentions', {});
 
 	$('#login').attr('href', '/authenticate/'+room.url);
-	var pretty = room.pretty;
+	var pretty = room.pretty.split(':');
 	var title = room.title;
 	if (room.type == 'private') {
 		var me = pretty[0] == name;
@@ -429,6 +450,7 @@ $(document).ready(function () {
 		// remove chatroom from sidebar
 		// load next chatroom in line
 		// if no chatroom redirect to dashboard with params
+		rooms.splice(rooms.indexOf(current), 1);
 
 		$('#lines').empty();
 		$('#online li:not(.nav-header)').remove();
