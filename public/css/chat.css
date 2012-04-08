@@ -77,7 +77,7 @@ p.message a.from:hover {
 	font-weight:bold;
 }
 
-p.message .label {
+.label {
 	display:inline-block;
 	margin-left:5px;
 	margin-right:2px;
@@ -108,6 +108,17 @@ p.message > span.mentions {
 
 #lines p div.message-mentions {
 	background: #eee;
+}
+
+span.text a.mention {
+	color: dimgrey;
+	font-weight: bold;
+}
+
+span.text a.mention:hover {
+	text-decoration: none;
+	color: darkgrey;
+	font-weight: bold;
 }
 
 div.message-mentions a.mention {

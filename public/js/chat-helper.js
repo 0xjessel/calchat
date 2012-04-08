@@ -2,6 +2,7 @@ var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
 function renderChatMessage(entry, mapping) {
+	console.log(mapping);
 	var fromUid = entry.from;
 	var toRoom = entry.to;
 	var msg = entry.text;
@@ -13,31 +14,12 @@ function renderChatMessage(entry, mapping) {
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
 	
-	var from = fromUid;
-	var gsi = false;
-	var special = SPECIAL_NONE;
-	if (mapping && fromUid in mapping) {
-		from = mapping[fromUid].name;
-		special = mapping[fromUid].special;
-		var gsirooms = mapping[fromUid].gsirooms.split(',');
-		for (var i = 0; i < gsirooms.length; i++) {
-			if (gsirooms[i] == toRoom) {
-				gsi = true;
-				break;
-			}
-		};
-		special = mapping[fromUid].special;
-	}
-	var label = $('<span>').addClass('label').hide();
-	if (special == SPECIAL_FOUNDER) {
-		label.addClass('label-inverse').text('FOUNDER').show();
-	} else if (gsi) {
-		label.addClass('label-warning').text('GSI').show();
-	}
+	var label = getLabel(fromUid, toRoom, mapping);
 	
-	if (from == 'System') {
+	if (fromUid == 'System') {
 		return $('<p class="system-message">').append(msg);
 	} else {
+     	var from = mapping[fromUid].name;
 		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+mid);
 
 		var totalWidth = 0;
@@ -54,12 +36,10 @@ function renderChatMessage(entry, mapping) {
 
 			mentionsElement.append(element);
 
-			var link = $('<div>').append(getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).remove().html();
+			var link = $('<div>').append(
+				getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).html();
 
 			msg = msg.replace(mapping[id].name, link);
-			//console.log(msg)
-			//console.log(mapping[id].name);
-			//console.log(link);
 		}
 
 
@@ -85,4 +65,28 @@ function getUserLink(id) {
 		return $('<a>').attr('href', 'javascript:void(0)');
 	}
 	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
+}
+
+function getLabel(fromUid, toRoom, mapping) {
+	var gsi = false;
+	var special = SPECIAL_NONE;
+	if (mapping && fromUid in mapping) {
+		var from = mapping[fromUid].name;
+		special = mapping[fromUid].special;
+		var gsirooms = mapping[fromUid].gsirooms.split(',');
+		for (var i = 0; i < gsirooms.length; i++) {
+			if (gsirooms[i] == toRoom) {
+				gsi = true;
+				break;
+			}
+		};
+		special = mapping[fromUid].special;
+	}
+	var label = $('<span>').addClass('label').hide();
+	if (special == SPECIAL_FOUNDER) {
+		label.addClass('label-inverse').text('FOUNDER').show();
+	} else if (gsi) {
+		label.addClass('label-warning').text('GSI').show();
+	}
+	return label;
 }

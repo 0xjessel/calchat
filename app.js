@@ -47,7 +47,7 @@ everyauth.facebook.sendResponse(function(res, data) {
 everyauth.facebook
 .appId('297402036983700')
 .appSecret('aad4c11b1b2ccbad5ea5d3632cc5d920')
-.scope('email, user_about_me, read_friendlists')
+.scope('email, user_about_me')
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
 	var timeStamp = new Date().getTime();
@@ -59,6 +59,7 @@ everyauth.facebook
 					'id': fbUserMetadata.id, 
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
+					'email': fbUserMetadata.email,
 					'chatrooms': 'CALCHAT',
 					'unread': timeStamp,
 					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
@@ -286,11 +287,6 @@ io.sockets.on('connection', function (socket) {
 								var roomId = roomIds[i];
 								nicknames[roomId][session.uid] = socket.nickname;
 								client2.zadd('users:'+roomId, stringScore(socket.nickname), session.uid);
-
-								if (roomId != current) {
-									io.sockets.in(roomId).emit('announcement', roomId, session.nick + ' connected');
-									io.sockets.in(roomId).emit('online', roomId, nicknames[roomId]);
-								}
 							}
 
 							callback(logs, mentions, room);
@@ -298,58 +294,68 @@ io.sockets.on('connection', function (socket) {
 							callback();
 						}
 						
-							// TODO: can we just get rid of that if check on line 213 so we don't need this? 
-							io.sockets.in(current).emit('announcement', current, session.nick + ' connected');
-							io.sockets.in(current).emit('online', current, nicknames[current]);
-						} else {
-							error(err, socket);
-							callback();
+						for (var i = 0; i < roomIds.length; i++) {
+							(function closure() {
+								var roomId = roomIds[i];
+								
+								getUsers(Object.keys(nicknames[roomId]), function(mapping) {
+									io.sockets.in(roomId).emit('announcement', roomId, session.nick + ' connected');
+									io.sockets.in(roomId).emit('online', roomId, mapping);
+								});
+							})();
 						}
-					});
-
+					} else {
+						error(err, socket);
+						callback();
+					}
+				});
 			});
 		} else {
 			getChatlog(current, null, null, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
-			io.sockets.in(current).emit('online', current, nicknames[current]);
+			getUsers(Object.keys(nicknames[current]), function(mapping) {
+				io.sockets.in(current).emit('online', current, mapping);
+			});
 		}
 	});
 	
 	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
-		if (session !== undefined && session.uid !== undefined){
-			delete nicknames[room][session.uid];
+		getUsers(Object.keys(nicknames[room]), function(mapping) {
+			if (session !== undefined && session.uid !== undefined){
+				delete nicknames[room][session.uid];
 
-			client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
+				client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
 
-				if (!err && reply[0] != null && reply[1] != null) {
-					var rooms = reply[1].split(',');
-					var index = rooms.indexOf(room);
+					if (!err && reply[0] != null && reply[1] != null) {
+						var rooms = reply[1].split(',');
+						var index = rooms.indexOf(room);
 
-					rooms.splice(index, 1);
+						rooms.splice(index, 1);
 
-					var unreads = reply[0].split(',');
-					unreads.splice(index, 1);
+						var unreads = reply[0].split(',');
+						unreads.splice(index, 1);
 
-					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
+						client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
+							callback();
+						});
+					} else {
+						error(err, socket);
 						callback();
-					});
-				} else {
-					error(err, socket);
-					callback();
-				}
-			});
+					}
+				});
 
-			// remove user from chatroom's list of users
-			client2.zrem('users:'+room, session.uid);
-        
-			io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-			io.sockets.in(room).emit('online', room, nicknames[room]);
-		} else {
-			error("session.uid undefined", socket);
-			callback();
-		}
+				// remove user from chatroom's list of users
+				client2.zrem('users:'+room, session.uid);
+	        
+				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+				io.sockets.in(room).emit('online', room, mapping);
+			} else {
+				error("session.uid undefined", socket);
+				callback();
+			}
+		});
 	});
 	
 	// remove room from the dashboard
@@ -378,10 +384,6 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(roomId, min, max, callback) {
-		console.log('roomId: '+roomId);
-		console.log('min: '+min);
-		console.log('max: '+max);
-		console.log('calback: '+callback);
 		helper.debug('get chatlog', roomId);
 		roomId = helper.stripHigh(roomId);
 
@@ -497,8 +499,10 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get online', function (room) {
 		helper.debug('get online', room);
 		
-		// send updated online users list
-		socket.emit('online', room, nicknames[room]);
+		getUsers(Object.keys(nicknames[room]), function(mapping) {
+			// send updated online users list
+			socket.emit('online', room, mapping);
+		});
 	});
 
 	socket.on('message', function (roomId, msg, mentions) {
@@ -800,13 +804,17 @@ io.sockets.on('connection', function (socket) {
 					// do not run if array is [''] (which happens b/c ''.split(',') becomes [''])
 					if (rooms.length && reply[0]) {
 						for (var i = 0; i < rooms.length; i++) {
-							var room = rooms[i];
+							(function closure() {
+								var room = rooms[i];
+								getUsers(Object.keys(nicknames[room]), function(mapping) {
 
-							// update unreads to time of d/c
-							unreads[i] = time;
+									// update unreads to time of d/c
+									unreads[i] = time;
 
-							io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
-							io.sockets.in(room).emit('online', room, nicknames[room]);
+									io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
+									io.sockets.in(room).emit('online', room, mapping);
+								});
+							})();
 						}
 						client2.hset('user:'+session.uid, 'unread', unreads.join());
 					}
