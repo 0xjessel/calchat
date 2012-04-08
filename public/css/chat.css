@@ -111,13 +111,11 @@ p.message > span.mentions {
 }
 
 span.text a.mention {
-	color: dimgrey;
 	font-weight: bold;
 }
 
 span.text a.mention:hover {
 	text-decoration: none;
-	color: darkgrey;
 	font-weight: bold;
 }
 
