@@ -744,40 +744,16 @@ io.sockets.on('connection', function (socket) {
 			callback([]);
 		} else {
 			helper.debug(stringScore(query), capStringScore(query));
-			client0.zrangebyscore('validrooms', stringScore(query), capStringScore(query), 'limit', 0, limit, function(err, ids) {
+			client0.zrangebyscore('validrooms', stringScore(query), capStringScore(query), function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {
 						callback([]);
 						return;
 					}
-
-					var rooms = {};
-					var added = 0;
-					for (var i = 0; i < ids.length; i++) {
-						// use closure so var id isn't changed by next loop iteration before callback
-						var closure = function() {
-							var id = ids[i];
-
-							// check if id is an abbreviation
-							if (id.charAt(id.length - 1) == '#') {
-								id = id.substring(0, id.length - 1);
-							}
-
-							helper.getRoomInfo(id, function(room) {
-								added++;
-								rooms[id] = room;
-
-								if (added == ids.length) {
-									var objects = [];
-									for (id in rooms) {
-										objects.push(rooms[id]);
-									}
-									callback(objects);
-								}
-							});
-						}
-						closure();
-					}
+					
+					helper.getRoomsInfo(ids, function(rooms) {
+						callback(rooms.slice(0, limit));
+					});
 				} else {
 					error(err, socket);
 					callback();

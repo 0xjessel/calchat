@@ -68,3 +68,25 @@ h1, h2, h3 {
 .room-pretty {
 	font-weight: bold;
 }
+
+.typeahead-container {
+	height: 37px;
+	position: relative;
+}
+
+.typeahead-firstline {
+}
+
+.typeahead-secondline {
+}
+
+.typeahead-main {
+	display: inline-block;
+	margin-left: 24px;
+}
+
+.typeahead-icon {
+	position: absolute;
+	top:50%;
+	margin-top:-7px;
+}

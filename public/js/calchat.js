@@ -30,12 +30,35 @@ $(document).ready(function () {
 				for (var i = 0; i < rooms.length; i++) {
 					var room = rooms[i];
 
-					var firstLine = $('<div>').append(
+					var firstLine = $('<div>').addClass('typeahead-firstline').append(
 						$('<span>').append('<p>').addClass('room-pretty').text(room.pretty));
+					var secondLine = $('<div>').addClass('typeahead-secondline').append('<p>').addClass('room-title').text(room.title);
+					var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);
+					var iconbuilding = $('<i>').addClass('icon-home typeahead-icon');
+					var iconclass = $('<i>').addClass('icon-book typeahead-icon');
+					var iconuser = $('<i>').addClass('icon-user typeahead-icon');
+					var iconspecial = $('<i>').addClass('icon-gift typeahead-icon');
+					
+					var icon = null;
+					switch(room.type) {
+						case 'class':
+							icon = iconclass;
+							break;
+						case 'building':
+							icon = iconbuilding;
+							break;
+						case 'special':
+							icon = iconspecial;
+							break;
+						case 'private':
+							icon = iconuser;
+							break;
+					}
+					
 
-					var html = $('<div>').append(
-						firstLine,
-						$('<div>').append('<p>').addClass('room-title').text(room.title));
+					var html = $('<div>').append($('<div>').addClass('typeahead-container').append(
+						icon,
+						main));
 
 					room.value = html.html();
 				};

@@ -55,33 +55,45 @@ function getRoomInfo(roomId, callback) {
 										url			: stripLow(rawId),
 										pretty		: rawId,
 										title		: title,
-										type		: 'manual',
+										type		: 'special',
 									});
 								} else {
-									//check if room is another user id
-									if (rawId.indexOf(':') != -1) {
-										var uids = rawId.split(':');
-										client2.hgetall('user:'+uids[0], function(err, user1) {
-											if (!err && Object.keys(user1).length) {
-												client2.hgetall('user:'+uids[1], function(err, user2) {
-													if (!err && Object.keys(user2).length) {
-														var name1 = user1.firstname+' '+user1.lastname[0];
-														var name2 = user2.firstname+' '+user2.lastname[0];
-														var readable = function(uid) {
-															return user1.id == uid || user2.id == uid;
-														};
-														var other = function(uid) {
-															if (uid == user1.id) return user2.id;
-															else return user1.id;
-														};
-														callback({
-															id			: rawId,
-															url			: stripLow(rawId),
-															pretty		: name1+':'+name2,
-															title		: 'Private Chat with '+name1+':'+'Private Chat with '+name2,
-															type		: 'private',
-															readable	: readable,
-															other		: other,
+									// check if room is a class room
+									client0.hget('room:'+rawId+':'+getDayOfWeek(), getLastHalfHour(), function(err, classId) {
+										if (!err && classId) {
+											getRoomInfo(classId, function(roomObject) {
+												console.log(roomObject);
+												callback(roomObject);
+											});
+										} else {
+											// check if room is another user id
+											if (rawId.indexOf(':') != -1) {
+												var uids = rawId.split(':');
+												client2.hgetall('user:'+uids[0], function(err, user1) {
+													if (!err && Object.keys(user1).length) {
+														client2.hgetall('user:'+uids[1], function(err, user2) {
+															if (!err && Object.keys(user2).length) {
+																var name1 = user1.firstname+' '+user1.lastname[0];
+																var name2 = user2.firstname+' '+user2.lastname[0];
+																var readable = function(uid) {
+																	return user1.id == uid || user2.id == uid;
+																};
+																var other = function(uid) {
+																	if (uid == user1.id) return user2.id;
+																	else return user1.id;
+																};
+																callback({
+																	id			: rawId,
+																	url			: stripLow(rawId),
+																	pretty		: name1+':'+name2,
+																	title		: 'Private Chat with '+name1+':'+'Private Chat with '+name2,
+																	type		: 'private',
+																	readable	: readable,
+																	other		: other,
+																});
+															} else {
+																callback(null);
+															}
 														});
 													} else {
 														callback(null);
@@ -90,10 +102,8 @@ function getRoomInfo(roomId, callback) {
 											} else {
 												callback(null);
 											}
-										});
-									} else {
-										callback(null);
-									}
+										}
+									});
 								}
 							});
 						}
@@ -111,12 +121,26 @@ function getRoomsInfo(roomIds, callback) {
 	if (!roomIds.length) {
 		callback([]);
 	}
+	
+	var temp = {};
+	for (var i = 0; i < roomIds.length; i++) {
+		var roomId = roomIds[i];
+		if (roomId.charAt(roomId.length - 1) == '#') {
+			roomId = roomId.substring(0, roomId.length - 1);
+		}
+		temp[roomId] = null;
+	};
+	roomIds = Object.keys(temp);
 
 	var added = 0;
 	var rooms = [];
 	for (var i = 0; i < roomIds.length; i++) {
 		function closure() {
 			var roomId = roomIds[i];
+			if (roomId.charAt(roomId.length - 1) == '#') {
+				roomId = roomId.substring(0, roomId.length - 1);
+			}
+
 			var n = i;
 			getRoomInfo(roomId, function(room) {
 				added++;
@@ -125,7 +149,14 @@ function getRoomsInfo(roomIds, callback) {
 				rooms[n] = room;
 
 				if (added == roomIds.length) {
-					callback(rooms);
+					var ret = [];
+					for (var i = 0; i < rooms.length; i++) {
+						var r = rooms[i];
+						if (r != null) {
+							ret.push(r);
+						}
+					};
+					callback(ret);
 				}
 			});
 		}
@@ -179,7 +210,6 @@ function isValid(roomId, callback) {
 		// try to find room in the database
 		var score = stringScore(roomId);
 		client0.zrangebyscore('validrooms', score, score, function(err, rooms) {
-			console.log(rooms);
 			// room is valid if it is the raw id or an abbreviation (ELENG40 or EE40)
 			if (!err && rooms.length) {
 				var sameLastChars = [];
@@ -259,6 +289,31 @@ function stripHigh(string) {
 
 function stripLow(string) {
 	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
+}
+
+function getDayOfWeek() {
+	var now = new Date();
+	switch(now.getDay()) {
+		case 0:
+			return 'Su';
+		case 1:
+			return 'M';
+		case 2:
+			return 'Tu';
+		case 3:
+			return 'W';
+		case 4:
+			return 'Th';
+		case 5:
+			return 'F';
+		case 6:
+			return 'S';
+	}
+}
+
+function getLastHalfHour() {
+	var now = new Date();
+	return (now.getHours() + (now.getMinutes() >= 30 ? .5 : 0)).toFixed(1);
 }
 
 function debug() {

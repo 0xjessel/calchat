@@ -130,6 +130,44 @@ public class Utils {
 		return s.replaceAll("[^A-Za-z0-9:-]", "").toUpperCase();
 	}
 
+	static Map<String, double[]> timeConversionCacheMap = new HashMap<String, double[]>();
+
+	public static double[] getHalfHoursFromInterval(String interval) {
+		double[] key = timeConversionCacheMap.get(interval);
+		if (key != null) {
+			return key;
+		}
+
+		String[] intervalArray = interval.split("-");
+		String fromTimeString = intervalArray[0];
+		double fromTime = fromTimeString.length() > 2 ? Integer
+				.parseInt(fromTimeString.substring(0,
+						fromTimeString.length() - 2)) + .5 : Integer
+				.parseInt(fromTimeString);
+		String to = intervalArray[1];
+		String toTimeString = to.substring(0, to.length() - 1);
+		double toTime = toTimeString.length() > 2 ? Integer
+				.parseInt(toTimeString.substring(0, toTimeString.length() - 2)) + .5
+				: Integer.parseInt(toTimeString);
+		boolean toPM = to.charAt(to.length() - 1) == 'P';
+		boolean fromPM = toPM
+				&& (fromTime >= 12 || (toTime < 12 && fromTime < toTime));
+
+		double fromMilitaryTime = fromTime + (fromPM && fromTime < 12 ? 12 : 0);
+		double toMilitaryTime = toTime + (toPM && toTime < 12 ? 12 : 0);
+
+		int hours = (int) ((toMilitaryTime - fromMilitaryTime) * 2);
+
+		double[] hoursArray = new double[hours];
+		for (int i = 0; i < hours; i++) {
+			hoursArray[i] = fromMilitaryTime + i * .5;
+		}
+
+		timeConversionCacheMap.put(interval, hoursArray);
+
+		return hoursArray;
+	}
+
 	public static void setValidRoom(String scoreby, String value) {
 		synchronized (pipeline0) {
 			pipeline0.zadd("validrooms", stringScore(scoreby), value);
@@ -189,13 +227,22 @@ public class Utils {
 				if (day.equals("")) {
 					continue;
 				}
-				String roomKey = String.format("room:%s:%s:%s",
-						stripHigh(schedule.building), schedule.buildingNumber,
-						day);
+				String roomName = String.format("%s%s",
+						stripHigh(schedule.buildingNumber),
+						stripHigh(schedule.building));
+				setValidRoom(roomName, String.format("%s%s",
+						stripHigh(schedule.buildingNumber),
+						stripHigh(schedule.building)));
+				String roomKey = String.format("room:%s%s:%s",
+						stripHigh(schedule.buildingNumber),
+						stripHigh(schedule.building), day);
 				String field = stripHigh(schedule.time);
 
-				synchronized (pipeline0) {
-					pipeline0.hset(roomKey, field, id);
+				double[] hours = getHalfHoursFromInterval(field);
+				for (double hour : hours) {
+					synchronized (pipeline0) {
+						pipeline0.hset(roomKey, String.valueOf(hour), id);
+					}
 				}
 			}
 		}
@@ -364,9 +411,6 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("E" + (char) ((int) 'Z' + 1));
-		System.out.println(stringScore("EZ"));
-		System.out.println(stringScore("E" + (char) (((int) 'Z') + 1)));
-		System.out.println(stringScore("F0"));
+		System.out.println(stringScore("111TEST"));
 	}
 }
