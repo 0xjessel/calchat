@@ -250,11 +250,11 @@ io.sockets.on('connection', function (socket) {
 		return '('+stringScore(cap, false);
 	}
 	
-	function getSockets(uids) {
+	function getSockets(uids, exceptuid) {
 		var sockets = [];
 		for (var key in io.sockets.sockets) {
 			var socket = io.sockets.socket(key);
-			if (uids.indexOf(socket.uid) != -1) {
+			if (socket.uid != exceptuid && uids.indexOf(socket.uid) != -1) {
 				sockets.push(socket);
 			}
 		}
@@ -511,7 +511,7 @@ io.sockets.on('connection', function (socket) {
 						switch(command.toUpperCase()) {
 							case 'KICK':
 							
-							var othersockets = getSockets(mentions);
+							var othersockets = getSockets(mentions, session.uid);
 							for (var i = 0; i < othersockets.length; i++) {
 								var s = othersockets[i];
 								s.emit('kick', room, user, commandMsg);

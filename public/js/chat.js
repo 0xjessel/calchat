@@ -121,7 +121,7 @@ socket.on('kick', function(from, by, msg) {
 	notify('You got kicked from '+from.pretty,
 		by.name+': '+msg,
 		'/chat/'+from.id,
-		'Take me back. I\'m sorry, I\'ve learned my lesson.');
+		'Take me back I\'ve learned my lesson');
 });
 
 socket.on('message', message);
