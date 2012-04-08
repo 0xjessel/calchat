@@ -4,6 +4,7 @@ div.container-fluid
   div.row-fluid
     div.span12
       div.hero-unit
+        h2 Archives
         ul.breadcrumb
           li
             a(href='#') #{title}
@@ -18,6 +19,6 @@ div.container-fluid
             div#lines
         ul.pager
           li.previous
-            a(href='#' class='prev') &larr; Yesterday
+            a(href='javascript:void(0)', id='goBack') &larr; Yesterday
           li.next
-            a(href='#' class='next') Tomorrow &rarr;
+            a(href='javascript:void(0)', class='hidden', id='goForward') Tomorrow &rarr;
