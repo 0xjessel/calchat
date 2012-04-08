@@ -230,7 +230,7 @@ public class Utils {
 				String roomName = String.format("%s%s",
 						stripHigh(schedule.buildingNumber),
 						stripHigh(schedule.building));
-				setValidRoom(roomName, String.format("%s%s",
+				setValidRoom(roomName, String.format("%s%s$",
 						stripHigh(schedule.buildingNumber),
 						stripHigh(schedule.building)));
 				String roomKey = String.format("room:%s%s:%s",
@@ -411,6 +411,6 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(stringScore("111TEST"));
+		System.out.println(stringScore("112TEST"));
 	}
 }
