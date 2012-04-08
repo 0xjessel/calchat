@@ -252,7 +252,7 @@ function getUserLink(id) {
 	if (uid == id) {
 		return $('<a>');
 	}
-	return $('<a>').attr('href', '/chat/'+uid+':'+id);
+	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
 }
 
 function clear () {
