@@ -43,10 +43,14 @@ $(document).ready(function () {
 function getArchive(start, finish) {
 	var lines = $('#lines');
 	lines.empty();
-	console.log('begin: '+start);
-	console.log('finish: '+finish);
 	socket.emit('get chatlog', room.id, start, finish, function(logs, mapping, room) {
-		console.log(logs);
+		if (Object.keys(logs).length == 0) {
+			logs[new Date().getTime()] = {
+				'from'	: 'System',
+				'to'	: 0,
+				'text'	: 'No messages for this day'
+			};
+		}
 		for (timestamp in logs) {
 			// not showing timestamp for now
 			var entry = logs[timestamp];
