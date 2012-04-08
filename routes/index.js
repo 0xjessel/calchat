@@ -168,7 +168,7 @@ exports.chatroom = function(req, res) {
 				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unread', unreads.join(), function() {
 					helper.getRoomsInfo(userChatrooms, function(rooms) {
 						res.render('chat', {
-							title: rooms[0].pretty+' Chatroom',
+							title: rooms[0].pretty,
 							layout: 'layout-chat',
 							loggedIn: req.loggedIn,
 							showChatTab: true,
