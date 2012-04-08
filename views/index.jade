@@ -2,14 +2,52 @@ include includes/navbar
 
 div.container-fluid
   div.hero-unit
-    if loggedIn
-      h1 Welcome back, #{everyauth.facebook.user.name}
-    else 
-      h1 Hello, world!
-    p This is a template for a simple marketing or informational website. It includes a large callout called the hero unit and three supporting pieces of content. Use it as a starting point to create something more unique.
-    if !loggedIn
-      p
-        a(href='/auth/facebook')#login
+    div.row-fluid
+      div.span6
+        img(src='/img/logo-lg.png')
+        if loggedIn
+          h2 Welcome back, #{everyauth.facebook.user.name}
+        else 
+          h2 welcome to CalChat!
+
+        p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or building in chatrooms all over campus (and more!). built by cal students for cal students.
+        if !loggedIn
+          p
+            a(href='/auth/facebook', rel="tooltip", title="test tooltip here")#login
+
+
+
+      div.span6
+        #myCarousel.carousel
+          .carousel-inner
+            .item.active
+              img(src='/img/carousel/1.jpg', alt='')
+              .carousel-caption
+                h4 First Thumbnail label
+                h6  
+                  | Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            .item
+              img(src='/img/carousel/2.jpg', alt='')
+              .carousel-caption
+                h4 Second Thumbnail label
+                h6
+                  | Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            .item
+              img(src='/img/carousel/3.jpg', alt='')
+              .carousel-caption
+                h4 Third Thumbnail label
+                h6
+                  | Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            .item
+              img(src='/img/carousel/4.jpg', alt='')
+              .carousel-caption
+                h4 fourth Thumbnail label
+                h6
+                  | Cras justo odio, dapibus ac facilisis in, egestas eget quam. Donec id elit non mi porta gravida at eget metus. Nullam id dolor id nibh ultricies vehicula ut id elit.
+            
+          a.carousel-control.left(href='#myCarousel', data-slide='prev') ‹
+          a.carousel-control.right(href='#myCarousel', data-slide='next') ›
+
           
   div.row-fluid
     div.span4
