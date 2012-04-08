@@ -82,7 +82,7 @@ function getLabel(fromUid, toRoom, mapping) {
 		};
 		special = mapping[fromUid].special;
 	}
-	var label = $('<span>').addClass('label').hide();
+	var label = $('<span>').addClass('label').css('display', 'none');
 	if (special == SPECIAL_FOUNDER) {
 		label.addClass('label-inverse').text('FOUNDER').show();
 	} else if (gsi) {
