@@ -7,15 +7,22 @@ $(document).ready(function () {
 		container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
 	} else {
 		var chatroomsList = $('#chatrooms');
+		var privateList = $('#privatechats');
 		for (var i = 0; i < rooms.length; i++) {
-			var room = rooms[i].pretty;
-			var unread = rooms[i].unread;
+			var room = rooms[i];
+			var private = (room.id.split(':').length == 2) ? true : false;
+			var unread = room.unread;
 			var unreadBadge = $('<span>').hide().addClass('badge').addClass('badge-error').text(unread);
-
 			if (unread > 0) {
 				unreadBadge.show();
 			}
-			chatroomsList.append($('<li>').append($('<a>').attr('href', '/chat/'+stripLow(room)).text(room).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', rooms[i].id).text('x'))));
+
+			var li = $('<li>').append($('<a>').attr('href', '/chat/'+room.url).text(room.pretty).append(unreadBadge).append($('<span>').addClass('close').addClass('close-chat').data('room', room.id).text('x')));
+			if (private) {
+				privateList.append(li);
+			} else {
+				chatroomsList.append(li);
+			}
 		}
 	}
 
