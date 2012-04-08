@@ -44,7 +44,6 @@ socket.on('announcement', function (to, msg) {
 
 socket.on('online', function(room, mapping) {
 	debug('online');
-	console.log(room);
 	if (room == current.id) {
 		// empty out sidebar, repopulate with online people
 		var onlineSidebar = $('#online');
