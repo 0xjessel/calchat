@@ -90,3 +90,18 @@ function getLabel(fromUid, toRoom, mapping) {
 	}
 	return label;
 }
+
+function getIcon(type) {
+	switch(type) {
+		case 'class':
+			return $('<i>').addClass('icon-book');
+		case 'building':
+			return $('<i>').addClass('icon-home');
+		case 'special':
+			return $('<i>').addClass('icon-gift');
+		case 'private':
+			return $('<i>').addClass('icon-user');
+		default:
+			return null;
+	}
+}

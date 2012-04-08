@@ -273,6 +273,8 @@ $(document).ready(function () {
 		var pretty = room.pretty;
 		var id = room.id;
 		var element = $('<li>');
+		var icon = getIcon(room.type).addClass('chats-icon');
+		
 		if (i == 0) {
 			element.addClass('active');
 		}
@@ -286,7 +288,9 @@ $(document).ready(function () {
 			.attr('href', 'javascript:void(0)')
 			.attr('id', id)
 			.data('room', room)
-			.append(pretty));
+			.append(
+				icon, 
+				$('<span>').addClass('chats-name').append(pretty)));
 		
 		if (room.type == 'private') {
 			privateNav.append(element);
