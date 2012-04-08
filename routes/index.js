@@ -180,10 +180,13 @@ exports.chatroom = function(req, res) {
 				return;
 			} else {
 				if (req.session.rooms && req.session.rooms.length) {
-					req.session.rooms = helper.prependRoom(rawId, undefined, req.session.rooms);
+					console.log('a');
+					helper.prependRoom(rawId, undefined, req.session.rooms);
 				} else {
+					console.log('b');
 					req.session.rooms = [rawId];
 				}
+				console.log(req.session.rooms);
 				req.session.redirectPath = '/chat/'+req.session.rooms[0];
 
 				helper.getRoomsInfo(req.session.rooms, function(rooms) {

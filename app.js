@@ -477,7 +477,19 @@ io.sockets.on('connection', function (socket) {
 		text = sanitize(text).entityEncode();
 		if (session.uid !== undefined) {
 			var timestamp = new Date().getTime();
-
+			var isGSI = false;
+			getUsers([session.uid], function(mapping){
+				console.log(mapping);
+				var user = mapping[session.uid];
+				var rooms = user.gsirooms.split(",");
+				for (var i = 0; i < rooms.length; i++){
+					if (rooms[i] == room){
+						isGSI = true;
+					}
+				}
+				if (isGSI && msg.indexOf("/kick") == 0){
+					return;
+				}
 			var temp = {};
 			for (var i = 0; i < mentions.length; i++) {
 				temp[mentions[i]] = null;
@@ -527,6 +539,7 @@ io.sockets.on('connection', function (socket) {
 					error(err, socket);
 				}
 			});
+		});
 		} else {
 			error("session.uid not defined", socket);
 		}

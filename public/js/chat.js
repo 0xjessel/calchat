@@ -164,7 +164,8 @@ function renderChatlogs (logs, mapping, room) {
 
 	$('.chat-title h2').text(room.pretty);
 	$('.chat-title h3').text(room.title);
-	History.pushState(null, null, room.url);			
+	
+	History.pushState(null, null, '/chat/'+room.url);			
 	
 	var newTitle = current.pretty;
 	document.title = newTitle;
@@ -248,7 +249,10 @@ function renderChatMessage(entry, mapping) {
 }
 
 function getUserLink(id) {
-	return $('<a>').attr('target', '_blank').attr('href', 'http://www.facebook.com/'+id);
+	if (uid == id) {
+		return $('<a>');
+	}
+	return $('<a>').attr('href', '/chat/'+uid+':'+id);
 }
 
 function clear () {
@@ -425,15 +429,10 @@ $(document).ready(function () {
 
 var init = true;
 window.addEventListener('popstate', function(e) {
-	if (init) {
-		init = false;
-		return;
+	if (init) { init = false; return;}
+	if (uid != null && name != null) {
+		window.location.href = '/dashboard';
+	} else {
+		window.location.href = '/';
 	}
-	var path = location.pathname.split('/');
-	var roomurl = path[path.length-1];
-	$('#chats a').each(function() {
-		if(room.url == roomurl) {
-			renderChatroom($(this));
-		}
-	});
 });
