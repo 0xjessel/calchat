@@ -10,7 +10,7 @@ $(document).ready(function () {
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i].pretty;
 			var unread = rooms[i].unread;
-			var unreadBadge = $('<span>').addClass('badge').addClass('badge-error').text(unread).hide();
+			var unreadBadge = $('<span>').hide().addClass('badge').addClass('badge-error').text(unread);
 
 			if (unread > 0) {
 				unreadBadge.show();

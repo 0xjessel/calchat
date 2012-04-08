@@ -52,11 +52,10 @@ exports.dashboard = function(req, res) {
 								function closure() {
 									var cur = new Date().getTime();
 									var prev = unreads[i];
-									var room = rooms[i];
+									var room = rooms[i].id;
 									client2.zcount('chatlog:'+room, prev, cur, function (err, count) {
 										added++;
-										if (!err) {
-											console.log('lol: '+count);
+										if (!err) {			
 											room.unread = count;
 										}
 										if (added == rooms.length) {
