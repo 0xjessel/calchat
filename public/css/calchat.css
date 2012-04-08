@@ -69,25 +69,24 @@ h1, h2, h3 {
 	font-weight: bold;
 }
 
-.typeahead-first-line {
-	position:absolute;
-	right:0px;
-	top:0px;
+.typeahead-container {
+	height: 37px;
+	position: relative;
 }
 
-.typeahead-second-line {
-	position:absolute;
-	right:0px;
-	bottom:0px;
+.typeahead-firstline {
+}
+
+.typeahead-secondline {
 }
 
 .typeahead-main {
-	position:absolute;
-	right:0px;
-	top:0px;
-	bottom:0px;	
+	display: inline-block;
+	margin-left: 24px;
 }
 
 .typeahead-icon {
-	float:left;
+	position: absolute;
+	top:50%;
+	margin-top:-7px;
 }

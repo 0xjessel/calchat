@@ -55,7 +55,7 @@ function getRoomInfo(roomId, callback) {
 										url			: stripLow(rawId),
 										pretty		: rawId,
 										title		: title,
-										type		: 'manual',
+										type		: 'special',
 									});
 								} else {
 									//check if room is another user id
