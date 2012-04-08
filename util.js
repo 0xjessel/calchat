@@ -14,13 +14,13 @@ client2.select(2);
 function mentionSMS(to, mid) {
 	// get to's phone number
 	client2.hget('user:'+to, 'phone', function (err, reply) {
-		if (!err && reply != null) {
+		if (!err && !reply) {
 			var phoneNum = reply;	
 			client2.hmget('message:'+mid, 'from', 'to', 'text', function (err, replies) {
 				if (!err && replies.length) {
 					var fromUid = replies[0];
 					client2.hget('user:'+fromUid, 'nick', function (err, reply) {
-						if (!err && reply != null) {
+						if (!err && !reply) {
 							var from = reply;
 							var room = replies[1];
 							var txt = replies[2];
