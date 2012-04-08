@@ -164,6 +164,7 @@ function renderChatroom(anchor) {
 	$('.chat-title h2').text('Loading...');
 	$('.chat-title h3').text('');
 
+    $('#fb-link').remove();
 	$('#lines').empty();
 	$('#online li:not(.nav-header)').remove();
 	anchor.find('.badge').remove();
@@ -215,7 +216,6 @@ function renderChatlogs (logs, mapping, room) {
 		pretty = me ? pretty[1] : pretty[0];
 		title = room.title.split(':');
 		title = me ? title[1] : title[0];
-		$('#fb-link').remove();
 		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+otherUID+'"><img src="/img/fb-small.png"></a>');
 		$('#fb-link').tooltip();
 	}
