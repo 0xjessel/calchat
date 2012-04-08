@@ -101,6 +101,10 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	}
 
 	if (privateMsgs.indexOf(messageEntry.from) != -1) {
+		var msg = $('.private-msg');
+		if (msg.length) {
+			msg.text(messageEntry.text);
+		}
 		return;
 	}
 
@@ -108,7 +112,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	var alert = $('<div>').addClass('alert').addClass('alert-info').addClass('fade in').addClass('private-alert');
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
 		, $('<h4>').addClass('alert-heading').text('New private chat from '+mapping[messageEntry.from].name+'!')
-		, $('<p>').text(messageEntry.text)
+		, $('<p>').text(messageEntry.text).addClass('private-msg')
 		, $('<p>').append(
 			$('<a>').addClass('btn').addClass('btn-primary').attr('href', '/chat/'+roomId).text('Go to private chat')
 			)
