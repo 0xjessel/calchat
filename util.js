@@ -1,3 +1,7 @@
+var TwilioClient = require('twilio').Client
+var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', 'http://calchat.net:3000');
+var phone = client.getPhoneNumber('+15107468123');
+
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
@@ -7,6 +11,56 @@ client1.select(1);
 var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
+function mentionSMS(to, mid) {
+	console.log('mentionSMS asldkfjalsdkjfalsdkjflasdkfjlasdfjal');
+	// get to's phone number
+	client2.hget('user:'+to, 'phone', function (err, reply) {
+		if (!err && reply != null) {
+			var phoneNum = reply;	
+			client2.hmget('message:'+mid, 'from', 'to', 'text', function (err, replies) {
+				if (!err && replies.length) {
+					var fromUid = replies[0];
+					client2.hget('user:'+fromUid, 'nick', function (err, reply) {
+						if (!err && reply != null) {
+							console.log('money asdkfjlsakdfjlskdfj');
+							var from = reply;
+							var room = replies[1];
+							var txt = replies[2];
+							var link = "calchat.net:3000/chat/"+room;
+							var msg = 'CalChat - '+from+' mentioned you in '+room+'!  Message: '+txt+' - '+link;
+							sendSMS(phoneNum, msg, null, function (sms) {
+								sms.on('processed', function (reqParams, response) {
+									console.log('message processed, request params follow');
+									console.log(reqParams);
+								})
+							})
+						} else {
+							console.log('getting nick from user:fromUid '+err + reply);
+						}
+					})	
+				} else {
+					console.log('getting message contents '+err+reply);
+				}
+			});
+		}
+	});
+	// get mid message and whose it from
+	// call sendSMS
+
+}
+
+function sendSMS(number, message, opts, callback) {
+	console.log('sending SMS');
+	console.log('number: '+number);
+	console.log('message: '+message);
+	phone.sendSms(number, message, opts, callback);
+}
+
+function sendMultipleSMS(numbers, message, opts, callback) {
+	for (var i = 0; i < numbers.length; i++) {
+		sendSMS(numbers[i], message, opts, callback);
+	}
+}
 
 // Returns an object containing the id, official name, pretty name, and title
 function getRoomInfo(roomId, callback) {
@@ -327,6 +381,7 @@ function debug() {
 	console.log('--');
 }
 
+exports.mentionSMS = mentionSMS;
 exports.getRoomInfo = getRoomInfo;
 exports.getRoomsInfo = getRoomsInfo;
 exports.prependRoom = prependRoom;
