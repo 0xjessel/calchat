@@ -123,3 +123,8 @@ div.message-mentions a.mention:hover {
 h3.title-text {
 	color: dimgrey;
 }
+
+#fb-link {
+	vertical-align:super;
+	margin-right:8px;
+}
