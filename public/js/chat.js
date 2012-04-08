@@ -108,17 +108,20 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 		return;
 	}
 
-	var sidebar = $('.span3');
-	var alert = $('<div>').addClass('alert').addClass('alert-info').addClass('fade in').addClass('private-alert');
-	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
-		, $('<h4>').addClass('alert-heading').text('New private chat from '+mapping[messageEntry.from].name+'!')
-		, $('<p>').text(messageEntry.text).addClass('private-msg')
-		, $('<p>').append(
-			$('<a>').addClass('btn').addClass('btn-primary').attr('href', '/chat/'+roomId).text('Go to private chat')
-			)
-		);
-	sidebar.append(alert);
 	privateMsgs[privateMsgs.length] = messageEntry.from;
+	
+	notify('New Private Chat from '+mapping[messageEntry.from].name+'!',
+		messageEntry.text,
+		'/chat/'+roomId,
+		'Go to Private Chat');
+});
+
+socket.on('kick', function(from, by, msg) {
+	$('#close').click();
+	notify('You got kicked from '+from.pretty,
+		by.name+': '+msg,
+		'/chat/'+from.id,
+		'Take me back. I\'m sorry, I\'ve learned my lesson.');
 });
 
 socket.on('message', message);
@@ -488,6 +491,16 @@ $(document).ready(function () {
 	
 	$('a[rel=tooltip]').tooltip();
 });
+
+function notify(title, body, actionurl, actiontext) {
+	var sidebar = $('.span3');
+	var alert = $('<div>').addClass('alert').addClass('alert-info').addClass('fade in').addClass('private-alert');
+	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
+		, $('<h4>').addClass('alert-heading').text(title)
+		, $('<p>').text(body).addClass('private-msg')
+		, $('<p>').append($('<a>').addClass('btn').addClass('btn-primary').attr('href', actionurl).text(actiontext)));
+	sidebar.append(alert);
+}
 
 var init = true;
 window.addEventListener('popstate', function(e) {
