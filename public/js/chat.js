@@ -247,7 +247,10 @@ function renderChatMessage(entry, mapping) {
 }
 
 function getUserLink(id) {
-	return $('<a>').attr('target', '_blank').attr('href', 'http://www.facebook.com/'+id);
+	if (uid == id) {
+		return $('<a>');
+	}
+	return $('<a>').attr('href', '/chat/'+uid+':'+id);
 }
 
 function clear () {
