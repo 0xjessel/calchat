@@ -127,6 +127,7 @@ app.listen(3000);
 var io = sio.listen(app);
 var nicknames = {};
 
+io.set('log level', 1);
 io.set('authorization', function(data, accept) {
 	if (data.headers.cookie) {
 		data.cookie = parseCookie(data.headers.cookie);
@@ -316,11 +317,8 @@ io.sockets.on('connection', function (socket) {
 
 					rooms.splice(index, 1);
 
-					console.log('index: '+index);
 					var unreads = reply[0].split(',');
-					console.log('before: '+unreads);
 					unreads.splice(index, 1);
-					console.log('after: '+unreads);
 
 					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
 						callback();

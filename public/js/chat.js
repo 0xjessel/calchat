@@ -150,9 +150,6 @@ function renderChatlogs (logs, mapping, room) {
 		// not showing timestamp for now
 
 		var entry = logs[timestamp];
-		
-		// wtf is this used for 
-		var text = entry.text;
 
 		var element = renderChatMessage(entry, mapping);
 		$('#lines').append(element);
@@ -168,7 +165,7 @@ function renderChatlogs (logs, mapping, room) {
 	$('.chat-title h3').text(room.title);
 	History.pushState(null, null, stripLow(room.pretty));			
 	
-	var newTitle = current.title+' Chatroom';
+	var newTitle = current.pretty;
 	document.title = newTitle;
 	$("meta[property=og\\:title]").attr("content", newTitle);
 
@@ -433,6 +430,7 @@ window.addEventListener('popstate', function(e) {
 	}
 	var path = location.pathname.split('/');
 	var room = path[path.length-1];
+	alert(room);
 	$('#chats a').each(function() {
 		if(stripLow($(this).data().room.pretty) == room) {
 			renderChatroom($(this));

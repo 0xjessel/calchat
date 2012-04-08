@@ -52,11 +52,10 @@ exports.dashboard = function(req, res) {
 								function closure() {
 									var cur = new Date().getTime();
 									var prev = unreads[i];
-									var room = rooms[i];
+									var room = rooms[i].id;
 									client2.zcount('chatlog:'+room, prev, cur, function (err, count) {
 										added++;
-										if (!err) {
-											console.log('lol: '+count);
+										if (!err) {			
 											room.unread = count;
 										}
 										if (added == rooms.length) {
@@ -169,7 +168,7 @@ exports.chatroom = function(req, res) {
 				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unread', unreads.join(), function() {
 					helper.getRoomsInfo(userChatrooms, function(rooms) {
 						res.render('chat', {
-							title: rooms[0].title+' Chatroom',
+							title: rooms[0].pretty,
 							layout: 'layout-chat',
 							loggedIn: req.loggedIn,
 							showChatTab: true,
@@ -189,7 +188,7 @@ exports.chatroom = function(req, res) {
 
 				helper.getRoomsInfo(req.session.rooms, function(rooms) {
 					res.render('chat', { 
-						title: rooms[0].title+' Chatroom',
+						title: rooms[0].pretty+' Chatroom',
 						layout: 'layout-chat',
 						loggedIn: req.loggedIn,
 						showChatTab: true,
