@@ -2,8 +2,17 @@
 html(lang='en')
   head
     link(rel='stylesheet', href='/css/archives.css')
+    link(rel='stylesheet', href='/css/chat.css')
     include includes/head
 
   body!= body
 
   include includes/footer  
+  script 
+    var room = !{JSON.stringify(room)};
+    var begin = #{begin};
+    var end = #{end};
+    var uid = null;
+  script(src='/js/libs/linkify.min.js')
+  script(src='/js/chat-helper.js')
+  script(src='/js/archives.js')

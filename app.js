@@ -277,7 +277,7 @@ io.sockets.on('connection', function (socket) {
 			socket.nickname = session.nick;
 			socket.uid = session.uid;
 			
-			getChatlog(current, function(logs, mentions, room) {	
+			getChatlog(current, null, null, function(logs, mentions, room) {	
 				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
 					if (!err) {
 						if (chatrooms) {
@@ -309,7 +309,7 @@ io.sockets.on('connection', function (socket) {
 
 			});
 		} else {
-			getChatlog(current, function(logs, mentions, room) {
+			getChatlog(current, null, null, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
 			io.sockets.in(current).emit('online', current, nicknames[current]);
@@ -377,7 +377,11 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	socket.on('get chatlog', getChatlog);
-	function getChatlog(roomId, callback) {
+	function getChatlog(roomId, min, max, callback) {
+		console.log('roomId: '+roomId);
+		console.log('min: '+min);
+		console.log('max: '+max);
+		console.log('calback: '+callback);
 		helper.debug('get chatlog', roomId);
 		roomId = helper.stripHigh(roomId);
 
@@ -399,7 +403,7 @@ io.sockets.on('connection', function (socket) {
 			});
 		}
 
-		// get last 30 messages
+		// get last 30 messages OR all messages between min and max
 		helper.getRoomInfo(roomId, function(room) {
 			if (room.type == 'private') {
 				if (!session || !session.uid) {
@@ -415,62 +419,76 @@ io.sockets.on('connection', function (socket) {
 					return;
 				}
 			}
+
+			if (min != null && max != null) {
+				client2.zrangebyscore('chatlog:'+room.id, min, max, function(err, chatlog) {
+					if (!err) {
+						getLogs(chatlog, callback);
+					} else {
+						error(err, socket);
+						callback({}, [], room);
+					}
+				});
+			}
 			
 			client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
 				if (!err) {
-						if (chatlog.length == 0) {
-							callback({}, {}, room);
-							return;
-						}
-					
-						var logs = {};
-						var allMentions = [];
-						var added = 0;
-						for (var i = 0; i < chatlog.length; i++) {
-							function closure() {
-								var mid = chatlog[i];
-								client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
-									added++;
-									if (!err){
-										var timestamp = message[0];
-										var fromUid = message[1];
-										var text = message[2];
-										var mentions = message[3]; // turn into array later
-
-										if (mentions) {
-											mentions = mentions.split(',');
-										} else {
-											mentions = [];
-										}
-
-										allMentions = allMentions.concat(mentions, fromUid);
-									
-										var entry = {
-											'from'		: fromUid,
-											'to'		: room.id,
-											'text'		: text,
-											'mentions'	: mentions,
-											'id'		: mid,
-										};
-										logs[timestamp] = entry;
-									} else {
-										error(err, socket);
-									}
-									
-									if (added == chatlog.length) {
-										getUsers(allMentions, function(mapping) {
-											callback(logs, mapping, room);
-										});
-									}
-								});
-							}
-							closure();
-						}
+					getLogs(chatlog, callback);
 				} else {
 					error(err, socket);
 					callback({}, [], room);
 				}
 			});
+			function getLogs(chatlog, callback) {
+				if (chatlog.length == 0) {
+					callback({}, {}, room);
+					return;
+				}
+			
+				var logs = {};
+				var allMentions = [];
+				var added = 0;
+				for (var i = 0; i < chatlog.length; i++) {
+					function closure() {
+						var mid = chatlog[i];
+						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
+							added++;
+							if (!err){
+								var timestamp = message[0];
+								var fromUid = message[1];
+								var text = message[2];
+								var mentions = message[3]; // turn into array later
+
+								if (mentions) {
+									mentions = mentions.split(',');
+								} else {
+									mentions = [];
+								}
+
+								allMentions = allMentions.concat(mentions, fromUid);
+							
+								var entry = {
+									'from'		: fromUid,
+									'to'		: room.id,
+									'text'		: text,
+									'mentions'	: mentions,
+									'id'		: mid,
+								};
+								logs[timestamp] = entry;
+							} else {
+								error(err, socket);
+							}
+							
+							if (added == chatlog.length) {
+								getUsers(allMentions, function(mapping) {
+									callback(logs, mapping, room);
+								});
+							}
+						});
+					}
+					closure();
+				}
+			}
 		});
 	}
 

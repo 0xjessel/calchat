@@ -219,6 +219,14 @@ exports.archives = function(req, res) {
 	helper.isValid(room, function(valid, rawId) {
 		helper.getRoomInfo(rawId, function(room) {
 			if (room) {
+				var before = new Date();
+				console.log('before: '+before);
+				before.setHours(0,0,0,0);
+				console.log('before: '+before);
+				var after = new Date();
+				console.log('after: '+after);
+				after.setHours(11, 59, 59, 999);
+				console.log('after: '+after);
 				res.render('archives', {
 					title: room.pretty+' Archives',
 					layout: 'layout-archives',
@@ -226,7 +234,8 @@ exports.archives = function(req, res) {
 					showChatTab: true,
 					room: room,
 					title: room.pretty,
-					today: new Date().toDateString(),
+					begin: before.getTime(),
+					end: after.getTime(),
 					index: 3 //wtf should this be
 				});
 			} else {
