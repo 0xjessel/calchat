@@ -479,28 +479,26 @@ io.sockets.on('connection', function (socket) {
 		if (session.uid !== undefined) {
 			var timestamp = new Date().getTime();
 			var isGSI = false;
-			getUsers([session.uid], function(mapping){
-				console.log(mapping);
+			getUsers(mentions.concat(session.uid), function(mapping){
 				var user = mapping[session.uid];
-				var rooms = user.gsirooms.split(",");
+				var rooms = user.gsirooms.split(',');
 				for (var i = 0; i < rooms.length; i++){
 					if (rooms[i] == roomId){
 						isGSI = true;
 					}
 				}
-				if (isGSI && msg.indexOf("/kick") == 0){
+				if (isGSI && msg.indexOf('/') == 0) {
 					return;
 				}
-			var temp = {};
-			for (var i = 0; i < mentions.length; i++) {
-				temp[mentions[i]] = null;
-			};
-			mentions = Object.keys(temp);
+				var temp = {};
+				for (var i = 0; i < mentions.length; i++) {
+					temp[mentions[i]] = null;
+				};
+				mentions = Object.keys(temp);
 
-			client2.incr('message:id:next', function(err, mid) {
-				if (!err) {
-					helper.getRoomInfo(roomId, function(room) {
-						getUsers(mentions.concat(session.uid), function(mapping) {
+				client2.incr('message:id:next', function(err, mid) {
+					if (!err) {
+						helper.getRoomInfo(roomId, function(room) {
 							var entry = {
 								'from'		: session.uid,
 								'to'		: roomId,
@@ -530,31 +528,30 @@ io.sockets.on('connection', function (socket) {
 							}
 							
 							io.sockets.in(roomId).emit('message', entry, mapping);
-						});
-						
-						client2.hmset('message:'+mid, {
-							'from'		: session.uid,
-							'to'		: roomId,
-							'text'		: text,
-							'mentions'	: mentions.join(),
-							'timestamp'	: timestamp,
-						});
-						client2.zadd('chatlog:'+roomId, timestamp, mid);
-						
-						for (var i = 0; i < mentions.length; i++) {
-							var id = mentions[i];
-							client2.exists('user:'+id, function(err, exists) {
-								if (exists) {
-									client2.zadd('mentions:'+id, timestamp, mid);
-								}
+							
+							client2.hmset('message:'+mid, {
+								'from'		: session.uid,
+								'to'		: roomId,
+								'text'		: text,
+								'mentions'	: mentions.join(),
+								'timestamp'	: timestamp,
 							});
-						}
-					});
-				} else {
-					error(err, socket);
-				}
-			});
-		});
+							client2.zadd('chatlog:'+roomId, timestamp, mid);
+							
+							for (var i = 0; i < mentions.length; i++) {
+								var id = mentions[i];
+								client2.exists('user:'+id, function(err, exists) {
+									if (exists) {
+										client2.zadd('mentions:'+id, timestamp, mid);
+									}
+								});
+							}
+						});
+} else {
+	error(err, socket);
+}
+});
+});
 		} else {
 			error("session.uid not defined", socket);
 		}
