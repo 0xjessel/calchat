@@ -494,6 +494,9 @@ io.sockets.on('connection', function (socket) {
 			var timestamp = new Date().getTime();
 			var isGSI = false;
 			getUsers(mentions.concat(session.uid), function(mapping){
+				if (msg.length > 256){
+					return;
+				}
 				helper.getRoomInfo(roomId, function(room) {
 					var user = mapping[session.uid];
 					var rooms = user.gsirooms.split(',');
