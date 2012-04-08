@@ -10,17 +10,19 @@ html(lang='en')
   script(src='/js/libs/bootstrap/tooltip.js')
   script(src='/js/libs/jquery.history.js')
   script 
-    if (window.location.hash) {
-      window.location.hash = '';
-      History.replaceState(null, null, window.location.href.slice(0, -1));
-    }
   if loggedIn
     script
+      if (window.location.hash) {
+        window.location.hash = '';
+        History.replaceState(null, null, window.location.href.slice(0, -1));
+      }
+      History.pushState(null, null, '/dashboard');
       var uid = #{user.id};
       var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
       var rooms = !{JSON.stringify(rooms)}
   else 
     script
+      History.pushState(null, null, '/');
       var uid = null
       var name = null
       var rooms = !{JSON.stringify(rooms)}

@@ -163,7 +163,7 @@ function renderChatlogs (logs, mapping, room) {
 
 	$('.chat-title h2').text(room.pretty);
 	$('.chat-title h3').text(room.title);
-	History.pushState(null, null, stripLow(room.pretty));			
+	History.replaceState(null, null, '/chat/'+stripLow(room.pretty));			
 	
 	var newTitle = current.pretty;
 	document.title = newTitle;
@@ -424,16 +424,10 @@ $(document).ready(function () {
 
 var init = true;
 window.addEventListener('popstate', function(e) {
-	if (init) {
-		init = false;
-		return;
+	if (init) { init = false; return;}
+	if (uid != null && name != null) {
+		window.location.href = '/dashboard';
+	} else {
+		window.location.href = '/';
 	}
-	var path = location.pathname.split('/');
-	var room = path[path.length-1];
-	alert(room);
-	$('#chats a').each(function() {
-		if(stripLow($(this).data().room.pretty) == room) {
-			renderChatroom($(this));
-		}
-	});
 });
