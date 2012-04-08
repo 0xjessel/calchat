@@ -7,6 +7,8 @@ function renderChatMessage(entry, mapping) {
 	var msg = entry.text;
 	var mentions = entry.mentions;
 	var mid = entry.id;
+	var timestamp = entry.timestamp;
+	console.log(timestamp);
 
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
@@ -70,7 +72,9 @@ function renderChatMessage(entry, mapping) {
 				}, function() {
 					$('#mentions'+mid).show().stop().fadeTo(300, 1);
 				}),
+			$('<span>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
 			$('<span>').addClass('mentions').append(mentionsElement));
+
 
 		return element;
 	}

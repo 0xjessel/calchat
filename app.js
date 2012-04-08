@@ -473,6 +473,7 @@ io.sockets.on('connection', function (socket) {
 									'text'		: text,
 									'mentions'	: mentions,
 									'id'		: mid,
+									'timestamp'	: timestamp,
 								};
 								logs[timestamp] = entry;
 							} else {
@@ -589,6 +590,7 @@ io.sockets.on('connection', function (socket) {
 									'text'		: msg,
 									'mentions'	: mentions,
 									'id'		: mid,
+									'timestamp' : timestamp,
 								};
 								
 								if (room.type == 'private') {
