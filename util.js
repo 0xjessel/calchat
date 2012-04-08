@@ -114,8 +114,14 @@ function getRoomInfo(rawId, callback) {
 							client0.hget('room:'+rawId+':'+getDayOfWeek(), getLastHalfHour(), function(err, classId) {
 								if (!err && classId) {
 									getRoomInfo(classId, function(roomObject) {
-										console.log(roomObject);
-										callback(roomObject);
+										if (roomObject) {
+											roomObject.title = 'Current Class: '+roomObject.pretty;
+											roomObject.pretty = rawId;
+											roomObject.type = 'redirect';
+											callback(roomObject);
+										} else {
+											callback();
+										}
 									});
 								} else {
 									// check if room is another user id
@@ -144,15 +150,15 @@ function getRoomInfo(rawId, callback) {
 															other		: other,
 														});
 													} else {
-														callback(null);
+														callback();
 													}
 												});
 											} else {
-												callback(null);
+												callback();
 											}
 										});
 									} else {
-										callback(null);
+										callback();
 									}
 								}
 							});
@@ -173,7 +179,8 @@ function getRoomsInfo(roomIds, callback) {
 	var temp = {};
 	for (var i = 0; i < roomIds.length; i++) {
 		var roomId = roomIds[i];
-		if (roomId.charAt(roomId.length - 1) == '#') {
+		var lastChar = roomId.charAt(roomId.length - 1);
+		if (lastChar == '#' || lastChar == '$') {
 			roomId = roomId.substring(0, roomId.length - 1);
 		}
 		temp[roomId] = null;
@@ -268,9 +275,8 @@ function isValid(roomId, callback) {
 					var lastChar = suggestion.charAt(suggestion.length - 1);
 					
 					// if $ is at the end then it means roomId was 306SODA and you need to redirect to current class held at 306SODA
-					console.log('lastChar', lastChar);
 					if (lastChar == '$') {
-						getRoomInfo(roomId, function(room) {
+						getRoomInfo(suggestion.substring(0, suggestion.length-1), function(room) {
 							if (room) {
 								callback(true, room.id);
 							} else {

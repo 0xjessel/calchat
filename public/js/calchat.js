@@ -177,6 +177,8 @@ function getIcon(type) {
 			return $('<i>').addClass('icon-gift');
 		case 'private':
 			return $('<i>').addClass('icon-comment');
+		case 'redirect':
+			return $('<i>').addClass('icon-time');
 		default:
 			return null;
 	}
