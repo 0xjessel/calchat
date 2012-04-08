@@ -510,17 +510,17 @@ io.sockets.on('connection', function (socket) {
 						
 						switch(command.toUpperCase()) {
 							case 'KICK':
+							case 'BAN':
 							
 							var othersockets = getSockets(mentions, session.uid);
 							for (var i = 0; i < othersockets.length; i++) {
 								var s = othersockets[i];
-								s.emit('kick', room, user, commandMsg);
+								s.emit(command.toLowerCase(), room, user, commandMsg);
 							};
 							
-							socket.emit('announcement', roomId, 'Kicked '+othersockets.length+' people with message: '+commandMsg);
+							var capitalcommand = command.charAt(0).toUpperCase()+command.substring(1);
+							socket.emit('announcement', roomId, capitalcommand+' '+othersockets.length+' user(s) with message: '+commandMsg);
 							
-							return;
-							case 'BAN':
 							return;
 							default:
 							break;

@@ -110,7 +110,8 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 	privateMsgs[privateMsgs.length] = messageEntry.from;
 	
-	notify('New Private Chat from '+mapping[messageEntry.from].name+'!',
+	notify(1,
+		'New Private Chat from '+mapping[messageEntry.from].name+'!',
 		messageEntry.text,
 		'/chat/'+roomId,
 		'Go to Private Chat');
@@ -118,10 +119,18 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 socket.on('kick', function(from, by, msg) {
 	$('#close').click();
-	notify('You got kicked from '+from.pretty,
+	notify(2,
+		'You were temporarily kicked from '+from.pretty,
 		by.name+': '+msg,
 		'/chat/'+from.id,
 		'Take me back I\'ve learned my lesson');
+});
+
+socket.on('ban', function(from, by, msg) {
+	$('#close').click();
+	notify(3,
+		'You were permanently banned from '+from.pretty,
+		by.name+': '+msg);
 });
 
 socket.on('message', message);
@@ -492,13 +501,37 @@ $(document).ready(function () {
 	$('a[rel=tooltip]').tooltip();
 });
 
-function notify(title, body, actionurl, actiontext) {
+// type can be 0-3, 0 being positive and 3 being negative
+function notify(type, title, body, actionurl, actiontext) {
+	var alertType = 'alert';
+	var buttonType = 'btn-warning';
+	switch(type) {
+		case 0:
+			alertType = 'alert-success';
+			buttonType = 'btn-success';
+			break;
+		case 1:
+			alertType = 'alert-info';
+			buttonType = 'btn-info';
+			break;
+		case 2:
+			alertType = 'alert';
+			buttonType = 'btn-warning';
+			break;
+		case 3:
+			alertType = 'alert-error';
+			buttonType = 'btn-danger';
+			break;
+	}
+	
 	var sidebar = $('.span3');
-	var alert = $('<div>').addClass('alert').addClass('alert-info').addClass('fade in').addClass('private-alert');
+	var alert = $('<div>').addClass('alert').addClass(alertType).addClass('fade in').addClass('private-alert');
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
 		, $('<h4>').addClass('alert-heading').text(title)
 		, $('<p>').text(body).addClass('private-msg')
-		, $('<p>').append($('<a>').addClass('btn').addClass('btn-primary').attr('href', actionurl).text(actiontext)));
+		, (actionurl && actiontext) ? 
+		$('<p>').append($('<a>').addClass('btn').addClass(buttonType).attr('href', actionurl).text(actiontext)) :
+		null);
 	sidebar.append(alert);
 }
 
