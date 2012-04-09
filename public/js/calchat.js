@@ -184,3 +184,39 @@ function getIcon(type) {
 	}
 }
 
+// type can be 0-3, 0 being positive and 3 being negative
+function notify(type, title, body, actionurl, actiontext, corner) {
+	var alertType = 'alert';
+	var buttonType = 'btn-warning';
+	switch(type) {
+		case 0:
+			alertType = 'alert-success';
+			buttonType = 'btn-success';
+			break;
+		case 1:
+			alertType = 'alert-info';
+			buttonType = 'btn-info';
+			break;
+		case 2:
+			alertType = 'alert';
+			buttonType = 'btn-warning';
+			break;
+		case 3:
+			alertType = 'alert-error';
+			buttonType = 'btn-danger';
+			break;
+	}
+	
+	var sidebar = $('.span3');
+	var alert = $('<div>').addClass('alert').addClass(alertType).addClass('fade in');
+	if (corner) {
+		alert.addClass('corner-alert');
+	}
+	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
+		, $('<h4>').addClass('alert-heading').text(title)
+		, $('<p>').text(body).addClass('private-msg')
+		, (actionurl && actiontext) ? 
+		$('<p>').append($('<a>').addClass('btn').addClass(buttonType).attr('href', actionurl).text(actiontext)) :
+		null);
+	return alert;
+}

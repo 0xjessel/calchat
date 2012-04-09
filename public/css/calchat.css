@@ -35,14 +35,14 @@ h1, h2, h3 {
 	width:75%;
 	margin-left:auto;
 	margin-right:auto;
+	z-index:3;
 }
 
-.private-alert {
+.corner-alert {
 	width:auto;
 	position:fixed;
 	left:15px;
 	bottom:15px;
-	z-index:3;
 }
 
 .sidebar-nav {
