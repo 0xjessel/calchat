@@ -30,13 +30,13 @@ exports.dashboard = function(req, res) {
 			var hasPhoneNum = false;
 			var firstTimeUser = false;
 			if (!err && reply[0] && reply[1]) {
-				if (reply.length == 10) {
-					if(helper.isNumber(reply)) {
+				if (reply[0].length == 10) {
+					if(helper.isPhoneNum(reply[0])) {
 						hasPhoneNum = true;
 					}
-					if(reply[1] + 30000 > Date.now()){
-						firstTimeUser = true;
-					}
+				}
+				if(reply[1] + 30000 > Date.now()){
+					firstTimeUser = true;
 				}
 			}	
 			res.render('dashboard', {
