@@ -411,6 +411,6 @@ public class Utils {
 	}
 
 	public static void main(String[] args) {
-		System.out.println(stringScore("112TEST"));
+		System.out.println(stringScore("306SODA"));
 	}
 }

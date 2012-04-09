@@ -56,7 +56,7 @@ exports.dashboard = function(req, res) {
 
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
-		helper.getRoomsInfo(roomIds, function(rooms) {
+		helper.getRoomsInfo(roomIds, req.user.id, function(rooms) {
 			if (rooms[0] != null) {
 				client2.hget('user:'+req.user.id, 'unread', function (err, unread) {
 					if (!err) {
@@ -116,7 +116,7 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
-		helper.getRoomInfo(rooms[0], function(room) {
+		helper.getRoomInfo(rooms[0], req.user.id, function(room) {
 			res.redirect('/chat/'+room.url);
 		});
 	} else {
@@ -180,7 +180,7 @@ exports.chatroom = function(req, res) {
 
 				// convert array to string, update db
 				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unread', unreads.join(), function() {
-					helper.getRoomsInfo(userChatrooms, function(rooms) {
+					helper.getRoomsInfo(userChatrooms, req.user.id, function(rooms) {
 						res.render('chat', {
 							title: rooms[0].pretty,
 							layout: 'layout-chat',
@@ -200,7 +200,7 @@ exports.chatroom = function(req, res) {
 				}
 				req.session.redirectPath = '/chat/'+req.session.rooms[0];
 
-				helper.getRoomsInfo(req.session.rooms, function(rooms) {
+				helper.getRoomsInfo(req.session.rooms, null, function(rooms) {
 					if (rooms.length) {
 						res.render('chat', { 
 							title: rooms[0].pretty+' Chatroom',
@@ -233,7 +233,7 @@ exports.archives = function(req, res) {
 	
 	if (req.loggedIn) {
 		helper.isValid(room, function(valid, rawId) {
-			helper.getRoomInfo(rawId, function(room) {
+			helper.getRoomInfo(rawId, req.user.id, function(room) {
 				if (room) {
 					var before = new Date();
 					before.setHours(0,0,0,0);
@@ -241,7 +241,7 @@ exports.archives = function(req, res) {
 					
 					var pretty = room.pretty;
 					if (room.type == 'private') {
-						pretty = room.prettyfor(req.user.uid);
+						pretty = room.prettyfor(req.user.id);
 					}
 					
 					res.render('archives', {

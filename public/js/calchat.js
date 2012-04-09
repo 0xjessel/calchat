@@ -28,10 +28,18 @@ $(document).ready(function () {
 
 				for (var i = 0; i < rooms.length; i++) {
 					var room = rooms[i];
+					
+					var pretty = room.pretty;
+					var title = room.title;
+					
+					if (room.type == 'private') {
+						pretty = prettyfor(room, uid);
+						title = titlefor(room, uid);
+					}
 
 					var firstLine = $('<div>').addClass('typeahead-firstline').append(
-						$('<span>').append('<p>').addClass('room-pretty').text(room.pretty));
-					var secondLine = $('<div>').addClass('typeahead-secondline').append('<p>').addClass('room-title').text(room.title);
+						$('<span>').append('<p>').addClass('room-pretty').text(pretty));
+					var secondLine = $('<div>').addClass('typeahead-secondline').append('<p>').addClass('room-title').text(title);
 					var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);					
 					var icon = getIcon(room.type).addClass('typeahead-icon');
 					
@@ -57,7 +65,7 @@ $(document).ready(function () {
 		
 		onselect: function(item) {
 			// item.pretty is the abbrev. form, o/w the pretty form
-			addChatInput.val(item.pretty);
+			addChatInput.val(item.url);
 			addChatForm.submit();
 		},
 	});

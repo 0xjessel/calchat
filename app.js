@@ -69,6 +69,9 @@ everyauth.facebook
 					'timestamp' : timeStamp,
 					'gsirooms' : "",
 				}, function() {
+					client0.zadd('validrooms',
+						helper.stringScore(fbUserMetadata.first_name+fbUserMetadata.last_name.charAt(0)),
+						fbUserMetadata.id);
 					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
 							promise.fulfill(reply);
@@ -226,32 +229,6 @@ io.sockets.on('connection', function (socket) {
 		socket.emit('error', err);
 		helper.debug('Error: '+err);
 	}
-
-	function stringScore(string, strip) {
-		if (!string) return '-inf';
-
-		if (strip === undefined || strip) {
-			string = helper.stripHigh(string);
-		}
-		
-		var hash = 0;
-
-		for (var i = 0; i < string.length; i++) {
-			hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
-		}
-		return hash;
-	}
-
-	function capStringScore(string) {
-		if (!string) return '+inf';
-
-		string = helper.stripHigh(string);
-		var last = string.charAt(string.length - 1);
-		var next = String.fromCharCode(last.charCodeAt() + 1);
-		var cap = string.substring(0, string.length - 1) + next;
-		helper.debug('capStringScore', string, cap);
-		return '('+stringScore(cap, false);
-	}
 	
 	function getSockets(uids, exceptuid) {
 		var sockets = [];
@@ -288,7 +265,7 @@ io.sockets.on('connection', function (socket) {
 							for (var i = 0; i < roomIds.length; i++) {
 								var roomId = roomIds[i];
 								nicknames[roomId][session.uid] = socket.nickname;
-								client2.zadd('users:'+roomId, stringScore(socket.nickname), session.uid);
+								client2.zadd('users:'+roomId, helper.stringScore(socket.nickname), session.uid);
 							}
 
 							callback(logs, mentions, room);
@@ -408,7 +385,7 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		// get last 30 messages OR all messages between min and max
-		helper.getRoomInfo(roomId, function(room) {
+		helper.getRoomInfo(roomId, null, function(room) {
 			if (room.type == 'private') {
 				if (!session || !session.uid) {
 					error('No permissions: Guests cannot access '+room.id, socket);
@@ -521,7 +498,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		
 		if (session !== undefined && session.uid !== undefined) {
-			helper.getRoomInfo(roomId, function(room) {
+			helper.getRoomInfo(roomId, session.uid, function(room) {
 				// check for ban
 				client2.hget('banlist:'+room.id, session.uid, function(err, ban) {
 					if (!err && ban != null) {
@@ -723,7 +700,7 @@ io.sockets.on('connection', function (socket) {
     
 	socket.on('get users', function(room, filter, limit, callback) {
 		helper.debug('get users', room, filter, limit);
-		client2.zrangebyscore('users:'+room, stringScore(filter), capStringScore(filter), 'limit', 0, limit, function(err, ids) {
+		client2.zrangebyscore('users:'+room, helper.stringScore(filter), helper.capStringScore(filter), 'limit', 0, limit, function(err, ids) {
 			if (!err) {
 				getUsers(ids, function(users) {
 					var online = [];
@@ -746,20 +723,21 @@ io.sockets.on('connection', function (socket) {
 	
 	socket.on('get validrooms', function(query, limit, callback) {		
 		helper.debug('get validrooms', query, limit);
+		console.log('socket.uid',socket.uid);
 		query = helper.stripHigh(query);
 		
 		if (!query || !limit) {
 			callback([]);
 		} else {
-			helper.debug(stringScore(query), capStringScore(query));
-			client0.zrangebyscore('validrooms', stringScore(query), capStringScore(query), function(err, ids) {
+			helper.debug(helper.stringScore(query), helper.capStringScore(query));
+			client0.zrangebyscore('validrooms', helper.stringScore(query), helper.capStringScore(query), function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {
 						callback([]);
 						return;
 					}
 					
-					helper.getRoomsInfo(ids, function(rooms) {
+					helper.getRoomsInfo(ids, socket.uid, function(rooms) {
 						callback(rooms.slice(0, limit));
 					});
 				} else {

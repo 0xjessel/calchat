@@ -63,7 +63,7 @@ function sendMultipleSMS(numbers, message, opts, callback) {
 }
 
 // Returns an object containing the id, official name, pretty name, and title
-function getRoomInfo(rawId, callback) {
+function getRoomInfo(rawId, callerId, callback) {
 	debug('getRoomInfo', rawId);
 	// check if the room is a class
 	client0.hgetall('class:'+rawId, function(err, klass) {
@@ -113,7 +113,7 @@ function getRoomInfo(rawId, callback) {
 							// check if room is a class room
 							client0.hget('room:'+rawId+':'+getDayOfWeek(), getLastHalfHour(), function(err, classId) {
 								if (!err && classId) {
-									getRoomInfo(classId, function(roomObject) {
+									getRoomInfo(classId, callerId, function(roomObject) {
 										if (roomObject) {
 											roomObject.title = 'Current Class: '+roomObject.pretty;
 											roomObject.pretty = rawId;
@@ -124,48 +124,55 @@ function getRoomInfo(rawId, callback) {
 										}
 									});
 								} else {
-									// check if room is another user id
-									if (rawId.indexOf(':') != -1) {
-										var uids = rawId.split(':');
-										client2.hgetall('user:'+uids[0], function(err, user1) {
-											if (!err && Object.keys(user1).length) {
-												client2.hgetall('user:'+uids[1], function(err, user2) {
-													if (!err && Object.keys(user2).length) {
-														var name1 = user1.firstname+' '+user1.lastname[0];
-														var name2 = user2.firstname+' '+user2.lastname[0];
-														var title1 = 'Private Chat with '+name1;
-														var title2 = 'Private Chat with '+name2;
-														var readable = function(uid) { return user1.id == uid || user2.id == uid; };
-														var other = function(uid) { return uid == user1.id ? user2.id : user1.id; };
-														var prettyfor = function(uid) { return uid == user2.id ? name1 : name2; };
-														var titlefor = function(uid) { return uid == user2.id ? title1 : title1; };
-														
-														callback({
-															id			: rawId,
-															url			: stripLow(rawId),
-															pretty		: name1+':'+name2,
-															title		: title1+':'+title2,
-															type		: 'private',
+									// check if room is a user
+									client2.hgetall('user:'+rawId, function(err, user) {
+										if (!err && Object.keys(user).length) {
+											rawId = Math.min(rawId,callerId)+':'+Math.max(rawId,callerId);
+										}
+																				
+										// check if room is another user id
+										if (rawId.indexOf(':') != -1) {
+											var uids = rawId.split(':');
+											client2.hgetall('user:'+uids[0], function(err, user1) {
+												if (!err && Object.keys(user1).length) {
+													client2.hgetall('user:'+uids[1], function(err, user2) {
+														if (!err && Object.keys(user2).length) {
+															var name1 = user1.firstname+' '+user1.lastname[0];
+															var name2 = user2.firstname+' '+user2.lastname[0];
+															var title1 = 'Private Chat with '+name1;
+															var title2 = 'Private Chat with '+name2;
+															var readable = function(uid) { return user1.id == uid || user2.id == uid; };
+															var other = function(uid) { return uid == user1.id ? user2.id : user1.id; };
+															var prettyfor = function(uid) { return uid == user2.id ? name1 : name2; };
+															var titlefor = function(uid) { return uid == user2.id ? title1 : title1; };
 															
-															readable	: readable,
-															other		: other,
-															prettyfor	: prettyfor,
-															titlefor	: titlefor,
-															
-															id1			: user1.id,
-															id2			: user2.id,
-														});
-													} else {
-														callback();
-													}
-												});
-											} else {
-												callback();
-											}
-										});
-									} else {
-										callback();
-									}
+															callback({
+																id			: rawId,
+																url			: stripLow(rawId),
+																pretty		: name1+':'+name2,
+																title		: title1+':'+title2,
+																type		: 'private',
+																
+																readable	: readable,
+																other		: other,
+																prettyfor	: prettyfor,
+																titlefor	: titlefor,
+																
+																id1			: user1.id,
+																id2			: user2.id,
+															});
+														} else {
+															callback();
+														}
+													});
+												} else {
+													callback();
+												}
+											});
+										} else {
+											callback();
+										}
+									});
 								}
 							});
 						}
@@ -176,7 +183,7 @@ function getRoomInfo(rawId, callback) {
 	});
 }
 
-function getRoomsInfo(roomIds, callback) {
+function getRoomsInfo(roomIds, callerId, callback) {
 	debug('getRoomsInfo');
 	if (!roomIds.length) {
 		callback([]);
@@ -203,7 +210,7 @@ function getRoomsInfo(roomIds, callback) {
 			}
 
 			var n = i;
-			getRoomInfo(roomId, function(room) {
+			getRoomInfo(roomId, callerId, function(room) {
 				added++;
 
 				// preserve order
@@ -256,17 +263,7 @@ function isValid(roomId, callback) {
 		callback(false);
 		return;
 	} else {
-		roomId = stripHigh(roomId);
-
-		function stringScore(string) {
-			string = string.toUpperCase();
-			var hash = 0;
-
-			for (var i = 0; i < string.length; i++) {
-				hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
-			}
-			return hash;
-		}
+		roomId = stripHigh(roomId, false);
 
 		// try to find room in the database
 		var score = stringScore(roomId);
@@ -282,7 +279,7 @@ function isValid(roomId, callback) {
 					
 					// if $ is at the end then it means roomId was 306SODA and you need to redirect to current class held at 306SODA
 					if (lastChar == '$') {
-						getRoomInfo(suggestion.substring(0, suggestion.length-1), function(room) {
+						getRoomInfo(suggestion.substring(0, suggestion.length-1), null, function(room) {
 							if (room) {
 								callback(true, room.id);
 							} else {
@@ -394,6 +391,33 @@ function getLastHalfHour() {
 	return (now.getHours() + (now.getMinutes() >= 30 ? .5 : 0)).toFixed(1);
 }
 
+
+function stringScore(string, strip) {
+	if (!string) return '-inf';
+
+	if (strip === undefined || strip) {
+		string = stripHigh(string);
+	}
+	
+	var hash = 0;
+
+	for (var i = 0; i < string.length; i++) {
+		hash += (string.charCodeAt(i) - '0'.charCodeAt()) / Math.pow('Z'.charCodeAt() - '0'.charCodeAt() + 1, i);
+	}
+	return hash;
+}
+
+function capStringScore(string) {
+	if (!string) return '+inf';
+
+	string = stripHigh(string);
+	var last = string.charAt(string.length - 1);
+	var next = String.fromCharCode(last.charCodeAt() + 1);
+	var cap = string.substring(0, string.length - 1) + next;
+	debug('capStringScore', string, cap);
+	return '('+stringScore(cap, false);
+}
+
 function debug() {
 	function inner() {
 		for(var i = 0; i < arguments.length; i++) {
@@ -414,4 +438,6 @@ exports.isValid = isValid;
 exports.postAuthenticate = postAuthenticate;
 exports.stripHigh = stripHigh;
 exports.stripLow = stripLow;
+exports.stringScore = stringScore;
+exports.capStringScore = capStringScore;
 exports.debug = debug;
