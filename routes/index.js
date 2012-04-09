@@ -1,3 +1,5 @@
+// Routing code
+
 var util = require('util')
 , helper = require('../util.js')
 , everyauth = require('everyauth')
@@ -24,8 +26,10 @@ exports.index = function(req, res) {
 	});
 };
 
+// displays /dashboard
 exports.dashboard = function(req, res) {
 	function finished(rooms) {
+		// ask user for phone number if not set
 		client2.hmget('user:'+req.user.id, 'phone', 'timestamp', function (err, reply) {
 			var hasPhoneNum = false;
 			var firstTimeUser = false;
@@ -38,7 +42,7 @@ exports.dashboard = function(req, res) {
 				if(reply[1] + 30000 > Date.now()){
 					firstTimeUser = true;
 				}
-			}	
+			}
 			res.render('dashboard', {
 				title: 'Dashboard',
 				layout: 'layout-dashboard',
@@ -101,6 +105,7 @@ exports.dashboard = function(req, res) {
 	}
 };
 
+// redirect /chat to latest /chat/room
 exports.chat = function(req, res) {
 	helper.debug('chat', req.user, req.session);
 	if (req.loggedIn) {		
@@ -125,6 +130,7 @@ exports.chat = function(req, res) {
 	}
 };
 
+// displays /chat/room
 exports.chatroom = function(req, res) {
 	helper.debug('chatroom', req.params, req.session, req.user);
 	var room = req.params.room;
@@ -227,6 +233,7 @@ exports.chatroom = function(req, res) {
 	});
 }
 
+// displays /chat/room/archives
 exports.archives = function(req, res) {
 	helper.debug('archives', req.params);
 	var room = req.params.room;
