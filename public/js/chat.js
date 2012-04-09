@@ -268,6 +268,7 @@ function renderChatlogs (logs, mapping, room) {
 	$('#message').data('mentions', {});
 
 	$('#login').attr('href', '/authenticate/'+room.url);
+	$('#share').show();
 	var pretty = room.pretty;
 	var title = room.title;
 	if (room.type == 'private') {
@@ -275,6 +276,7 @@ function renderChatlogs (logs, mapping, room) {
 		title = titlefor(room, uid);
 		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+getotherfor(room, uid)+'"><img src="/img/fb-small.png"></a>');
 		$('#fb-link').tooltip();
+		$('#share').hide();
 	}
 	$('.chat-title h2').text(pretty);
 	$('.chat-title h3').text(title);
