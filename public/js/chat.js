@@ -3,7 +3,7 @@ var opts = {};
 opts['sync disconnect on unload'] = false;
 var socket = io.connect(null, opts);
 var current = rooms[0];
-var chatDiv;
+var chatDiv, sidebar;
 var selfAnnounced = false;
 var unread = {};
 var privateMsgs = [];
@@ -110,11 +110,15 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 	privateMsgs[privateMsgs.length] = messageEntry.from;
 	
-	notify(0,
-		'New Private Chat from '+mapping[messageEntry.from].name+'!',
-		messageEntry.text,
-		'/chat/'+roomId,
-		'Go to Private Chat');
+	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+roomId).text('Go to Private Chat');
+	sidebar.append(
+		notify(0,
+			'New Private Chat from '+mapping[messageEntry.from].name+'!',
+			messageEntry.text,
+			callToAction,
+			true
+		)
+	);
 });
 
 socket.on('mention', function(room, by, msg) {
@@ -127,23 +131,37 @@ socket.on('mention', function(room, by, msg) {
 
 socket.on('kick', function(from, by, msg) {
 	$('#close').click();
-	notify(1,
-		'You are temporarily kicked from '+from.pretty,
-		by.name+': '+msg,
-		'/chat/'+from.id,
-		'Take me back I\'ve learned my lesson');
+	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+from.id).text('Take me back I\'ve learned my lesson');
+	sidebar.append(
+		notify(1,
+			'You are temporarily kicked from '+from.pretty,
+			by.name+': '+msg,
+			callToAction,
+			true
+		)
+	);
 });
 
 socket.on('warn', function(from, by, msg) {
-	notify(2,
-		'You are temporarily banned from '+from.pretty,
-		by.name+': '+msg);
+	sidebar.append(
+		notify(2,
+			'You are temporarily banned from '+from.pretty,
+			by.name+': '+msg, 
+			null,
+			true
+		)
+	);
 });
 
 socket.on('ban', function(from, by, msg) {
-	notify(3,
-		'You are permanently banned from '+from.pretty,
-		by.name+': '+msg);
+	sidebar.append(
+		notify(3,
+			'You are permanently banned from '+from.pretty,
+			by.name+': '+msg,
+			null,
+			true
+		)
+	);
 });
 
 socket.on('message', message);
@@ -266,6 +284,7 @@ function getUsers(room, filter, limit, callback) {
 // dom manipulation
 $(document).ready(function () {
 	chatDiv = $('#chat');
+	sidebar = $('.span3');
 
 	// setup chats in left nav sidebar
 	var chatNav = $('#chats');
@@ -440,40 +459,6 @@ $(document).ready(function () {
 	
 	$('a[rel=tooltip]').tooltip();
 });
-
-// type can be 0-3, 0 being positive and 3 being negative
-function notify(type, title, body, actionurl, actiontext) {
-	var alertType = 'alert';
-	var buttonType = 'btn-warning';
-	switch(type) {
-		case 0:
-			alertType = 'alert-success';
-			buttonType = 'btn-success';
-			break;
-		case 1:
-			alertType = 'alert-info';
-			buttonType = 'btn-info';
-			break;
-		case 2:
-			alertType = 'alert';
-			buttonType = 'btn-warning';
-			break;
-		case 3:
-			alertType = 'alert-error';
-			buttonType = 'btn-danger';
-			break;
-	}
-	
-	var sidebar = $('.span3');
-	var alert = $('<div>').addClass('alert').addClass(alertType).addClass('fade in').addClass('private-alert');
-	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
-		, $('<h4>').addClass('alert-heading').text(title)
-		, $('<p>').text(body).addClass('private-msg')
-		, (actionurl && actiontext) ? 
-		$('<p>').append($('<a>').addClass('btn').addClass(buttonType).attr('href', actionurl).text(actiontext)) :
-		null);
-	sidebar.append(alert);
-}
 
 var init = true;
 window.addEventListener('popstate', function(e) {

@@ -26,22 +26,29 @@ exports.index = function(req, res) {
 
 exports.dashboard = function(req, res) {
 	function finished(rooms) {
-		res.render('dashboard', {
-			title: 'Dashboard',
-			layout: 'layout-dashboard',
-			loggedIn: req.loggedIn,
-			showChatTab: true,
-			rooms: rooms,
-			index: 1,
+		client2.hget('user:'+req.user.id, 'phone', function (err, reply) {
+			var hasPhoneNum = false;
+			if (!err && reply != null) {
+				if (reply.length == 10) {
+					if(helper.isNumber(reply)) {
+						hasPhoneNum = true;
+					}
+				}
+			}	
+			res.render('dashboard', {
+				title: 'Dashboard',
+				layout: 'layout-dashboard',
+				loggedIn: req.loggedIn,
+				showChatTab: true,
+				hasPhoneNum: hasPhoneNum,
+				rooms: rooms,
+				index: 1,
+			});
 		});
 	}
 	helper.debug('dashboard', req.user);
 	if (req.loggedIn) {
 		helper.postAuthenticate(req);
-
-		client2.hget('user:'+req.user.id, 'phone', function (err, reply) {
-			
-		});
 
 		// convert string to array
 		var roomIds = req.user.chatrooms.split(',');
@@ -253,6 +260,16 @@ exports.archives = function(req, res) {
 	} else {
 		res.redirect('home');
 	}
+}
+
+exports.features = function (req, res) {
+	res.render('features', {
+		title: 'Features',
+		layout: 'layout-features',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 4
+	})
 }
 
 exports.authenticate = function (req, res, next) {

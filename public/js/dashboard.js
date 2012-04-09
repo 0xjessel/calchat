@@ -46,6 +46,10 @@ $(document).ready(function () {
 			container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a><b>Error: </b>\"'+invalid[1]+'\" is an invalid chatroom, please try again.</div>');
 		}
 	}
+
+	if (!hasPhoneNum) {
+		container.prepend(notify(1, "Important!", "Enter your phone number (e.g. 5553234764) to be notified when someone @mentions you", "something", "soda"));
+	}
 	
 	$('.close-chat').click(function () {
 		socket.emit('remove room', $(this).data('room'));
