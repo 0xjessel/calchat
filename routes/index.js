@@ -259,6 +259,16 @@ exports.archives = function(req, res) {
 	});
 }
 
+exports.features = function (req, res) {
+	res.render('features', {
+		title: 'Features',
+		layout: 'layout-features',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 4
+	})
+}
+
 exports.authenticate = function (req, res, next) {
 	helper.debug('authenticate', req.params);
 	var room = req.params.room;
