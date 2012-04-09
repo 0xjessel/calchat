@@ -20,7 +20,7 @@ find study partners, and stay in the loop.
 ---------------------------------------
 URLS
 ---------------------------------------
-Youtube Walkthrough URL (not to exceed 2 minutes):
+Youtube Walkthrough URL (not to exceed 2 minutes): http://www.youtube.com/watch?v=_4vmN9A20Ig
 
 Working Prototype URL (optional, but highly recommended): http://calchat.net:3000 
 (wait!! did you modify your hosts file to run CalChat locally? if so, please comment or delete the modification in your
