@@ -60,9 +60,10 @@ everyauth.facebook
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
 					'email': fbUserMetadata.email,
+					'phone': "",
 					'chatrooms': 'CALCHAT',
 					'unread': timeStamp,
-					'firstlast': fbUserMetadata.first_name+fbUserMetadata.last_name,
+					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
 					'oauth': accessToken,
 					'special': SPECIAL_NONE,
 					'timestamp' : timeStamp,
@@ -629,6 +630,8 @@ io.sockets.on('connection', function (socket) {
 									var id = mentions[i];
 									client2.exists('user:'+id, function(err, exists) {
 										if (exists) {
+											// send SMS
+											helper.mentionSMS(id, mid);
 											client2.zadd('mentions:'+id, timestamp, mid);
 										}
 									});
