@@ -13,6 +13,7 @@ Primary Team Contact E-mail: jesse.chen@berkeley.edu
 ELEVATOR STATEMENT
 ---------------------------------------
 Please include a short (25-50 word) compelling description of what your application does:
+
 CalChat is a web app that hosts chatrooms for every class and building on campus with the goal of connecting the cal campus
 community.  By logging in with Facebook, students can talk to fellow students in the same building or class, make friends,
 find study partners, and stay in the loop.  
@@ -130,3 +131,10 @@ views/*.jade are individual body html code that are injected into the correspond
 KNOWN ISSUES
 ---------------------------------------
 Please note any known issues with the functionality of your code. Simply state "No issues found." if you did not find any:
+
+- Online sidebar does not update occasionally.  
+- Mobile is not optimized.
+- Chatrooms sometimes will hang and not load. 
+- Server is unstable and will occasionally crash.  
+- If you @mention and then delete their name, the @mention still goes through.
+- Front-end for adding GSIs does not exist.
