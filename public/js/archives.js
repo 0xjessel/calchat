@@ -7,7 +7,8 @@ $(document).ready(function () {
 	$('.breadcrumb li a').attr('href', '/chat/'+room.url);
 
 	getArchive(begin, end);
-
+	
+	// go back a day
 	$('#goBack').click(function() {
 		var newBegin = new Date(begin);
 		newBegin.setDate(newBegin.getDate()-1);
@@ -25,6 +26,7 @@ $(document).ready(function () {
 		}	
 	});
 
+	// go forward a day
 	$('#goForward').click(function() {
 		var newBegin = new Date(begin);
 		newBegin.setDate(newBegin.getDate()+1);
@@ -40,6 +42,7 @@ $(document).ready(function () {
 	});
 });
 
+// query the db for messages between start to finish
 function getArchive(start, finish) {
 	var lines = $('#lines');
 	lines.empty();
