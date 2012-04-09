@@ -22,7 +22,9 @@ URLS
 ---------------------------------------
 Youtube Walkthrough URL (not to exceed 2 minutes):
 
-Working Prototype URL (optional, but highly recommended): http://calchat.net:3000
+Working Prototype URL (optional, but highly recommended): http://calchat.net:3000 
+(wait!! did you modify your hosts file to run CalChat locally? if so, please comment or delete the modification in your
+hosts file so you can view our working prototype)
 
 ---------------------------------------
 TECHNICAL ASPECT
