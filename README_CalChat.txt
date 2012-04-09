@@ -76,7 +76,8 @@ routes/index.js is the route handling code which helps direct incoming requests 
 
 The util.js file is simply a file that holds shared functions that we use between app.js and routes/index.js.  
 
-public/ contains static files to serve to clients, the folders css/, js/, and img/ serves css, js, and image files respectively.  
+public/ contains static files to serve to clients, the folders css/, js/, and img/ serves css, js, and image files 
+respectively.  
 
 The public/css/calchat.css file is css that is used on all endpoints.
 
@@ -84,12 +85,13 @@ The public/css/bootstrap*.css files are bootstrap files that are used for popula
 
 All the other public/css/*.css files are individual css files for each endpoint.
 
-The public/js/libs folder contains bootstrap javascript files, History.js (for browser history manipulation), the jquery library, 
-linkify (for converting plain text to links), and modernizr (feature detection).
+The public/js/libs folder contains bootstrap javascript files, History.js (for browser history manipulation), the jquery 
+library, linkify (for converting plain text to links), and modernizr (feature detection).
 
 The public/js/calchat.js file contain javascript constants and functions that we use across all endpoints.
 
-The public/js/geo.js as well as public/js/yqlgeo.js contains methods to detect the client's location via HTML5 geolocation API.
+The public/js/geo.js as well as public/js/yqlgeo.js contains methods to detect the client's location via HTML5 geolocation
+API.
 
 All the other public/js/*.js files are indiviual js files for each endpoint.
 
@@ -106,5 +108,4 @@ views/*.jade are individual body html code that are injected into the correspond
 ---------------------------------------
 KNOWN ISSUES
 ---------------------------------------
-Please note any known issues with the functionality of your code. Simply state "No issues found." if you did not find any: 
-
+Please note any known issues with the functionality of your code. Simply state "No issues found." if you did not find any:
