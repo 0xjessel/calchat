@@ -138,9 +138,8 @@ exports.chatroom = function(req, res) {
 				helper.postAuthenticate(req);
 
 				var sessionRooms = undefined;
-				var userChatrooms = undefined;
-				var unreads = undefined;
-				var roomIds = null;
+				var userChatrooms = [];
+				var unreads = [];
 
 				if (req.session.rooms != undefined) {
 					sessionRooms = req.session.rooms;

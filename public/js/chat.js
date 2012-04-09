@@ -16,7 +16,7 @@ var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
 function debug(msg) {
-	console.log(msg);
+	// console.log(msg);
 }
 
 socket.on('connect', function () {
