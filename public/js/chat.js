@@ -123,11 +123,16 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 });
 
 socket.on('mention', function(room, by, msg) {
-	notify(0,
-		by.name+' mentioned you in '+room.pretty+'!',
-		'Message: '+msg,
-		'/chat/'+room.id,
-		'Go to '+room.pretty);
+	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+room.id).text('Go to '+room.pretty);
+	sidebar.append(
+		notify(0,
+			by.name+' mentioned you in '+room.pretty+'!',
+			'Message: '+msg,
+			callToAction,
+			true,
+			true
+		)
+	);
 });
 
 socket.on('kick', function(from, by, msg) {
