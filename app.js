@@ -278,7 +278,6 @@ io.sockets.on('connection', function (socket) {
 								var roomId = roomIds[i];
 								
 								getUsers(Object.keys(nicknames[roomId]), function(mapping) {
-									io.sockets.in(roomId).emit('announcement', roomId, session.nick + ' connected');
 									io.sockets.in(roomId).emit('online', roomId, mapping);
 								});
 							})();
@@ -328,7 +327,6 @@ io.sockets.on('connection', function (socket) {
 				// remove user from chatroom's list of users
 				client2.zrem('users:'+room, session.uid);
 	        
-				io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
 				io.sockets.in(room).emit('online', room, mapping);
 			} else {
 				error("session.uid undefined", socket);
