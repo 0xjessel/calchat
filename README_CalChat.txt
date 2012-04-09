@@ -29,11 +29,28 @@ hosts file so you can view our working prototype)
 ---------------------------------------
 TECHNICAL ASPECT
 ---------------------------------------
-Hardware and Software Requirements (i.e. what OS does it work on?):
+Hardware and Software Requirements (i.e. what OS does it work on?): Works on Windows and Mac OS. NodeJS is needed in order to run our app locally.
 
 
 Please provide brief instructions on how to run your code: 
+1. Unzip calchat to where ever you prefer.
+2. Go to http://nodejs.org/#. Then download and install the installer for your operating system.
 
+For Macs:
+3. Open up the terminal and cd into the calchat folder
+4. Enter ‘sudo nano /etc/hosts’
+5. At the bottom of the file, add “127.0.0.1  localhost calchat.net”
+6. In the calchat folder, type in “node app.js”
+7. Then fire up your browser of choice and go to http://calchat.net:3000 and CalChat should load
+
+For Windows:
+3. Run notepad as an administrator. To do this right click note pad and select “run as administrator”
+4. Go to File-> Open and open the hosts file (located at ‘C:\Windows\System32\drivers\etc\’)
+5. Append this line to the end of your hosts file: 127.0.0.1	localhost	calchat.net
+6. Save this file
+7. Open the Command Prompt (Start->Run->’cmd.exe’) and go to the CalChat root directory
+8. Run ‘node app.js’
+9. Point your browser to: http://calchat.net:3000 and CalChat should load
 ---------------------------------------
 INCLUDED FILES
 ---------------------------------------
