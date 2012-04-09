@@ -26,12 +26,16 @@ exports.index = function(req, res) {
 
 exports.dashboard = function(req, res) {
 	function finished(rooms) {
-		client2.hget('user:'+req.user.id, 'phone', function (err, reply) {
+		client2.hmget('user:'+req.user.id, 'phone', 'timestamp', function (err, reply) {
 			var hasPhoneNum = false;
-			if (!err && reply != null) {
+			var firstTimeUser = false;
+			if (!err && reply[0] && reply[1]) {
 				if (reply.length == 10) {
 					if(helper.isNumber(reply)) {
 						hasPhoneNum = true;
+					}
+					if(reply[1] + 30000 > Date.now()){
+						firstTimeUser = true;
 					}
 				}
 			}	
