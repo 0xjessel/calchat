@@ -39,6 +39,7 @@ public class Utils {
 	private static Jedis syncJedis1; // for synchronous calls
 	private static Pipeline pipeline0;
 
+	// connect to redis db and take care of all one-time parsing
 	public static boolean connect() {
 		try {
 			jedis = new Jedis(REDIS_URL);
@@ -174,6 +175,7 @@ public class Utils {
 		}
 	}
 
+	// saves class into db
 	public static void save(ClassModel m) {
 		String id = getClassId(m);
 		String key = String.format("class:%s", id);
@@ -280,6 +282,7 @@ public class Utils {
 		savedBuildings = null;
 	}
 
+	// background thread that constantly is looking for new buildings 
 	public static void saveLocations() {
 		while (true) {
 			String building = null;
@@ -313,6 +316,7 @@ public class Utils {
 		}
 	}
 
+	// save building location to db
 	public static void saveLocation(String building)
 			throws InterruptedException {
 		HttpURLConnection connection = null;

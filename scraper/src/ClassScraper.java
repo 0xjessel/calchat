@@ -19,6 +19,7 @@ public class ClassScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?p_term=%s&p_list_all=Y";
 	private static final int RETRY_LIMIT = 3;
 
+	// entry point of the scraper. Expects 1 argument that is the term (spring)
 	public static void main(String args[]) {
 		boolean error = false;
 
@@ -54,6 +55,7 @@ public class ClassScraper {
 			System.exit(1);
 		}
 
+		// do the actual scraping
 		String terms = getTerm(termIndex);
 		if (terms == null) {
 			System.err.println("An error has occurred.");
@@ -76,6 +78,7 @@ public class ClassScraper {
 					"Connected to Redis server. Parsing term %s...",
 					Utils.TERMS_STRINGS[termIndex]));
 
+			// do the actual scraping
 			TermModel term = parseTerm(termIndex);
 			Gson gson = new Gson();
 
@@ -89,6 +92,7 @@ public class ClassScraper {
 		}
 	}
 
+	// connects to osoc.berkeley.edu and scrapes the classes
 	private static TermModel parseTerm(int termIndex) {
 		try {
 			String term = Utils.TERMS[termIndex];
@@ -129,11 +133,14 @@ public class ClassScraper {
 				}
 
 				try {
+					// for each class, get more details
 					ClassModel classModel = DetailsScraper.getClassModel(term,
 							department, number, title);
 
 					retry = 0;
 					classModels.add(classModel);
+					
+					// save the class to the db
 					Utils.save(classModel);
 				} catch (IOException e) {
 					if (retry < RETRY_LIMIT) {

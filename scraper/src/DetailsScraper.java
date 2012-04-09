@@ -16,6 +16,7 @@ import util.Utils;
 public class DetailsScraper {
 	private static final String URL = "http://osoc.berkeley.edu/OSOC/osoc?y=0&p_term=%s&p_deptname=--+Choose+a+Department+Name+--&p_classif=--+Choose+a+Course+Classification+--&p_course=%s&p_dept=%s&x=0";
 
+	// connect to osoc.berkeley.edu to scrape class details
 	public static ClassModel getClassModel(String term, String department,
 			String course, String title) throws IOException {
 		try {
@@ -62,6 +63,7 @@ public class DetailsScraper {
 				String buildingNumber = "";
 				String building = locationSplit[0];
 
+				// lots of exceptions to take care of
 				if (location.equals("PAC FILM ARC")
 						|| location.equals("BOT GARDEN")
 						|| location.equals("SPIEKER POOL")
