@@ -135,6 +135,7 @@ Please note any known issues with the functionality of your code. Simply state "
 - Online sidebar does not update occasionally.  
 - Mobile is not optimized.
 - Chatrooms sometimes will hang and not load. 
-- Server is unstable and will occasionally crash.  
+- Server is unstable and will occasionally crash. 
+- Account preferences, Help, About, Feedback, and Contact Us links do not exist.  
 - If you @mention and then delete their name, the @mention still goes through.
 - Front-end for adding GSIs does not exist.
