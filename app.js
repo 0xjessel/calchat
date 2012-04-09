@@ -28,6 +28,7 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 redis.debug_mode = false;
 
+// for the user: special field
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
@@ -51,6 +52,7 @@ everyauth.facebook
 .findOrCreateUser( function(session, accessToken, accessTokenExtra, fbUserMetadata) {
 	var promise = this.Promise();
 	var timeStamp = new Date().getTime();
+	// try to find user in db
 	client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 		if (!err) { // no errors
 			if (Object.keys(reply).length == 0) { 
@@ -69,9 +71,11 @@ everyauth.facebook
 					'timestamp' : timeStamp,
 					'gsirooms' : "",
 				}, function() {
+					// add user to validrooms so other users can search for him
 					client0.zadd('validrooms',
 						helper.stringScore(fbUserMetadata.first_name+fbUserMetadata.last_name.charAt(0)),
 						fbUserMetadata.id);
+					// fetch the user we just saved to db
 					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
 						if (err == null) {
 							promise.fulfill(reply);
@@ -79,9 +83,11 @@ everyauth.facebook
 					})
 				});
 			} else { 
+				// fetch the user we just saved to db
 				promise.fulfill(reply);
 			}
 		} else {
+			// there were errors getting user from db
 			promise.fail(err);
 			console.log('Error: '+err);
 		}
@@ -152,13 +158,17 @@ io.set('authorization', function(data, accept) {
 	accept(null, true);
 });
 
+// client connects
 io.sockets.on('connection', function (socket) {
 	var session = socket.handshake.session;
 	helper.debug('connect');
+	
 	// msgs: list of messages to parse for ids. uids: list of ids to include
+	// return: list of ids
     function getMentions(msgs, uids) {
         var ids = {};
 		
+		//deduplication
 		if (uids) {
 			for (var i = 0; i < uids.length; i++) {
 				var uid = uids[i];
@@ -180,6 +190,7 @@ io.sockets.on('connection', function (socket) {
             }
         }
         
+        // turn deduplication assoc array into list
         var idsList = [];
         for (id in ids) {
             idsList.push(id);
@@ -188,6 +199,8 @@ io.sockets.on('connection', function (socket) {
 		return idsList;
     }
     
+    //ids: list of user ids
+    //callback: passes a map of user ids to user objects
     function getUsers(ids, callback) {
 		helper.debug('getUsers', ids);
     	if (!ids || !Object.keys(ids).length) {
@@ -206,6 +219,7 @@ io.sockets.on('connection', function (socket) {
                 client2.hgetall('user:'+id, function(err, user) {
                 	added++;
                 	if (!err && Object.keys(user).length) {
+                		// create a user object
                 		users[id] = {
                 			name		: user.firstname+' '+user.lastname.charAt(0),
                 			gsirooms	: user.gsirooms,
@@ -216,6 +230,7 @@ io.sockets.on('connection', function (socket) {
                 	}
 
                 	if (added == ids.length) {
+                		// return from function when all async have processed
                 		callback(users);
                 	}
                 });
@@ -230,6 +245,8 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('Error: '+err);
 	}
 	
+	//uids: list of user ids. exceptuid: exclude this user id
+	//returns: list of sockets which correspond to the uids
 	function getSockets(uids, exceptuid) {
 		var sockets = [];
 		for (var key in io.sockets.sockets) {
@@ -240,7 +257,10 @@ io.sockets.on('connection', function (socket) {
 		}
 		return sockets;
 	}
-
+	
+	// sent by client when it loads /chat/..
+	// roomIds: list of room ids that the user wants to join. current: active chatroom id
+	// callback: same callback as get chatlog. see getChatlog()
 	socket.on('initialize', function(roomIds, current, callback) {
 		helper.debug('initialize', roomIds, current);
 
@@ -253,6 +273,7 @@ io.sockets.on('connection', function (socket) {
 			socket.join(roomId);
 		}
 
+		// if the user is logged in
 		if (session !== undefined && session.uid !== undefined && session.nick !== undefined) {
 			socket.nickname = session.nick;
 			socket.uid = session.uid;
@@ -261,6 +282,7 @@ io.sockets.on('connection', function (socket) {
 				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
 					if (!err) {
 						if (chatrooms) {
+							// add the client to the user list of each chatroom
 							var roomIds = chatrooms.split(',');
 							for (var i = 0; i < roomIds.length; i++) {
 								var roomId = roomIds[i];
@@ -273,10 +295,13 @@ io.sockets.on('connection', function (socket) {
 							callback();
 						}
 						
+						// send renewed online list to all chatrooms
 						for (var i = 0; i < roomIds.length; i++) {
+							// use closure to prevent iteration i vars from being overwritten by iteration i+1
 							(function closure() {
 								var roomId = roomIds[i];
 								
+								// mapping is needed to convert user ids to user names
 								getUsers(Object.keys(nicknames[roomId]), function(mapping) {
 									io.sockets.in(roomId).emit('online', roomId, mapping);
 								});
@@ -288,7 +313,8 @@ io.sockets.on('connection', function (socket) {
 					}
 				});
 			});
-		} else {
+		} else { // the user is not logged in
+			// allow guests to view chat rooms
 			getChatlog(current, null, null, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
@@ -298,14 +324,19 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 	
+	// called from chat.js
+	// room: removes client from room
+	// callback: empty
 	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
 		getUsers(Object.keys(nicknames[room]), function(mapping) {
+			// can only leave room if logged in
 			if (session !== undefined && session.uid !== undefined){
+				// removes the client's nickname
 				delete nicknames[room][session.uid];
 
 				client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
-
+					// removes room from client's list of chatrooms
 					if (!err && reply[0] != null && reply[1] != null) {
 						var rooms = reply[1].split(',');
 						var index = rooms.indexOf(room);
@@ -326,7 +357,7 @@ io.sockets.on('connection', function (socket) {
 
 				// remove user from chatroom's list of users
 				client2.zrem('users:'+room, session.uid);
-	        
+	        	// broadcast new online users list
 				io.sockets.in(room).emit('online', room, mapping);
 			} else {
 				error("session.uid undefined", socket);
@@ -335,7 +366,9 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
-	// remove room from the dashboard
+	// called from dashboard.js
+	// almost same code as 'leave room' except doesn't have to worry about disconnecting the socket
+	// room: remove client from this room
 	socket.on('remove room', function (room) {
 		helper.debug('remove room', room);
 
@@ -359,11 +392,21 @@ io.sockets.on('connection', function (socket) {
 		});	
 	});
 	
+	// client requests the chatlog for a room
+	// roomId: the room that the client wants to access
+	// min, max: optional: If specified, only messages between the min and max timestamps are returned.
+	// if min and max are not specified, getChatlog returns the 30 newest messages
+	// callback: passes 3 things
+	// 		logs: associative array of timestamp to message object
+	//		mapping: associative array of user ids to user objects. This is needed for the @mentions function
+	//		room: object representing the chat room
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(roomId, min, max, callback) {
 		helper.debug('get chatlog', roomId);
+		// sanitize input
 		roomId = helper.stripHigh(roomId);
 
+		// reset unread counts for logged in users
 		if (session !== undefined && session.uid !== undefined) {
 			// make this chatroom most recent in user's list
 			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
@@ -382,15 +425,17 @@ io.sockets.on('connection', function (socket) {
 			});
 		}
 
-		// get last 30 messages OR all messages between min and max
+		// get last 30 messages or all messages between min and max
 		helper.getRoomInfo(roomId, null, function(room) {
 			if (room.type == 'private') {
+				// guest users cannot see private chats
 				if (!session || !session.uid) {
 					error('No permissions: Guests cannot access '+room.id, socket);
 					callback({}, {}, room);
 					return;
 				}
 				
+				// clients cannot see private chats that they do not belong to
 				if(!room.readable(session.uid)) {
 					// not permitted
 					error('No permissions: '+session.uid+' cannot access '+room.id, socket);
@@ -398,7 +443,8 @@ io.sockets.on('connection', function (socket) {
 					return;
 				}
 			}
-
+			
+			// optional min and max parameters are provided. Return messages between min and max timestamps
 			if (min && max) {
 				client2.zrangebyscore('chatlog:'+room.id, min, max, function(err, chatlog) {
 					if (!err) {
@@ -408,7 +454,7 @@ io.sockets.on('connection', function (socket) {
 						callback({}, [], room);
 					}
 				});
-			} else {			
+			} else { // return the 30 most recent messages
 				client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
 					if (!err) {
 						getLogs(chatlog, callback);
@@ -418,6 +464,10 @@ io.sockets.on('connection', function (socket) {
 					}
 				});
 			}
+			
+			// helper function
+			// chatlog: list of message ids
+			// callback: passes same 3 things as getChatlog()
 			function getLogs(chatlog, callback) {
 				if (chatlog.length == 0) {
 					callback({}, {}, room);
@@ -427,9 +477,11 @@ io.sockets.on('connection', function (socket) {
 				var logs = {};
 				var allMentions = [];
 				var added = 0;
+				// for each message id, turn it into a message object
 				for (var i = 0; i < chatlog.length; i++) {
 					function closure() {
 						var mid = chatlog[i];
+						// fetch message data from db
 						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
 							added++;
 							if (!err){
@@ -446,6 +498,7 @@ io.sockets.on('connection', function (socket) {
 
 								allMentions = allMentions.concat(mentions, fromUid);
 							
+								//create message object
 								var entry = {
 									'from'		: fromUid,
 									'to'		: room.id,
@@ -459,6 +512,7 @@ io.sockets.on('connection', function (socket) {
 								error(err, socket);
 							}
 							
+							// when all messages have been added, callback
 							if (added == chatlog.length) {
 								getUsers(allMentions, function(mapping) {
 									callback(logs, mapping, room);
@@ -472,7 +526,7 @@ io.sockets.on('connection', function (socket) {
 		});
 	}
 
-	// emit online users as well as update user's chatroom list
+	// client tells server he joined a room
 	socket.on('get online', function (room) {
 		helper.debug('get online', room);
 		
@@ -482,19 +536,25 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 
+	// client sends a message
+	// roomId: room id the message is sent to
+	// msg: text content of the message
+	// mentions: list of user ids that were mentioned in this message
 	socket.on('message', function (roomId, msg, mentions) {
 		helper.debug('message', roomId, msg, mentions);
 		
 		var timestamp = new Date().getTime();
 		
+		// sanitize input to prevent malicious code
 		msg = sanitize(msg).xss();
 		msg = sanitize(msg).entityEncode();
 		
+		// reject long messages
 		if (msg.length > 256) {
 			socket.emit('error', 'Message not sent. Message length too long.');
 			return;
 		}
-		
+		// client can only send messages if he has logged in
 		if (session !== undefined && session.uid !== undefined) {
 			helper.getRoomInfo(roomId, session.uid, function(room) {
 				// check for ban
@@ -507,20 +567,21 @@ io.sockets.on('connection', function (socket) {
 							var banlengthstring = ban == -1 ? 'ever' : Math.round((totalbanlength-banlength)/(60*1000))+' minutes';
 							socket.emit('error', 'Message not sent. You\'ve been banned from chatting in this room for '+banlengthstring+'.');
 							return;
-						} else {
-							
 						}
 					}
 					
+					// check for commands
 					var isGSI = false;
 					getUsers(mentions.concat(session.uid), function(mapping){
 						var user = mapping[session.uid];
 						var rooms = user.gsirooms.split(',');
+						// check if client's list of gsirooms contains this room
 						for (var i = 0; i < rooms.length; i++){
 							if (rooms[i] == roomId){
 								isGSI = true;
 							}
 						}
+						// we received a command if the user is a gsi of this room and the first character is the special char /
 						if (isGSI && msg.charAt(0) == '/') {
 							var commandend = msg.indexOf(' ');
 							if (commandend == -1) commandend = msg.length;
@@ -540,15 +601,18 @@ io.sockets.on('connection', function (socket) {
 									s.emit(command.toLowerCase(), room, user, commandmsg);
 								};
 								
+								// update the banlist
 								if (command.toUpperCase() == 'BAN' || command.toUpperCase() == 'WARN') {
 									commandsdone = mentions.length;
 									for (var i = 0; i < mentions.length; i++) {
 										var mention = mentions[i];
 										
+										// ban is permanent while warn is temporary
 										client2.hset('banlist:'+room.id, mention, command.toUpperCase() == 'BAN' ? -1 : timestamp);
 									};
 								}
 								
+								// announce back to the gsi that his command has been done
 								var capitalcommand = command.charAt(0).toUpperCase()+command.substring(1);
 								socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
 								
@@ -557,14 +621,18 @@ io.sockets.on('connection', function (socket) {
 								break;
 							}
 						}
+						
+						// deduplicate mentions
 						var temp = {};
 						for (var i = 0; i < mentions.length; i++) {
 							temp[mentions[i]] = null;
 						};
 						mentions = Object.keys(temp);
 
+						// get the next unique message id
 						client2.incr('message:id:next', function(err, mid) {
 							if (!err) {
+								// create message object
 								var entry = {
 									'from'		: session.uid,
 									'to'		: roomId,
@@ -574,13 +642,16 @@ io.sockets.on('connection', function (socket) {
 									'timestamp' : timestamp,
 								};
 								
+								// send the special 'private chat' message to the receiving client
 								if (room.type == 'private') {
 									var other = room.other(session.uid);
 									var othersocket = getSockets([other])[0];
 									if (othersocket) {
+										// the client will be notified in a special way for private chats
 										othersocket.emit('private chat', roomId, entry, mapping);
 									}
-
+									
+									// update unread counts
 									client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
 										if (!err) {
 											var roomsArray = user[0].split(',');
@@ -591,8 +662,10 @@ io.sockets.on('connection', function (socket) {
 									});
 								}
 								
+								// general broadcast to all clients in a room of the new message
 								io.sockets.in(roomId).emit('message', entry, mapping);
 								
+								// save the message to the database
 								client2.hmset('message:'+mid, {
 									'from'		: session.uid,
 									'to'		: roomId,
@@ -600,9 +673,10 @@ io.sockets.on('connection', function (socket) {
 									'mentions'	: mentions.join(),
 									'timestamp'	: timestamp,
 								});
+								// add the message id to the db chatlog
 								client2.zadd('chatlog:'+roomId, timestamp, mid);
 								
-								// send persistent notifications
+								// @mentions send persistent notifications
 								for (var i = 0; i < mentions.length; i++) {
 									var id = mentions[i];
 									client2.zadd('mentions:'+id, timestamp, mid);
@@ -611,7 +685,7 @@ io.sockets.on('connection', function (socket) {
 									helper.mentionSMS(id, mid);
 								}
 								
-								// send temporary notifications
+								// @mentions send temporary notifications
 								var othersockets = getSockets(mentions);
 								for (var i = 0; i < othersockets.length; i++) {
 									othersockets[i].emit('mention', room, user, msg);
@@ -628,7 +702,9 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 
+	// client asks for the nearest buildings for chatroom recommendation
 	socket.on('get nearest buildings', function (lat, lng, limit, callback) {
+		// distance function
 		function dist (lat1, lng1, lat2, lng2) {
 			var R = 6371; // km
 			var dLat = (lat2-lat1) * Math.PI / 180;
@@ -643,8 +719,11 @@ io.sockets.on('connection', function (socket) {
 		}
 
 		helper.debug('get nearest buildings', lat, lng, limit);
+		
+		// get known locations from db
 		client0.hgetall("location:all", function (err, locations) {
 			if (!err) {
+				// create coordinates array for sorting
 				var coordinates = [];
 				for (var key in locations) {
 					coordinates.push(key);
@@ -664,6 +743,7 @@ io.sockets.on('connection', function (socket) {
 
 				var buildings = [];
 				var added = 0;
+				// get the locations of the closest coordinates
 				for (var i = 0; i < limit; i++) {
 					function closure() {						
 						var coordinate = coordinates[i];
@@ -682,6 +762,7 @@ io.sockets.on('connection', function (socket) {
 								error(err, socket);
 							}
 
+							// when all locations have been retrieved, callback
 							if (added == limit) {
 								callback(buildings);
 							}
@@ -696,14 +777,24 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
     
+    // client asks for the users of a given chat room during @mentions
+    // room: room id
+    // filter: string that specifies the beginning of all returned users' names
+    // limit: maximum number of users to return
+    // callback: returns 3 things
+    // 		mapping: an associative array from user id to user object. Contains all user ids from online and offline
+    // 		online: list of user ids who are online
+    // 		offline: list of user ids who are offline
 	socket.on('get users', function(room, filter, limit, callback) {
 		helper.debug('get users', room, filter, limit);
+		// query db for users whose names start with filter
 		client2.zrangebyscore('users:'+room, helper.stringScore(filter), helper.capStringScore(filter), 'limit', 0, limit, function(err, ids) {
 			if (!err) {
 				getUsers(ids, function(users) {
 					var online = [];
 					var offline = [];
-				
+					
+					// sort users into online and offline
 					for (id in users) {					
 						if (nicknames[room][id]) {
 							online.push(id);
@@ -719,21 +810,26 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
+	// client sets his phone number
+	// uid: client's id
+	// phoneNum: client's entered phone number
 	socket.on('phone num', function(uid, phoneNum, callback) {
 		if (helper.isPhoneNum(phoneNum)) {
+			// save phone number to db
 			client2.hset('user:'+uid, 'phone', phoneNum, callback);
 		}
 	});
 
+	// client queries server for valid chatrooms when entering autocompletions in the navbar
 	socket.on('get validrooms', function(query, limit, callback) {		
 		helper.debug('get validrooms', query, limit);
-		console.log('socket.uid',socket.uid);
+		// sanitize the input
 		query = helper.stripHigh(query);
 		
 		if (!query || !limit) {
 			callback([]);
 		} else {
-			helper.debug(helper.stringScore(query), helper.capStringScore(query));
+			// query db for chat rooms whose names start with the query
 			client0.zrangebyscore('validrooms', helper.stringScore(query), helper.capStringScore(query), function(err, ids) {
 				if (!err) {
 					if (ids.length == 0) {
@@ -741,6 +837,7 @@ io.sockets.on('connection', function (socket) {
 						return;
 					}
 					
+					// turn room ids into room objects
 					helper.getRoomsInfo(ids, socket.uid, function(rooms) {
 						callback(rooms.slice(0, limit));
 					});
@@ -752,15 +849,18 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 
+	// client disconnects from the server
 	socket.on('disconnect', function () {
 		helper.debug('disconnect');
 		if (!socket.nickname) return;
         
+        // clean up if client was logged on
 		if (session && session.uid !== undefined) {
 			for (room in nicknames) {
 				delete nicknames[room][session.uid];
 			}
 
+			// set unread start timestamp so we can calculate how many messages the client missed
 			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
 				if (!err && reply[0] != null && reply[1] != null) {
 					var rooms = reply[0].split(',');
@@ -777,6 +877,7 @@ io.sockets.on('connection', function (socket) {
 									// update unreads to time of d/c
 									unreads[i] = time;
 
+									// broadcast to other clients in the room of the new online users list
 									io.sockets.in(room).emit('online', room, mapping);
 								});
 							})();
