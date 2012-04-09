@@ -359,6 +359,10 @@ function stripLow(string) {
 	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
 }
 
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
 function getDayOfWeek() {
 	var now = new Date();
 	switch(now.getDay()) {
@@ -395,6 +399,7 @@ function debug() {
 	console.log('--');
 }
 
+exports.isNumber = isNumber;
 exports.mentionSMS = mentionSMS;
 exports.getRoomInfo = getRoomInfo;
 exports.getRoomsInfo = getRoomsInfo;
