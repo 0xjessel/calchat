@@ -23,8 +23,7 @@ $(document).ready(function () {
 			var pretty = room.pretty;
 			var isPrivate = (room.type == 'private');
 			if (isPrivate) {
-				pretty = pretty.split(':');
-				pretty = (pretty[0] == name) ? pretty[1] : pretty[0];
+				pretty = prettyfor(room, uid);
 			}
 
 			var li = $('<li>').append($('<a>').attr('href', '/chat/'+room.url).append(
@@ -50,9 +49,10 @@ $(document).ready(function () {
 
 	if (!hasPhoneNum) {
 		var callToAction = $('<form>').addClass('form-inline').addClass('phoneSubmit');
-		callToAction.append($('<input>').attr('type', 'text').attr('placeholder', 'Phone Number').addClass('input-medium').addClass('phone-number'),
+		callToAction.append(
+			$('<input>').attr('type', 'text').attr('placeholder', 'Phone Number').addClass('input-medium').addClass('phone-number'),
 			$('<button>').attr('type', 'submit').addClass('btn').addClass('btn-submit').text('Save')
-			);
+		);
 		container.prepend(
 			notify(1, 
 				"Important!", 

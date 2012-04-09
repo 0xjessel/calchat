@@ -119,6 +119,7 @@ app.get('/chat', routes.chat);
 app.get('/chat/:room', routes.chatroom); 
 app.get('/chat/:room/archives', routes.archives);
 app.get('/authenticate/:room', routes.authenticate);
+app.get('/features', routes.features);
 app.get('*', routes.invalid);
 
 app.listen(3000);
@@ -423,7 +424,7 @@ io.sockets.on('connection', function (socket) {
 				}
 			}
 
-			if (min != null && max != null) {
+			if (min && max) {
 				client2.zrangebyscore('chatlog:'+room.id, min, max, function(err, chatlog) {
 					if (!err) {
 						getLogs(chatlog, callback);
@@ -432,16 +433,16 @@ io.sockets.on('connection', function (socket) {
 						callback({}, [], room);
 					}
 				});
+			} else {			
+				client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
+					if (!err) {
+						getLogs(chatlog, callback);
+					} else {
+						error(err, socket);
+						callback({}, [], room);
+					}
+				});
 			}
-			
-			client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
-				if (!err) {
-					getLogs(chatlog, callback);
-				} else {
-					error(err, socket);
-					callback({}, [], room);
-				}
-			});
 			function getLogs(chatlog, callback) {
 				if (chatlog.length == 0) {
 					callback({}, {}, room);
@@ -626,16 +627,20 @@ io.sockets.on('connection', function (socket) {
 								});
 								client2.zadd('chatlog:'+roomId, timestamp, mid);
 								
+								// send persistent notifications
 								for (var i = 0; i < mentions.length; i++) {
 									var id = mentions[i];
-									client2.exists('user:'+id, function(err, exists) {
-										if (exists) {
-											// send SMS
-											helper.mentionSMS(id, mid);
-											client2.zadd('mentions:'+id, timestamp, mid);
-										}
-									});
+									client2.zadd('mentions:'+id, timestamp, mid);
+									
+									// send SMS
+									helper.mentionSMS(id, mid);
 								}
+								
+								// send temporary notifications
+								var othersockets = getSockets(mentions);
+								for (var i = 0; i < othersockets.length; i++) {
+									othersockets[i].emit('mention', room, user, msg);
+								};
 							} else {
 								error(err, socket);
 							}

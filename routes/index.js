@@ -26,10 +26,18 @@ exports.index = function(req, res) {
 
 exports.dashboard = function(req, res) {
 	function finished(rooms) {
-		client2.hget('user:'+req.user.id, 'phone', function (err, reply) {
+		client2.hmget('user:'+req.user.id, 'phone', 'timestamp', function (err, reply) {
 			var hasPhoneNum = false;
-			if (!err && reply != null) {
-				hasPhoneNum = helper.isPhoneNum(reply);
+			var firstTimeUser = false;
+			if (!err && reply[0] && reply[1]) {
+				if (reply.length == 10) {
+					if(helper.isNumber(reply)) {
+						hasPhoneNum = true;
+					}
+					if(reply[1] + 30000 > Date.now()){
+						firstTimeUser = true;
+					}
+				}
 			}	
 			res.render('dashboard', {
 				title: 'Dashboard',
@@ -126,14 +134,12 @@ exports.chatroom = function(req, res) {
 	
 	helper.isValid(room, function(valid, rawId) {
 		if (valid) {
-			console.log('rawId',rawId);
 			if (req.loggedIn) {
 				helper.postAuthenticate(req);
 
 				var sessionRooms = undefined;
-				var userChatrooms = undefined;
-				var unreads = undefined;
-				var roomIds = null;
+				var userChatrooms = [];
+				var unreads = [];
 
 				if (req.session.rooms != undefined) {
 					sessionRooms = req.session.rooms;
@@ -224,35 +230,49 @@ exports.chatroom = function(req, res) {
 exports.archives = function(req, res) {
 	helper.debug('archives', req.params);
 	var room = req.params.room;
-
-	helper.isValid(room, function(valid, rawId) {
-		helper.getRoomInfo(rawId, function(room) {
-			if (room) {
-				var before = new Date();
-				console.log('before: '+before);
-				before.setHours(0,0,0,0);
-				console.log('before: '+before);
-				var after = new Date();
-				console.log('after: '+after);
-				after.setHours(11, 59, 59, 999);
-				console.log('after: '+after);
-				res.render('archives', {
-					title: room.pretty+' Archives',
-					layout: 'layout-archives',
-					loggedIn: req.loggedIn,
-					showChatTab: true,
-					room: room,
-					title: room.pretty,
-					begin: before.getTime(),
-					end: after.getTime(),
-					index: 3 //wtf should this be
-				});
-			} else {
-				console.log('archives failed to get pretty title');
-				res.redirect('home');
-			}
+	
+	if (req.loggedIn) {
+		helper.isValid(room, function(valid, rawId) {
+			helper.getRoomInfo(rawId, function(room) {
+				if (room) {
+					var before = new Date();
+					before.setHours(0,0,0,0);
+					var after = new Date();
+					
+					var pretty = room.pretty;
+					if (room.type == 'private') {
+						pretty = room.prettyfor(req.user.uid);
+					}
+					
+					res.render('archives', {
+						title: pretty+' Archives',
+						layout: 'layout-archives',
+						loggedIn: req.loggedIn,
+						showChatTab: true,
+						room: room,
+						title: pretty,
+						begin: before.getTime(),
+						end: after.getTime(),
+						index: 3 //wtf should this be
+					});
+				} else {
+					res.redirect('home');
+				}
+			});
 		});
-	});
+	} else {
+		res.redirect('home');
+	}
+}
+
+exports.features = function (req, res) {
+	res.render('features', {
+		title: 'Features',
+		layout: 'layout-features',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 4
+	})
 }
 
 exports.authenticate = function (req, res, next) {

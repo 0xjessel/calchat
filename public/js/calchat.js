@@ -20,7 +20,6 @@ $(document).ready(function () {
 			}
 
 			socket.emit('get validrooms', query, limit, function(rooms) {
-				console.log(rooms);
 				if (!rooms.length) {
 					addChatInput.data('filter-empty', query);
 				} else {
@@ -78,14 +77,12 @@ var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
 function renderChatMessage(entry, mapping) {
-	console.log(mapping);
 	var fromUid = entry.from;
 	var toRoom = entry.to;
 	var msg = entry.text;
 	var mentions = entry.mentions;
 	var mid = entry.id;
 	var timestamp = entry.timestamp;
-	console.log(timestamp);
 
 	msg = linkify(msg);
 	// msg = mentionize(msg, mapping);
@@ -182,6 +179,20 @@ function getIcon(type) {
 		default:
 			return null;
 	}
+}
+
+function prettyfor(privateRoom, uid) {
+	var split = privateRoom.pretty.split(':');
+	return uid == privateRoom.id2 ? split[0] : split[1];
+}
+
+function titlefor(privateRoom, uid) {
+	var split = privateRoom.title.split(':');
+	return uid == privateRoom.id2 ? split[0] : split[1];
+}
+
+function getotherfor(privateRoom, uid) {
+	return uid == privateRoom.id2 ? privateRoom.id1 : privateRoom.id2;
 }
 
 // type can be 0-3, 0 being positive and 3 being negative
