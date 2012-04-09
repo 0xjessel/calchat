@@ -777,7 +777,6 @@ io.sockets.on('connection', function (socket) {
 									// update unreads to time of d/c
 									unreads[i] = time;
 
-									io.sockets.in(room).emit('announcement', room, socket.nickname + ' disconnected');
 									io.sockets.in(room).emit('online', room, mapping);
 								});
 							})();
