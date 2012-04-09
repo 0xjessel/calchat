@@ -721,6 +721,12 @@ io.sockets.on('connection', function (socket) {
 		});
 	});
 	
+	socket.on('phone num', function(uid, phoneNum, callback) {
+		if (helper.isPhoneNum(phoneNum)) {
+			client2.hset('user:'+uid, 'phone', phoneNum, callback);
+		}
+	});
+
 	socket.on('get validrooms', function(query, limit, callback) {		
 		helper.debug('get validrooms', query, limit);
 		console.log('socket.uid',socket.uid);
