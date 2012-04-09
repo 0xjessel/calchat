@@ -1,7 +1,6 @@
 var socket = io.connect();
 
 $(document).ready(function () {
-	// example navbar search
 	var addChatForm = $('.navbar-search');
 	// addChatInput includes the input form in /dashboard 
 	// so that the typeahead code below populates both inputs
@@ -18,7 +17,7 @@ $(document).ready(function () {
 				typeahead.process([]);
 				return;
 			}
-
+			// query db for valid rooms that begin with query
 			socket.emit('get validrooms', query, limit, function(rooms) {
 				if (!rooms.length) {
 					addChatInput.data('filter-empty', query);
@@ -81,9 +80,12 @@ function stripLow(string) {
 	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
 }
 
+// for user.special field
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
+// helper function to render individual chat messages
+// shared by archives.js and chat.js
 function renderChatMessage(entry, mapping) {
 	var fromUid = entry.from;
 	var toRoom = entry.to;
@@ -141,6 +143,7 @@ function renderChatMessage(entry, mapping) {
 	}
 }
 
+// helper function to return a jquery anchor tag for a user's name
 function getUserLink(id) {
 	if (uid == id || (uid == null && name == 'null')) {
 		return $('<a>').attr('href', 'javascript:void(0)');
@@ -148,6 +151,7 @@ function getUserLink(id) {
 	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
 }
 
+// helper function that returns a jquery GSI or FOUNDER label, etc
 function getLabel(fromUid, toRoom, mapping) {
 	var gsi = false;
 	var special = SPECIAL_NONE;
@@ -203,6 +207,7 @@ function getotherfor(privateRoom, uid) {
 	return uid == privateRoom.id2 ? privateRoom.id1 : privateRoom.id2;
 }
 
+// helper function to pop up a notification
 // type can be 0-3, 0 being positive and 3 being negative
 function notify(type, title, body, callToAction, isButton, corner) {
 	var alertType = 'alert';

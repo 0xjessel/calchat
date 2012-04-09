@@ -1,13 +1,13 @@
 // socket variable already instantiated via geo.js
 
 $(document).ready(function () {
-
 	var container = $('.container-fluid');
 	if (rooms[0] == null) {
 		container.prepend('<div class="alert alert-error"><a class="close fade in" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
 	} else {
 		var chatroomsList = $('#chatrooms');
 		var privateList = $('#privatechats');
+		// add all chats and unread badges that the client is in
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i];
 			
