@@ -1,3 +1,5 @@
+// Responsible for rendering the chat room
+
 // socket.io specific code
 var opts = {};
 opts['sync disconnect on unload'] = false;
@@ -12,6 +14,7 @@ for (var i = 0; i < rooms.length; i++) {
 }
 var History = window.History;
 
+// for user.special field
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
@@ -19,6 +22,7 @@ function debug(msg) {
 	// console.log(msg);
 }
 
+// on connection to the server
 socket.on('connect', function () {
 	debug('connect');
 	// join all rooms, set uid and nick, get chatlog
@@ -29,6 +33,7 @@ socket.on('connect', function () {
 	socket.emit('initialize', roomIds, current.id, renderChatlogs);
 });
 
+// display announcement from server
 socket.on('announcement', function (to, msg) {
 	debug('announcement');
 	if (to == current.id) {
@@ -42,6 +47,7 @@ socket.on('announcement', function (to, msg) {
 	}
 });
 
+// server sends updated online users list
 socket.on('online', function(room, mapping) {
 	debug('online');
 	if (room == current.id) {
@@ -63,6 +69,7 @@ socket.on('online', function(room, mapping) {
 	}
 });
 
+// server asks client to reconnect if there was an interruption
 socket.on('reconnect', function () {
 	debug('reconnect');
 	$('#lines').empty();
@@ -74,6 +81,7 @@ socket.on('reconnect', function () {
 	$('.chat-header .loading').addClass('hidden');
 });
 
+// server comes back up from interruption
 socket.on('reconnecting', function () {
 	debug('reconnecting');
 	message({
@@ -84,6 +92,7 @@ socket.on('reconnecting', function () {
 	$('.chat-header .loading').removeClass('hidden');
 });
 
+// server sends an error message to the client
 socket.on('error', function (e) {
 	debug('Error: '+e);
 	message({
@@ -93,6 +102,7 @@ socket.on('error', function (e) {
 	});
 });
 
+// server alerts client of a private chat
 socket.on('private chat', function(roomId, messageEntry, mapping) {
 	for (var i = 0; i < rooms.length; i++) {
 		if (roomId == rooms[i].id) {
@@ -122,6 +132,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	);
 });
 
+// server alerts client of an @mention
 socket.on('mention', function(room, by, msg) {
 	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+room.id).text('Go to '+room.pretty);
 	sidebar.append(
@@ -135,8 +146,11 @@ socket.on('mention', function(room, by, msg) {
 	);
 });
 
+// server alerts client of a kick
 socket.on('kick', function(from, by, msg) {
-	$('#close').click();
+	// kick self from current room
+	if (from.id == current.id)
+		$('#close').click();
 	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+from.id).text('Take me back I\'ve learned my lesson');
 	sidebar.append(
 		notify(1,
@@ -149,6 +163,7 @@ socket.on('kick', function(from, by, msg) {
 	);
 });
 
+// server alerts client of a warn
 socket.on('warn', function(from, by, msg) {
 	sidebar.append(
 		notify(2,
@@ -161,6 +176,7 @@ socket.on('warn', function(from, by, msg) {
 	);
 });
 
+// server alerts client of a ban
 socket.on('ban', function(from, by, msg) {
 	sidebar.append(
 		notify(3,
@@ -173,6 +189,7 @@ socket.on('ban', function(from, by, msg) {
 	);
 });
 
+// server alerts client of a message
 socket.on('message', message);
 function message (entry, mapping) {
 	debug('message');
@@ -196,6 +213,7 @@ function message (entry, mapping) {
 	}
 }
 
+// helper function when chat anchor is clicked
 function renderChatroom(anchor) {
 	debug('renderChatroom');
 	current = anchor.data('room');
@@ -221,6 +239,7 @@ function renderChatroom(anchor) {
 	socket.emit('get online', current.id);			
 }
 
+// callback from 'get chatlog' server command
 function renderChatlogs (logs, mapping, room) {
 	debug('renderChatlogs');
 	if (!logs) logs = {};
@@ -237,10 +256,13 @@ function renderChatlogs (logs, mapping, room) {
 
 		var entry = logs[timestamp];
 
+		// render individual chat messages
 		var element = renderChatMessage(entry, mapping);
 		lines.append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
+	
+	// update all page information when get chatlog is successful
 	
 	$('#message').prop('disabled', false);
 	$('#message').data('mentions', {});
@@ -312,7 +334,7 @@ $(document).ready(function () {
 			pretty = prettyfor(room, uid);
 			id = id.replace(':', '');
 		}
-
+		// add the chatroom link element
 		element.append($('<a>')
 			.attr('href', 'javascript:void(0)')
 			.attr('id', id)
@@ -321,6 +343,7 @@ $(document).ready(function () {
 				icon, 
 				$('<span>').addClass('chats-name').append(pretty)));
 		
+		// add to the correct section
 		if (room.type == 'private') {
 			privateNav.append(element);
 		} else {
@@ -330,6 +353,7 @@ $(document).ready(function () {
 	
 	$('.rooms .loading').addClass('hidden');
 
+	// switch to new room
 	$('.rooms a').click(function () {
 		if ($(this).data('room') != current) {
 			renderChatroom($(this));	
@@ -337,9 +361,8 @@ $(document).ready(function () {
 		return false;
 	});
 
+	// sending a message
 	$('#send-message').submit(function () {
-		// TODO: since we are sending the message to the server and waiting for the reply
-		//       we should display some kind of 'Sending...' text
 		if ($('#message').val()) {
 			socket.emit('message', current.id, $('#message').val(), Object.keys($('#message').data('mentions')));
 			$('#message').data('mentions', {});
@@ -349,6 +372,7 @@ $(document).ready(function () {
 		return false;
 	});
 	
+	// start autocompleting the user names when encountering a @
 	var limit = 5;
 	$('#message').typeahead({
 		source: function(typeahead, query) {
@@ -374,7 +398,8 @@ $(document).ready(function () {
 				typeahead.process([]);
 				return;
 			}
-
+			
+			// query db for all users matching the filter
 			getUsers(current.id, filter, limit, function(mapping, online, offline) {
 				online.sort();
 				offline.sort();
@@ -437,6 +462,7 @@ $(document).ready(function () {
 		}
 	});
 
+	// close current chatroom
 	$('#close').click(function () {
 		// remove chatroom from sidebar
 		// load next chatroom in line
