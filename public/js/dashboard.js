@@ -49,11 +49,30 @@ $(document).ready(function () {
 	}
 
 	if (!hasPhoneNum) {
-		container.prepend(notify(1, "Important!", "Enter your phone number (e.g. 5553234764) to be notified when someone @mentions you", "something", "soda"));
+		var callToAction = $('<form>').addClass('form-inline').addClass('phoneSubmit');
+		callToAction.append($('<input>').attr('type', 'text').attr('placeholder', 'Phone Number').addClass('input-medium').addClass('phone-number'),
+			$('<button>').attr('type', 'submit').addClass('btn').addClass('btn-submit').text('Save')
+			);
+		container.prepend(
+			notify(1, 
+				"Important!", 
+				"Enter your phone number (e.g. 5553234764) to be notified when someone @mentions you", 
+				callToAction, 
+				false,
+				false));
 	}
+
+	$('.phoneSubmit').submit(function () {
+		socket.emit('phone num', uid, $('.phone-number').val(), function () {
+			$('.alert-info a').click();
+		});
+		return false;
+	});
 	
 	$('.close-chat').click(function () {
-		socket.emit('remove room', $(this).data('room'));
+		socket.emit('remove room', $(this).data('room'), function(success) {
+			alert('check');
+		});
 		$(this).parent().parent().remove();
 		return false;
 	});

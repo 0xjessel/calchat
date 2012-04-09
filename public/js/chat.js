@@ -116,6 +116,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 			'New Private Chat from '+mapping[messageEntry.from].name+'!',
 			messageEntry.text,
 			callToAction,
+			true,
 			true
 		)
 	);
@@ -129,6 +130,7 @@ socket.on('kick', function(from, by, msg) {
 			'You are temporarily kicked from '+from.pretty,
 			by.name+': '+msg,
 			callToAction,
+			true,
 			true
 		)
 	);
@@ -140,6 +142,7 @@ socket.on('warn', function(from, by, msg) {
 			'You are temporarily banned from '+from.pretty,
 			by.name+': '+msg, 
 			null,
+			false,
 			true
 		)
 	);
@@ -151,6 +154,7 @@ socket.on('ban', function(from, by, msg) {
 			'You are permanently banned from '+from.pretty,
 			by.name+': '+msg,
 			null,
+			false,
 			true
 		)
 	);

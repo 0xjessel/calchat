@@ -29,11 +29,7 @@ exports.dashboard = function(req, res) {
 		client2.hget('user:'+req.user.id, 'phone', function (err, reply) {
 			var hasPhoneNum = false;
 			if (!err && reply != null) {
-				if (reply.length == 10) {
-					if(helper.isNumber(reply)) {
-						hasPhoneNum = true;
-					}
-				}
+				hasPhoneNum = helper.isPhoneNum(reply);
 			}	
 			res.render('dashboard', {
 				title: 'Dashboard',
