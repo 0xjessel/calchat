@@ -23,8 +23,7 @@ $(document).ready(function () {
 			var pretty = room.pretty;
 			var isPrivate = (room.type == 'private');
 			if (isPrivate) {
-				pretty = pretty.split(':');
-				pretty = (pretty[0] == name) ? pretty[1] : pretty[0];
+				pretty = prettyfor(room, uid);
 			}
 
 			var li = $('<li>').append($('<a>').attr('href', '/chat/'+room.url).append(

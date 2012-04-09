@@ -133,21 +133,27 @@ function getRoomInfo(rawId, callback) {
 													if (!err && Object.keys(user2).length) {
 														var name1 = user1.firstname+' '+user1.lastname[0];
 														var name2 = user2.firstname+' '+user2.lastname[0];
-														var readable = function(uid) {
-															return user1.id == uid || user2.id == uid;
-														};
-														var other = function(uid) {
-															if (uid == user1.id) return user2.id;
-															else return user1.id;
-														};
+														var title1 = 'Private Chat with '+name1;
+														var title2 = 'Private Chat with '+name2;
+														var readable = function(uid) { return user1.id == uid || user2.id == uid; };
+														var other = function(uid) { return uid == user1.id ? user2.id : user1.id; };
+														var prettyfor = function(uid) { return uid == user2.id ? name1 : name2; };
+														var titlefor = function(uid) { return uid == user2.id ? title1 : title1; };
+														
 														callback({
 															id			: rawId,
 															url			: stripLow(rawId),
 															pretty		: name1+':'+name2,
-															title		: 'Private Chat with '+name1+':'+'Private Chat with '+name2,
+															title		: title1+':'+title2,
 															type		: 'private',
+															
 															readable	: readable,
 															other		: other,
+															prettyfor	: prettyfor,
+															titlefor	: titlefor,
+															
+															id1			: user1.id,
+															id2			: user2.id,
 														});
 													} else {
 														callback();

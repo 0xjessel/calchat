@@ -117,6 +117,14 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 		'Go to Private Chat');
 });
 
+socket.on('mention', function(room, by, msg) {
+	notify(0,
+		by.name+' mentioned you in '+room.pretty+'!',
+		'Message: '+msg,
+		'/chat/'+room.id,
+		'Go to '+room.pretty);
+});
+
 socket.on('kick', function(from, by, msg) {
 	$('#close').click();
 	notify(1,
@@ -141,7 +149,6 @@ socket.on('ban', function(from, by, msg) {
 socket.on('message', message);
 function message (entry, mapping) {
 	debug('message');
-	console.log(entry);
 	if (entry.to == current.id) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(entry, mapping);
@@ -215,14 +222,9 @@ function renderChatlogs (logs, mapping, room) {
 	var pretty = room.pretty;
 	var title = room.title;
 	if (room.type == 'private') {
-		pretty = room.pretty.split(':');
-		var me = (pretty[0] == name);
-		var uids = room.id.split(':');
-		var otherUID = (uid == uids[0]) ? uids[1] : uids[0];
-		pretty = me ? pretty[1] : pretty[0];
-		title = room.title.split(':');
-		title = me ? title[1] : title[0];
-		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+otherUID+'"><img src="/img/fb-small.png"></a>');
+		pretty = prettyfor(room, uid);
+		title = titlefor(room, uid);
+		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+getotherfor(room, uid)+'"><img src="/img/fb-small.png"></a>');
 		$('#fb-link').tooltip();
 	}
 	$('.chat-title h2').text(pretty);
@@ -279,8 +281,7 @@ $(document).ready(function () {
 			element.addClass('active');
 		}
 		if (room.type == 'private') {
-			pretty = pretty.split(':');
-			pretty = (name == pretty[0]) ? pretty[1] : pretty[0];
+			pretty = prettyfor(room, uid);
 			id = id.replace(':', '');
 		}
 
@@ -418,7 +419,6 @@ $(document).ready(function () {
 		$('#online li:not(.nav-header)').remove();
 		
 		var parent = $('.rooms .active').parents('.rooms');
-		console.log(parent);
 		$('.rooms .active').remove();
 		var next = parent.find('a:first');
 		
