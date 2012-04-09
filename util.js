@@ -127,6 +127,10 @@ function getRoomInfo(rawId, callerId, callback) {
 									// check if room is a user
 									client2.hgetall('user:'+rawId, function(err, user) {
 										if (!err && Object.keys(user).length) {
+											if (rawId == callerId) {
+												callback();
+												return;
+											}
 											rawId = Math.min(rawId,callerId)+':'+Math.max(rawId,callerId);
 										}
 																				
