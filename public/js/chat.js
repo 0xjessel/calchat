@@ -110,12 +110,12 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 	privateMsgs[privateMsgs.length] = messageEntry.from;
 	
+	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+roomId).text('Go to Private Chat');
 	sidebar.append(
 		notify(0,
 			'New Private Chat from '+mapping[messageEntry.from].name+'!',
 			messageEntry.text,
-			'/chat/'+roomId,
-			'Go to Private Chat',
+			callToAction,
 			true
 		)
 	);
@@ -123,12 +123,12 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 
 socket.on('kick', function(from, by, msg) {
 	$('#close').click();
+	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+from.id).text('Take me back I\'ve learned my lesson');
 	sidebar.append(
 		notify(1,
 			'You are temporarily kicked from '+from.pretty,
 			by.name+': '+msg,
-			'/chat/'+from.id,
-			'Take me back I\'ve learned my lesson',
+			callToAction,
 			true
 		)
 	);
@@ -139,6 +139,7 @@ socket.on('warn', function(from, by, msg) {
 		notify(2,
 			'You are temporarily banned from '+from.pretty,
 			by.name+': '+msg, 
+			null,
 			true
 		)
 	);
@@ -149,6 +150,7 @@ socket.on('ban', function(from, by, msg) {
 		notify(3,
 			'You are permanently banned from '+from.pretty,
 			by.name+': '+msg,
+			null,
 			true
 		)
 	);

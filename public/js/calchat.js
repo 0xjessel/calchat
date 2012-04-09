@@ -185,7 +185,7 @@ function getIcon(type) {
 }
 
 // type can be 0-3, 0 being positive and 3 being negative
-function notify(type, title, body, actionurl, actiontext, corner) {
+function notify(type, title, body, callToAction, corner) {
 	var alertType = 'alert';
 	var buttonType = 'btn-warning';
 	switch(type) {
@@ -215,8 +215,8 @@ function notify(type, title, body, actionurl, actiontext, corner) {
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
 		, $('<h4>').addClass('alert-heading').text(title)
 		, $('<p>').text(body).addClass('private-msg')
-		, (actionurl && actiontext) ? 
-		$('<p>').append($('<a>').addClass('btn').addClass(buttonType).attr('href', actionurl).text(actiontext)) :
+		, (callToAction) ? 
+		$('<p>').append(callToAction.addClass(buttonType)) :
 		null);
 	return alert;
 }
