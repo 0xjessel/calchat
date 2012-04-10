@@ -195,7 +195,7 @@ function message (entry, mapping) {
 	debug('message');
 	if (entry.to == current.id) {
 		// append incoming msg to the current room
-		var element = renderChatMessage(entry, mapping);
+		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
 
 		scrollToBottom();
@@ -257,7 +257,7 @@ function renderChatlogs (logs, mapping, room) {
 		var entry = logs[timestamp];
 
 		// render individual chat messages
-		var element = renderChatMessage(entry, mapping);
+		var element = renderChatMessage(entry, mapping, true);
 		lines.append(element);
 	}
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);

@@ -86,7 +86,7 @@ var SPECIAL_FOUNDER		= 1;
 
 // helper function to render individual chat messages
 // shared by archives.js and chat.js
-function renderChatMessage(entry, mapping) {
+function renderChatMessage(entry, mapping, enableLink) {
 	var fromUid = entry.from;
 	var toRoom = entry.to;
 	var msg = entry.text;
@@ -103,24 +103,13 @@ function renderChatMessage(entry, mapping) {
 		return $('<p class="system-message">').append(msg);
 	} else {
      	var from = mapping[fromUid].name;
-		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+mid);
 
 		var totalWidth = 0;
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
 
-			var element = $('<span>').addClass('mention').attr('id', id).append(
-				getUserLink(id).addClass('mention').text(' @'+mapping[id].name+' '));
-
-			totalWidth += $('#'+id).outerWidth();
-			if (i == 0) {
-				element.addClass('first');
-			}
-
-			mentionsElement.append(element);
-
 			var link = $('<div>').append(
-				getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).html();
+				getUserLink(id, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
 
 			msg = msg.replace(mapping[id].name, link);
 		}
@@ -128,24 +117,17 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
-			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), label, ': '),
-			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
-				function() {
-					$('#mentions'+mid).stop().fadeTo(400 ,0, function(){$(this).hide()});
-				}, function() {
-					$('#mentions'+mid).show().stop().fadeTo(300, 1);
-				}),
-			$('<span>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
-			$('<span>').addClass('mentions').append(mentionsElement));
-
-
+			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
+			$('<span>').addClass('from').append(getUserLink(fromUid, enableLink).addClass('from').append(from), label, ': '),
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)
+		);
 		return element;
 	}
 }
 
 // helper function to return a jquery anchor tag for a user's name
-function getUserLink(id) {
-	if (uid == id || (uid == null && name == 'null')) {
+function getUserLink(id, enable) {
+	if (!enable || uid == id || (uid == null && name == 'null')) {
 		return $('<a>').attr('href', 'javascript:void(0)');
 	}
 	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));

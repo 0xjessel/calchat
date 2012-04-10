@@ -86,22 +86,7 @@ p.message a.from:hover {
 }
 
 p.message {
-	position: relative;
-}
-
-.timestamp {
-	display: inline-block;
-	float:right;
-	color: dimgrey;
-	font-size: 10px;
-}
-
-#lines p:nth-child(even) div.message-mentions {
-	background: #fafafa;
-}
-
-#lines p div.message-mentions {
-	background: #eee;
+	word-wrap: break-word;
 }
 
 span.text a.mention {
@@ -110,20 +95,14 @@ span.text a.mention {
 
 span.text a.mention:hover {
 	text-decoration: none;
-	font-weight: bold;
+    font-weight: bold;
 }
 
-div.message-mentions a.mention {
+.timestamp {
+	display: inline-block;
+	float:right;
 	color: dimgrey;
-	font-weight: bold;
-	font-size: 75%;
-}
-
-div.message-mentions a.mention:hover {
-	text-decoration: none;
-	color: darkgrey;
-	font-weight: bold;
-	font-size: 75%;
+	font-size: 10px;
 }
 
 .chat-title .title-text {
