@@ -693,8 +693,15 @@ io.sockets.on('connection', function (socket) {
 										var id = mentions[i];
 										client2.zadd('mentions:'+id, timestamp, mid);
 										
-										// send SMS
-										helper.mentionSMS(id, mid);
+										// only send offline notifications if user is offline
+										for (room in nicknames) {
+											// user is not online
+											if (nicknames[room][id] == undefined) {
+												// hook to send notifications when mention'd
+												helper.mentionNotification(id, mid);
+												break;
+											}
+										}
 									}
 									
 									// @mentions send temporary notifications

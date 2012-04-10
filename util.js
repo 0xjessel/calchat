@@ -1,6 +1,6 @@
 // Utility functions shared by all server code
 
-var TwilioClient = require('twilio').Client
+var TwilioClient = require('twilio').Client;
 var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', 'http://calchat.net:3000');
 var phone = client.getPhoneNumber('+15107468123');
 
@@ -12,6 +12,11 @@ var client1 = redis.createClient(null, redisUrl);
 client1.select(1);
 var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
+
+// email, SMS, facebook app-generated request
+function mentionNotification(to, mid) {
+	mentionSMS(to, mid);
+}
 
 // helper function to send an SMS notification
 // to: user id to send message to
@@ -530,9 +535,9 @@ function debug() {
 	console.log('--');
 }
 
+exports.mentionNotification = mentionNotification;
 exports.getUsers = getUsers;
 exports.isPhoneNum = isPhoneNum;
-exports.mentionSMS = mentionSMS;
 exports.getRoomInfo = getRoomInfo;
 exports.getRoomsInfo = getRoomsInfo;
 exports.prependRoom = prependRoom;
