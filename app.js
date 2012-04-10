@@ -530,130 +530,183 @@ io.sockets.on('connection', function (socket) {
 						}
 					}
 					
-					// check for commands
-					var isGSI = false;
 					helper.getUsers(mentions.concat(session.uid), function(mapping){
 						var user = mapping[session.uid];
-						var rooms = user.gsirooms.split(',');
-						// check if client's list of gsirooms contains this room
-						for (var i = 0; i < rooms.length; i++){
-							if (rooms[i] == roomId){
-								isGSI = true;
-							}
-						}
+						var commandreceivers = mentions.filter(function(mention) {
+							// if you are not a Founder, you cannot execute a command against a Founder
+							return mapping[session.uid].special == SPECIAL_FOUNDER || mapping[mention].special != SPECIAL_FOUNDER;
+						});
+						
+						// check for commands
 						// we received a command if the user is a gsi of this room and the first character is the special char /
-						if (isGSI && msg.charAt(0) == '/') {
+						if (msg.charAt(0) == '/') {
 							var commandend = msg.indexOf(' ');
 							if (commandend == -1) commandend = msg.length;
 							var command = msg.substring(1, commandend);
 							var commandmsg = msg.substring(commandend).trim();
 							
-							switch(command.toUpperCase()) {
-								case 'KICK':
-								case 'BAN':
-								case 'WARN':
-								
-								// send command message to each mentioned socket
-								var othersockets = getSockets(mentions, session.uid);
-								var commandsdone = othersockets.length;
-								for (var i = 0; i < othersockets.length; i++) {
-									var s = othersockets[i];
-									s.emit(command.toLowerCase(), room, user, commandmsg);
+							getCommands(command, socket.uid, roomId, function(commands) {
+								for (var i = 0; i < commands.length; i++) {
+									var command = commands[i];
+									
+									// COMMANDLIST
+									switch(command.name) {
+										case 'KICK':
+										case 'BAN':
+										case 'WARN':
+										case 'FORGIVE':
+										case 'ADMIN':
+										case 'GSI':
+										case 'DEMOTE':
+										
+										// send command message to each mentioned socket
+										var othersockets = getSockets(commandreceivers, session.uid);
+										for (var i = 0; i < othersockets.length; i++) {
+											var s = othersockets[i];
+											s.emit('command', command.name.toLowerCase(), room, user, commandmsg);
+										};
+										
+										// update the banlist
+										for (var i = 0; i < commandreceivers.length; i++) {
+											var mention = commandreceivers[i];
+											if (command.name == 'BAN' || command.name == 'WARN') {
+												// ban is permanent while warn is temporary
+												client2.hset('banlist:'+room.id, mention, command.name == 'BAN' ? -1 : timestamp);
+											} else if (command.name == 'FORGIVE') {
+												client2.hdel('banlist:'+room.id, mention);
+											} else if (command.name == 'ADMIN') {
+												client2.hset('user:'+mention, 'special', 2);
+											} else if (command.name == 'GSI') {
+												// add roomId to existing gsirooms
+												client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
+													if (gsirooms) {
+														var roomIds = gsirooms.split(',');
+														var index = roomIds.indexOf(roomId);
+														if (index != -1) {
+															roomIds.unshift(roomIds.splice(index, 1));
+														} else {
+															roomIds.unshift(roomId);
+														}
+														client2.hset('user:'+mention, 'gsirooms', roomIds.join());
+													} else {
+														client2.hset('user:'+mention, 'gsirooms', roomId);
+													}
+												});
+											} else if (command.name == 'DEMOTE') {
+												// remove this room id from gsirooms, set user special field to 0
+												client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
+													var roomIds = [''];
+													if (gsirooms) {
+														roomIds = gsirooms.split(',');
+														var index = roomIds.indexOf(roomId);
+														if (index != -1) {
+															roomIds.splice(index, 1);
+														}
+													}
+													client2.hmset('user:'+mention, 'gsirooms', roomIds.join(), 'special', 0);
+												});
+											}
+										};
+										
+										var commandsdone = commandreceivers.length;
+										if (command.name == 'KICK') {
+											commandsdone = othersockets.length;
+										}
+										
+										// announce back to the gsi that his command has been done
+										var capitalcommand = command.name.charAt(0)+command.name.substring(1);
+										socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
+										
+										// DO NOT CONTINUE once we've processed a command
+										return;
+										default:
+										break;
+									}		
 								};
 								
-								// update the banlist
-								if (command.toUpperCase() == 'BAN' || command.toUpperCase() == 'WARN') {
-									commandsdone = mentions.length;
-									for (var i = 0; i < mentions.length; i++) {
-										var mention = mentions[i];
-										
-										// ban is permanent while warn is temporary
-										client2.hset('banlist:'+room.id, mention, command.toUpperCase() == 'BAN' ? -1 : timestamp);
-									};
-								}
-								
-								// announce back to the gsi that his command has been done
-								var capitalcommand = command.charAt(0).toUpperCase()+command.substring(1);
-								socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
-								
-								return;
-								default:
-								break;
-							}
+								// since we haven't returned yet, we must have not processed a command
+								handleMessage();
+							});
+						} else { // no command
+							handleMessage();
 						}
 						
-						// deduplicate mentions
-						var temp = {};
-						for (var i = 0; i < mentions.length; i++) {
-							temp[mentions[i]] = null;
-						};
-						mentions = Object.keys(temp);
+						function handleMessage() {
+							// CONTINUE only if we have not processed a command
+							
+							// deduplicate mentions
+							var temp = {};
+							for (var i = 0; i < mentions.length; i++) {
+								temp[mentions[i]] = null;
+							};
+							mentions = Object.keys(temp);
 
-						// get the next unique message id
-						client2.incr('message:id:next', function(err, mid) {
-							if (!err) {
-								// create message object
-								var entry = {
-									'from'		: session.uid,
-									'to'		: roomId,
-									'text'		: msg,
-									'mentions'	: mentions,
-									'id'		: mid,
-									'timestamp' : timestamp,
-								};
-								
-								// send the special 'private chat' message to the receiving client
-								if (room.type == 'private') {
-									var other = room.other(session.uid);
-									var othersocket = getSockets([other])[0];
-									if (othersocket) {
-										// the client will be notified in a special way for private chats
-										othersocket.emit('private chat', roomId, entry, mapping);
+							// get the next unique message id
+							client2.incr('message:id:next', function(err, mid) {
+								if (!err) {
+									// create message object
+									var entry = {
+										'from'		: session.uid,
+										'to'		: roomId,
+										'text'		: msg,
+										'mentions'	: mentions,
+										'id'		: mid,
+										'timestamp' : timestamp,
+									};
+									
+									// send the special 'private chat' message to the receiving client
+									if (room.type == 'private') {
+										var other = room.other(session.uid);
+										var othersocket = getSockets([other])[0];
+										if (othersocket) {
+											// the client will be notified in a special way for private chats
+											othersocket.emit('private chat', roomId, entry, mapping);
+										}
+										
+										// update unread counts
+										client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
+											if (!err) {
+												var roomsArray = user[0].split(',');
+												var unreadsArray = user[1].split(',');
+												helper.prependRoom(roomId, unreadsArray, roomsArray);
+												client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
+											}
+										});
 									}
 									
-									// update unread counts
-									client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
-										if (!err) {
-											var roomsArray = user[0].split(',');
-											var unreadsArray = user[1].split(',');
-											helper.prependRoom(roomId, unreadsArray, roomsArray);
-											client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
-										}
-									});
-								}
-								
-								// general broadcast to all clients in a room of the new message
-								io.sockets.in(roomId).emit('message', entry, mapping);
-								
-								// save the message to the database
-								client2.hmset('message:'+mid, {
-									'from'		: session.uid,
-									'to'		: roomId,
-									'text'		: msg,
-									'mentions'	: mentions.join(),
-									'timestamp'	: timestamp,
-								});
-								// add the message id to the db chatlog
-								client2.zadd('chatlog:'+roomId, timestamp, mid);
-								
-								// @mentions send persistent notifications
-								for (var i = 0; i < mentions.length; i++) {
-									var id = mentions[i];
-									client2.zadd('mentions:'+id, timestamp, mid);
+									// general broadcast to all clients in a room of the new message
+									io.sockets.in(roomId).emit('message', entry, mapping);
 									
-									// send SMS
-									helper.mentionSMS(id, mid);
+									// save the message to the database
+									client2.hmset('message:'+mid, {
+										'from'		: session.uid,
+										'to'		: roomId,
+										'text'		: msg,
+										'mentions'	: mentions.join(),
+										'timestamp'	: timestamp,
+									});
+									// add the message id to the db chatlog
+									client2.zadd('chatlog:'+roomId, timestamp, mid);
+									
+									// @mentions send persistent notifications
+									for (var i = 0; i < mentions.length; i++) {
+										var id = mentions[i];
+										client2.zadd('mentions:'+id, timestamp, mid);
+										
+										// send SMS
+										helper.mentionSMS(id, mid);
+									}
+									
+									// @mentions send temporary notifications
+									var othersockets = getSockets(mentions);
+									for (var i = 0; i < othersockets.length; i++) {
+										othersockets[i].emit('command', 'mention', room, user, msg);
+									};
+								} else {
+									error(err, socket, 'message');
 								}
-								
-								// @mentions send temporary notifications
-								var othersockets = getSockets(mentions);
-								for (var i = 0; i < othersockets.length; i++) {
-									othersockets[i].emit('mention', room, user, msg);
-								};
-							} else {
-								error(err, socket, 'message');
-							}
-						});
+							});
+						}
 					});
 				});
 			});
@@ -778,19 +831,22 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('get commands', uid, filter, roomId);
 		
 		helper.getUsers([uid], function(mapping) {
+			console.log(mapping);
 			if (Object.keys(mapping).length) {
 				var user = mapping[uid];
 				var commands = [];
 				var isGSI = false;
-				
-				for (var i = 0; i < user.gsirooms.length; i++){
-					if (user.gsirooms[i] == roomId){
+				var gsirooms = user.gsirooms.split(',');
+				for (var i = 0; i <  gsirooms.length; i++){
+					if (gsirooms[i] == roomId){
 						isGSI = true;
 						break;
 					}
 				}
+				
+				// COMMANDLIST
 				// kick, ban, warn, unban
-				if (isGSI || user.special <= SPECIAL_ADMIN) {
+				if (isGSI || (user.special > 0 && user.special <= SPECIAL_ADMIN)) {
 					commands = commands.concat({
 						name: 			'KICK',
 						description: 	'Boots the @users from the room. The @users can join back immediately.',
@@ -810,7 +866,7 @@ io.sockets.on('connection', function (socket) {
 					});
 				}
 				
-				if (user.special <= SPECIAL_ADMIN) {
+				if (user.special > 0 && user.special <= SPECIAL_ADMIN) {
 					commands = commands.concat({
 						name: 			'ADMIN',
 						description: 	'Gives administrator priviledges to the @users.',
@@ -818,6 +874,10 @@ io.sockets.on('connection', function (socket) {
 					}, {
 						name: 			'GSI',
 						description: 	'Gives GSI priviledges to the @users.',
+						type: 			'ADMIN',
+					}, {
+						name: 			'DEMOTE',
+						description: 	'Removes all priviledges from the @users.',
 						type: 			'ADMIN',
 					});
 				}

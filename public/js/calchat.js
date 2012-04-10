@@ -211,7 +211,7 @@ function getotherfor(privateRoom, uid) {
 
 // helper function to pop up a notification
 // type can be 0-3, 0 being positive and 3 being negative
-function notify(type, title, body, callToAction, isButton, corner) {
+function notify(type, title, body, callToAction, hasButton, corner) {
 	var alertType = 'alert';
 	var buttonType = 'btn-warning';
 	switch(type) {
@@ -239,7 +239,7 @@ function notify(type, title, body, callToAction, isButton, corner) {
 		alert.addClass('corner-alert');
 	}
 
-	if (callToAction && isButton) {
+	if (callToAction && hasButton) {
 		callToAction.addClass(buttonType);
 	}
 

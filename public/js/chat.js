@@ -19,8 +19,15 @@ var History = window.History;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
-function debug(msg) {
-	// console.log(msg);
+function debug() {
+	function inner() {
+		for(var i = 0; i < arguments.length; i++) {
+			console.log(arguments[i]);
+		}
+	}
+	console.log('--');
+	inner.apply(null, arguments);
+	console.log('--');
 }
 
 // on connection to the server
@@ -133,61 +140,77 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	);
 });
 
-// server alerts client of an @mention
-socket.on('mention', function(room, by, msg) {
-	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+room.id).text('Go to '+room.pretty);
+socket.on('command', function(command, room, by, msg) {
+	debug('command',command, room, by, msg);
+	
+	var buttontext = null;
+	var buttonlink = null;
+	
+	var type = 0;
+	var title = null;
+	var text = by.name+': '+msg;
+	
+	// COMMANDLIST
+	switch(command.toUpperCase()) {
+		case 'MENTION':
+		buttontext = 'Go to '+room.pretty;
+		buttonlink = '/chat/'+room.url;
+		type = 0;
+		title = by.name+' mentioned you in '+room.pretty+'!';
+		break;
+		case 'FORGIVE':
+		buttontext = 'Go to '+room.pretty;
+		buttonlink = '/chat/'+room.url;
+		type = 0;
+		title = by.name+' has forgiven you';
+		break;
+		case 'ADMIN':
+		buttontext = 'Go to '+room.pretty;
+		buttonlink = '/chat/'+room.url;
+		type = 1;
+		title = by.name+' made you ADMIN in '+room.pretty+'!';
+		break;
+		case 'GSI':
+		buttontext = 'Go to '+room.pretty;
+		buttonlink = '/chat/'+room.url;
+		type = 1;
+		title = by.name+' made you GSI in '+room.pretty+'!';
+		break;
+		case 'DEMOTE':
+		type = 1;
+		title = by.name+' demoted you in '+room.pretty;
+		break;
+		case 'KICK':
+		
+		if (room.id == current.id)
+			$('#close').click();
+		
+		buttontext = 'Take me back I\'ve learned my lesson';
+		buttonlink = '/chat/'+room.url;
+		type = 2;
+		title = 'You are temporarily kicked from '+room.pretty;
+		break;
+		case 'WARN':
+		type = 2;
+		title = 'You are temporarily banned from '+room.pretty;
+		break;
+		case 'BAN':
+		type = 3;
+		title = 'You are permanently banned from '+room.pretty;
+		break;
+		default: return;
+	}
+	
+	var callToAction = null;
+	if (buttonlink && buttontext) {
+		callToAction = $('<a>').addClass('btn').attr('href', buttonlink).text(buttontext);
+	}
+	var hasButton = callToAction != null;
+	var corner = true;
+	
+	debug('notify', type, title, text, callToAction, hasButton, corner);
 	sidebar.append(
-		notify(0,
-			by.name+' mentioned you in '+room.pretty+'!',
-			'Message: '+msg,
-			callToAction,
-			true,
-			true
-		)
-	);
-});
-
-// server alerts client of a kick
-socket.on('kick', function(from, by, msg) {
-	// kick self from current room
-	if (from.id == current.id)
-		$('#close').click();
-	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+from.id).text('Take me back I\'ve learned my lesson');
-	sidebar.append(
-		notify(1,
-			'You are temporarily kicked from '+from.pretty,
-			by.name+': '+msg,
-			callToAction,
-			true,
-			true
-		)
-	);
-});
-
-// server alerts client of a warn
-socket.on('warn', function(from, by, msg) {
-	sidebar.append(
-		notify(2,
-			'You are temporarily banned from '+from.pretty,
-			by.name+': '+msg, 
-			null,
-			false,
-			true
-		)
-	);
-});
-
-// server alerts client of a ban
-socket.on('ban', function(from, by, msg) {
-	sidebar.append(
-		notify(3,
-			'You are permanently banned from '+from.pretty,
-			by.name+': '+msg,
-			null,
-			false,
-			true
-		)
-	);
+		notify(type, title, text, callToAction, hasButton, corner));
 });
 
 // server alerts client of a message
@@ -457,7 +480,7 @@ $(document).ready(function () {
 			} else if (search == '/' && start == 0) { // we are doing typeahead for commands
 				socket.emit('get commands', filter, current.id, function(commands) {
 					
-					if (!commands.length) {
+					if (!commands.length && filter.length) {
 						$('#message').data('filter-empty', filter);
 					} else {
 						$('#message').data('filter-empty', null);
@@ -524,8 +547,11 @@ $(document).ready(function () {
 			.focus()
 			.get(0).setSelectionRange(caretPosition,caretPosition);
 
-			// use associative array for de-duplication
-			$('#message').data('mentions')[item.id] = null;
+			// save mention
+			if (item.type == '@') {
+				// use associative array for de-duplication
+				$('#message').data('mentions')[item.id] = null;
+			}
 		}
 	});
 

@@ -68,7 +68,9 @@ function sendSMS(number, message, opts, callback) {
 	console.log('number: '+number);
 	console.log('message: '+message);
 	// uses twilio library
-	phone.sendSms(number, message, opts, callback);
+	if (number) {
+		phone.sendSms(number, message, opts, callback);
+	}
 }
 
 // helper function to send multiple SMS notifications
