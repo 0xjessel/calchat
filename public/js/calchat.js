@@ -117,9 +117,9 @@ function renderChatMessage(entry, mapping) {
 
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
+			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), label, ': '),
-			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid),
-			$('<div>').addClass('timestamp').append($('<span>').append(new Date(parseInt(timestamp)).toLocaleTimeString()))
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)
 		);
 		return element;
 	}

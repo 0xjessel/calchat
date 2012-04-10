@@ -86,7 +86,6 @@ p.message a.from:hover {
 }
 
 p.message {
-	position: relative;
 	word-wrap: break-word;
 }
 
