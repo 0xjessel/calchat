@@ -65,30 +65,32 @@ h1, h2, h3 {
 	vertical-align:initial;
 }
 
-.room-pretty {
-	font-weight: bold;
-}
-
-.typeahead-container {
+div.typeahead-container {
 	height: 37px;
 	position: relative;
 }
 
-.typeahead-firstline {
+span.typeahead-firstline {
+	font-weight: bold;
 }
 
-.typeahead-secondline {
-}
-
-.typeahead-main {
+div.typeahead-main {
 	display: inline-block;
 	margin-left: 24px;
+}
+
+div.typeahead-main-left {
+	display: inline-block;
 }
 
 .typeahead-icon {
 	position: absolute;
 	top:50%;
 	margin-top:-7px;
+}
+
+.typeahead-right {
+	float: right;
 }
 
 .chats-icon {

@@ -31,9 +31,7 @@ redis.debug_mode = false;
 // for the user: special field
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
-
-// commands
-var commands = ['KICK', 'WARN', 'BAN', 'UNBAN', 'ADMIN', 'GSI'];
+var SPECIAL_ADMIN		= 2;
 
 /**
 * Facebook Connect
@@ -814,13 +812,60 @@ io.sockets.on('connection', function (socket) {
 	});
 	
 	// gives possible commands for client
-	socket.on('get commands', getCommands);
-	function getCommands(filter, roomId, callback) {
-		helper.debug('get commands', filter, roomId);
+	socket.on('get commands', function(filter, roomId, callback) {
+		getCommands(filter, socket.uid, roomId, callback);
+	});
+	function getCommands(filter, uid, roomId, callback) {
+		helper.debug('get commands', uid, filter, roomId);
 		
-		
-		
-		callback(commands);
+		getUsers([uid], function(mapping) {
+			if (Object.keys(mapping).length) {
+				var user = mapping[uid];
+				var commands = [];
+				var isGSI = false;
+				
+				for (var i = 0; i < user.gsirooms.length; i++){
+					if (user.gsirooms[i] == roomId){
+						isGSI = true;
+						break;
+					}
+				}
+				// kick, ban, warn, unban
+				if (isGSI || user.special <= SPECIAL_ADMIN) {
+					commands = commands.concat({
+						name: 			'KICK',
+						description: 	'Boots the @users from the room. The @users can join back immediately.',
+						type: 			'GSI',
+					}, {
+						name: 			'WARN',
+						description: 	'Temporarily silences the @users. The @users can still view messages. The @users can speak again after 5 minutes.',
+						type: 			'GSI',
+					}, {
+						name: 			'BAN',
+						description: 	'Permanently silences the @users. The @users can still view messages. The @users can never speak again.',
+						type: 			'GSI',
+					}, {
+						name: 			'FORGIVE',
+						description: 	'Allows the @users to talk again.',
+						type: 			'GSI',
+					});
+				}
+				
+				if (user.special <= SPECIAL_ADMIN) {
+					commands = commands.concat({
+						name: 			'ADMIN',
+						description: 	'Gives administrator priviledges to the @users.',
+						type: 			'ADMIN',
+					}, {
+						name: 			'GSI',
+						description: 	'Gives GSI priviledges to the @users.',
+						type: 			'ADMIN',
+					});
+				}
+				commands = commands.filter(function(command) { return command.name.indexOf(filter) == 0});
+				callback(commands);
+			}
+		});
 	};
 	
 	// client sets his phone number

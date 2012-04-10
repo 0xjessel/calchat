@@ -1,5 +1,10 @@
 var socket = io.connect();
 
+// for user.special field
+var SPECIAL_NONE		= 0;
+var SPECIAL_FOUNDER		= 1;
+var SPECIAL_ADMIN		= 2;
+
 $(document).ready(function () {
 	var addChatForm = $('.navbar-search');
 	// addChatInput includes the input form in /dashboard 
@@ -37,16 +42,16 @@ $(document).ready(function () {
 					}
 
 					var firstLine = $('<div>').addClass('typeahead-firstline').append(
-						$('<span>').append('<p>').addClass('room-pretty').text(pretty));
-					var secondLine = $('<div>').addClass('typeahead-secondline').append('<p>').addClass('room-title').text(title);
+						$('<span>').addClass('typeahead-firstline').append(pretty));
+					var secondLine = $('<div>').addClass('typeahead-secondline').addClass('typeahead-secondline').append(title);
 					var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);					
 					var icon = getIcon(room.type).addClass('typeahead-icon');
 					
-					var html = $('<div>').append($('<div>').addClass('typeahead-container').append(
+					var html = $('<div>').addClass('typeahead-container').append(
 						icon,
-						main));
+						main);
 
-					room.value = html.html();
+					room.value = $('<div>').append(html.clone()).html();
 				};
 				typeahead.process(rooms);
 			});
@@ -79,10 +84,6 @@ $(document).ready(function () {
 function stripLow(string) {
 	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
 }
-
-// for user.special field
-var SPECIAL_NONE		= 0;
-var SPECIAL_FOUNDER		= 1;
 
 // helper function to render individual chat messages
 // shared by archives.js and chat.js
@@ -167,11 +168,30 @@ function getLabel(fromUid, toRoom, mapping) {
 		};
 		special = mapping[fromUid].special;
 	}
-	var label = $('<span>').addClass('label').css('display', 'none');
 	if (special == SPECIAL_FOUNDER) {
-		label.addClass('label-inverse').text('FOUNDER').show();
+		return getLabelOf('FOUNDER');
+	} else if (special == SPECIAL_ADMIN) {
+		return getLabelOf('ADMIN');
 	} else if (gsi) {
+		return getLabelOf('GSI');
+	} else {
+		return getLabelOf(null);
+	}
+}
+
+function getLabelOf(type) {
+	var label = $('<span>').addClass('label').css('display', 'none');
+	
+	switch(type) {
+		case 'GSI':
 		label.addClass('label-warning').text('GSI').show();
+		break;
+		case 'ADMIN':
+		label.addClass('label-important').text('ADMIN').show();
+		break;
+		case 'FOUNDER':
+		label.addClass('label-inverse').text('FOUNDER').show();
+		break;
 	}
 	return label;
 }

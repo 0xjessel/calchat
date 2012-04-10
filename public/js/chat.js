@@ -375,7 +375,7 @@ $(document).ready(function () {
 	});
 	
 	// start autocompleting the user names when encountering a @
-	var limit = 5;
+	var limit = 10;
 	$('#message').typeahead({
 		source: function(typeahead, query) {
 			var msg = this.query;
@@ -429,7 +429,7 @@ $(document).ready(function () {
 						users.push({
 							id:		id,
 							value:	html.html(),
-							name:	name,
+							replacement:	name,
 							type: 	'@',
 						});
 					}
@@ -447,12 +447,23 @@ $(document).ready(function () {
 					$('#message').data('search', search);
 					
 					var commandobjects = [];
+					console.log(commands);
 					for (var i = 0; i < commands.length; i++) {
 						var command = commands[i];
+						
+						var firstLine = $('<div>').addClass('typeahead-firstline').append(
+							$('<span>').addClass('typeahead-firstline').append(command.name));
+						var secondLine = $('<div>').addClass('typeahead-secondline').addClass('typeahead-secondline').append(command.description);
+						var main = $('<div>').addClass('typeahead-main-left').append(firstLine, secondLine);					
+						var icon = getLabelOf(command.type).addClass('typeahead-right');
+						
+						var html = $('<div>').addClass('typeahead-container').append(
+							main, icon);
+						
 						commandobjects.push({
-							name: 		command,
-							value: 		command,
-							type: 		'/',
+							replacement: 	'/'+command.name+' @',
+							value: 			$('<div>').append(html.clone()).html(),
+							type: 			'/',
 						});
 					};
 					
@@ -467,15 +478,22 @@ $(document).ready(function () {
 			return true;
 		},
 		
+		highlighter: function(item) {
+			return item;
+		},
+		
 		onselect: function(item) {			
 			var msg = this.query;
 			// get caret position
 			// for some reason $('#message').get(0).selectionStart becomes all screwed up
 			var end = $('#message').data('selectionStart');
-			// get position of '@'
-			var start = msg.substring(0, end).lastIndexOf('@');
+			// get position of '@' or '/'
+			var startmention = msg.substring(0, end).lastIndexOf('@');
+			var startcommand = msg.substring(0, end).lastIndexOf('/');
 			
-			var replacement = item.name;
+			var start = startmention > startcommand ? startmention : startcommand;
+			
+			var replacement = item.replacement;
 			
 			var transformedMsg = msg.substring(0, start) + replacement + msg.substring(end);
 
