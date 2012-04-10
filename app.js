@@ -32,6 +32,9 @@ redis.debug_mode = false;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 
+// commands
+var commands = ['KICK', 'WARN', 'BAN', 'UNBAN', 'ADMIN', 'GSI'];
+
 /**
 * Facebook Connect
 */
@@ -809,6 +812,16 @@ io.sockets.on('connection', function (socket) {
 			}
 		});
 	});
+	
+	// gives possible commands for client
+	socket.on('get commands', getCommands);
+	function getCommands(filter, roomId, callback) {
+		helper.debug('get commands', filter, roomId);
+		
+		
+		
+		callback(commands);
+	};
 	
 	// client sets his phone number
 	// uid: client's id

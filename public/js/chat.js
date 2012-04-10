@@ -383,9 +383,11 @@ $(document).ready(function () {
 			var end = $('#message').get(0).selectionStart;
 			$('#message').data('selectionStart', end);
 			// get position of '@'
-			var start = msg.substring(0, end).lastIndexOf('@');
-
-			$('#message').data('');
+			var startmention = msg.substring(0, end).lastIndexOf('@');
+			var startcommand = msg.substring(0, end).lastIndexOf('/');
+			
+			var start = startmention > startcommand ? startmention : startcommand;
+			var search = startmention > startcommand ? '@' : '/';
 
 			// quit if no '@'
 			if (start == -1) {
@@ -396,40 +398,67 @@ $(document).ready(function () {
 			// the text in between '@' and caret position
 			var filter = msg.substring(start+1, end).toUpperCase();
 
-			if (filter.indexOf($('#message').data('filter-empty')) == 0) {
+			if (filter.indexOf($('#message').data('filter-empty')) == 0 && search == $('#message').data('search')) {
 				typeahead.process([]);
 				return;
 			}
 			
-			// query db for all users matching the filter
-			getUsers(current.id, filter, limit, function(mapping, online, offline) {
-				online.sort();
-				offline.sort();
-				var ids = online.concat(offline);
+			// we are doing typeahead for names
+			if (search == '@') {
+				// query db for all users matching the filter
+				getUsers(current.id, filter, limit, function(mapping, online, offline) {
+					online.sort();
+					offline.sort();
+					var ids = online.concat(offline);
 
-				if (!ids.length) {
-					$('#message').data('filter-empty', filter);
-				} else {
-					$('#message').data('filter-empty', null);
-				}
+					if (!ids.length) {
+						$('#message').data('filter-empty', filter);
+					} else {
+						$('#message').data('filter-empty', null);
+					}
+					$('#message').data('search', search);
+						
+					var users = [];
+						
+					for (var i = 0; i < ids.length; i++) {
+						var id = ids[i];
+						var name = mapping[id].name;
+						var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
+						var html = $('<div>').append($('<img class="avatar" width="30px" height="30px" src='+pic+'>')).append(name);
+						
+						users.push({
+							id:		id,
+							value:	html.html(),
+							name:	name,
+							type: 	'@',
+						});
+					}
 					
-				var users = [];
+					typeahead.process(users);
+				});
+			} else if (search == '/') { // we are doing typeahead for commands
+				socket.emit('get commands', filter, current.id, function(commands) {
 					
-				for (var i = 0; i < ids.length; i++) {
-					var id = ids[i];
-					var name = mapping[id].name;
-					var pic = 'https://graph.facebook.com/'+id+'/picture?type=square';
-					var html = $('<div>').append($('<img class="avatar" width="30px" height="30px" src='+pic+'>')).append(name);
+					if (!commands.length) {
+						$('#message').data('filter-empty', filter);
+					} else {
+						$('#message').data('filter-empty', null);
+					}
+					$('#message').data('search', search);
 					
-					users.push({
-						id:		id,
-						value:	html.html(),
-						name:	name,
-					});
-				}
-				
-				typeahead.process(users);
-			});
+					var commandobjects = [];
+					for (var i = 0; i < commands.length; i++) {
+						var command = commands[i];
+						commandobjects.push({
+							name: 		command,
+							value: 		command,
+							type: 		'/',
+						});
+					};
+					
+					typeahead.process(commandobjects);
+				});
+			}
 		},
 		
 		items: limit,
