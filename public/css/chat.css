@@ -82,7 +82,7 @@ p.message a.from:hover {
 	margin-left:5px;
 	margin-right:2px;
 	margin-top:5px;
-	vertical-align:top;
+	vertical-align:top !important;
 }
 
 p.message {
