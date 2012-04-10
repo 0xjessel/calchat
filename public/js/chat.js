@@ -119,7 +119,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	}
 
 	if (privateMsgs.indexOf(messageEntry.from) != -1) {
-		var msg = $('.private-msg');
+		var msg = $('.alert-msg');
 		if (msg.length) {
 			msg.text(messageEntry.text);
 		}
@@ -131,6 +131,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+roomId).text('Go to Private Chat');
 	sidebar.append(
 		notify(0,
+			'notify-'+messageEntry.from,
 			'New Private Chat from '+mapping[messageEntry.from].name+'!',
 			messageEntry.text,
 			callToAction,
@@ -147,6 +148,7 @@ socket.on('command', function(command, room, by, msg) {
 	var buttonlink = null;
 	
 	var type = 0;
+	var alertClass = 'alert-command';
 	var title = null;
 	var text = by.name+': '+msg;
 	
@@ -208,9 +210,9 @@ socket.on('command', function(command, room, by, msg) {
 	var hasButton = callToAction != null;
 	var corner = true;
 	
-	debug('notify', type, title, text, callToAction, hasButton, corner);
+	debug('notify', type, alertClass, title, text, callToAction, hasButton, corner);
 	sidebar.append(
-		notify(type, title, text, callToAction, hasButton, corner));
+		notify(type, alertClass, title, text, callToAction, hasButton, corner));
 });
 
 // server alerts client of a message

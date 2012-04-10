@@ -211,7 +211,7 @@ function getotherfor(privateRoom, uid) {
 
 // helper function to pop up a notification
 // type can be 0-3, 0 being positive and 3 being negative
-function notify(type, title, body, callToAction, hasButton, corner) {
+function notify(type, alertClass, title, body, callToAction, hasButton, corner) {
 	var alertType = 'alert';
 	var buttonType = 'btn-warning';
 	switch(type) {
@@ -233,7 +233,7 @@ function notify(type, title, body, callToAction, hasButton, corner) {
 			break;
 	}
 	
-	var alert = $('<div>').addClass('alert').addClass(alertType).addClass('fade in');
+	var alert = $('<div>').addClass('alert').addClass(alertClass).addClass(alertType).addClass('fade in');
 
 	if (corner) {
 		alert.addClass('corner-alert');
@@ -245,7 +245,7 @@ function notify(type, title, body, callToAction, hasButton, corner) {
 
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
 		, $('<h4>').addClass('alert-heading').text(title)
-		, $('<p>').text(body).addClass('private-msg')
+		, $('<p>').text(body).addClass('alert-msg')
 		, (callToAction) ? 
 		$('<p>').append(callToAction) :
 		null);
