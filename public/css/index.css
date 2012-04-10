@@ -10,10 +10,9 @@
 }
 
 #why {
-	vertical-align:middle;
+	top:25%;
 	margin-left:10px;
 	position:absolute;
-	bottom:0px
 }
 
 @media only screen and (max-width:600px) {
