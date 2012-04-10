@@ -57,7 +57,7 @@ function getArchive(start, finish) {
 		for (timestamp in logs) {
 			// not showing timestamp for now
 			var entry = logs[timestamp];
-			var element = renderChatMessage(entry, mapping);
+			var element = renderChatMessage(entry, mapping, false);
 			lines.append(element);
 		}
 		chatDiv.scrollTop(chatDiv[0].scrollHeight);	

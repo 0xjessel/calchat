@@ -89,6 +89,15 @@ p.message {
 	word-wrap: break-word;
 }
 
+span.text a.mention {
+	font-weight: bold;
+}
+
+span.text a.mention:hover {
+	text-decoration: none;
+    font-weight: bold;
+}
+
 .timestamp {
 	display: inline-block;
 	float:right;
