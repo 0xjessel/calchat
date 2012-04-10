@@ -12,13 +12,22 @@ html(lang='en')
     var uid = #{user.id};
     var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
     var hasPhoneNum = #{hasPhoneNum}
-  script(src='/js/libs/jquery.history.js')
+  script
+    Modernizr.load({
+      test: Modernizr.history,
+      nope: '/js/libs/jquery.history.js',
+      complete: function () {
+        if (Modernizr.history) {
+          window.History = window.history;
+        }
+      }
+    });
   script(src='/js/geo.js')
   script(src='/js/libs/bootstrap/alert.js')
   script(src='/js/libs/bootstrap/modal.js')
   script 
     if (window.location.hash) {
       window.location.hash = '';
-      History.replaceState(null, null, window.location.href.slice(0, -1));
+      window.History.replaceState(null, null, window.location.href.slice(0, -1));
     }
   script(src='/js/dashboard.js')
