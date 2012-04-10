@@ -13,7 +13,6 @@ var updateTitleId;
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
-var History = window.History;
 
 // for user.special field
 var SPECIAL_NONE		= 0;
@@ -319,7 +318,7 @@ function renderChatlogs (logs, mapping, room) {
 	$('.chat-title h2').text(pretty);
 	$('.chat-title h3').text(title);
 	
-	History.pushState(null, null, '/chat/'+room.url);			
+	window.History.replaceState(null, null, '/chat/'+room.url);			
 	
 	var newTitle = pretty;
 	document.title = newTitle;

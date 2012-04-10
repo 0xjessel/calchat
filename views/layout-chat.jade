@@ -9,21 +9,29 @@ html(lang='en')
   include includes/footer  
   script(src='/js/libs/bootstrap/alert.js')
   script(src='/js/libs/bootstrap/tooltip.js')
-  script(src='/js/libs/jquery.history.js')
-  script 
+  script
+    Modernizr.load({
+      test: Modernizr.history,
+      nope: '/js/libs/jquery.history.js',
+      complete: function () {
+        if (Modernizr.history) {
+          window.History = window.history;
+        }
+      }
+    });
   if loggedIn
     script
       if (window.location.hash) {
         window.location.hash = '';
-        History.replaceState(null, null, window.location.href.slice(0, -1));
+        window.History.replaceState(null, null, window.location.href.slice(0, -1));
       }
-      History.pushState(null, null, '/dashboard');
+      window.History.replaceState(null, null, '/dashboard');
       var uid = #{user.id};
       var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
       var rooms = !{JSON.stringify(rooms)}
   else 
     script
-      History.pushState(null, null, '/');
+      window.History.pushState(null, null, '/');
       var uid = null
       var name = null
       var rooms = !{JSON.stringify(rooms)}
