@@ -1,6 +1,7 @@
 /* CSS Document */
 .fblogin {
 	float: left;
+	position:relative;
 }
 
 .features {
@@ -9,8 +10,10 @@
 }
 
 #why {
-	display: inline;
-	height:47px; line-height:47px;
+	vertical-align:middle;
+	margin-left:10px;
+	position:absolute;
+	bottom:0px
 }
 
 @media only screen and (max-width:600px) {
