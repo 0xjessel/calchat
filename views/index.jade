@@ -10,10 +10,15 @@ div.container-fluid
           p hope you're enjoying CalChat! 
         else 
           h2 Welcome to CalChat!
-          p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or building in chatrooms all over campus (and more!). built by cal students for cal students.
+          p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or builtilding in chatrooms all over campus (and more!). built by cal students for cal students.
         if !loggedIn
-          p
-            a(href='/auth/facebook', rel="tooltip", title="we will never post to your fb without your permission. we only use fb connect to discourage spamming and trolling.")#login
+          div.fblogin
+            a(href='/auth/facebook')#login
+            a(href="#", rel="tooltip", title="we will never post to your fb without your permission. we only use fb connect to discourage spamming and trolling.")#why &nbsp;&nbsp;[why?]
+          div.features
+            br
+            h2
+              a(href='/features').features check out some of our features! &raquo;
 
 
 

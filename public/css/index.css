@@ -1,10 +1,24 @@
 /* CSS Document */
+.fblogin {
+	float: left;
+}
+
+.features {
+	clear: both;
+	color: dimgrey;
+}
 
 #login {
-	display: block;
+	float: left;
+	display: inline;
 	width: 280px;
 	height: 47px;
 	background: url('../img/fb-connect.png') bottom;
+}
+
+#why {
+	display: inline;
+	height:47px; line-height:47px;
 }
 
 #login:hover {
