@@ -19,7 +19,7 @@ client2.select(2);
 function mentionSMS(to, mid) {
 	// get to's phone number
 	client2.hget('user:'+to, 'phone', function (err, reply) {
-		if (!err && !reply) {
+		if (!err && reply != '') {
 			var phoneNum = reply;	
 			// fetch the message object
 			client2.hmget('message:'+mid, 'from', 'to', 'text', function (err, replies) {
@@ -27,18 +27,23 @@ function mentionSMS(to, mid) {
 					var fromUid = replies[0];
 					// fetch nickname of the user that generated the notification
 					client2.hget('user:'+fromUid, 'nick', function (err, reply) {
-						if (!err && !reply) {
+						if (!err && reply != '') {
 							var from = reply;
 							var room = replies[1];
+							var roomUrl = room;
+							// change room text if private chat
+							if (room.split(':').length == 2) {
+								room = 'a private chat';
+							}
 							var txt = replies[2];
-							var footerLink = " - calchat.net:3000/chat/"+room;
-							var msg = 'CalChat - '+from+' mentioned you in '+room+'!  Message: ';
-							var msgSize = 160 - msg.length;							
+							var footerLink = " - calchat.net:3000/chat/"+roomUrl;
+							var msg = from+' mentioned you in '+room+'!  Message: ';
+							var msgSize = 160 - msg.length - footerLink.length;							
 							if (txt.length > msgSize) {
 								txt = txt.substring(0, msgSize - 2);
 								txt = txt+'..';
 							}
-							msg = msg+txt;
+							msg = msg+txt+footerLink;
 							// call helper function
 							sendSMS(phoneNum, msg, null, function (sms) {
 								console.log('done');

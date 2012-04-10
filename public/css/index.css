@@ -8,28 +8,57 @@
 	color: dimgrey;
 }
 
-#login {
-	float: left;
-	display: inline;
-	width: 280px;
-	height: 47px;
-	background: url('../img/fb-connect.png') bottom;
-}
-
 #why {
 	display: inline;
 	height:47px; line-height:47px;
 }
 
-#login:hover {
-	background-position: 0 0;
+@media only screen and (max-width:600px) {
+	#login {
+		float: left;
+		display: block;
+		width: 233px;
+		height: 40px;
+		background: url('../img/fb-connect-lg.png');
+	}
 }
 
-h6 {
-	color:grey;
-	text-transform:lowercase;
+@media only screen and (max-width:400px) {
+	#login {
+		float: left;
+		display: block;
+		width: 129px;
+		height: 39px;
+		background: url('../img/fb-connect-med.png');
+	}
+}
+
+@media screen and (min-width:600px) {
+	#login {
+		float: left;
+		display: block;
+		width: 280px;
+		height: 47px;
+		background: url('../img/fb-connect.png') bottom;
+	}
+	#login:hover {
+		background-position: 0 0;
+	}
+}
+
+@media only screen and (min-width:320px) and (max-width:480px) {
+	.carousel {
+		display:none !important;
+	}	
 }
 
 .hero-unit {
 	background-image: url('/img/grid_noise.png');
+}
+
+/* stupid hero-unit p overriding this css property */
+.carousel-caption p {
+	color:white;
+	font-size:13px;
+	line-height:18px;
 }

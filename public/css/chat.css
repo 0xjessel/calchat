@@ -82,23 +82,16 @@ p.message a.from:hover {
 	margin-left:5px;
 	margin-right:2px;
 	margin-top:5px;
-	vertical-align:top;
+	vertical-align:top !important;
 }
 
 p.message {
 	position: relative;
 }
 
-p.message > span.mentions {
-	position: absolute;
-	right: 10px;
-	visibility: hidden;
-}
-
 .timestamp {
 	display: inline-block;
-	position: absolute;
-	right: 10px;
+	float:right;
 	color: dimgrey;
 	font-size: 10px;
 }
