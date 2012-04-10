@@ -413,7 +413,11 @@ $(document).ready(function () {
 	});
 
 	$('#message').focus(function() {
-		document.title = current.pretty;
+		if (current.type == "private") {
+			document.title = prettyfor(current, uid);
+		} else {
+			document.title = current.pretty;
+		}
 		clearInterval(updateTitleId);
 	})
 	
