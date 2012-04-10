@@ -97,8 +97,7 @@ p.message > span.mentions {
 
 .timestamp {
 	display: inline-block;
-	position: absolute;
-	right: 10px;
+	float:right;
 	color: dimgrey;
 	font-size: 10px;
 }
