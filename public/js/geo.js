@@ -1,9 +1,11 @@
 var socket = io.connect();
 
-if (Modernizr.geolocation) {
-	navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
-} else {
-	yqlgeo.get('visitor', normalize_yql_response);
+function getGeo() {
+	if (Modernizr.geolocation) {
+		navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);
+	} else {
+		yqlgeo.get('visitor', normalize_yql_response);
+	}
 }
 
 function handle_errors(error) {

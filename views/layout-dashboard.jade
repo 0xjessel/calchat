@@ -13,7 +13,7 @@ html(lang='en')
     var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
     var hasPhoneNum = #{hasPhoneNum}
   script
-    Modernizr.load({
+    Modernizr.load([{
       test: Modernizr.history,
       nope: '/js/libs/jquery.history.js',
       complete: function () {
@@ -21,8 +21,15 @@ html(lang='en')
           window.History = window.history;
         }
       }
-    });
-  script(src='/js/geo.js')
+    }, 
+    {
+      load: '/js/geo.js',
+      test: Modernizr.geolocation,
+      nope: '/js/libs/yqlgeo.js',
+      complete: function() {
+        getGeo();
+      }
+    }]);
   script(src='/js/libs/bootstrap/alert.js')
   script(src='/js/libs/bootstrap/modal.js')
   script 
