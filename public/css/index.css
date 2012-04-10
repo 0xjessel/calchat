@@ -36,11 +36,13 @@
 	}	
 }
 
-h6 {
-	color:grey;
-	text-transform:lowercase;
-}
-
 .hero-unit {
 	background-image: url('/img/grid_noise.png');
+}
+
+/* stupid hero-unit p overriding this css property */
+.carousel-caption p {
+	color:white;
+	font-size:13px;
+	line-height:18px;
 }
