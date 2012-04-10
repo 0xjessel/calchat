@@ -96,36 +96,6 @@ p.message {
 	font-size: 10px;
 }
 
-#lines p:nth-child(even) div.message-mentions {
-	background: #fafafa;
-}
-
-#lines p div.message-mentions {
-	background: #eee;
-}
-
-span.text a.mention {
-	font-weight: bold;
-}
-
-span.text a.mention:hover {
-	text-decoration: none;
-	font-weight: bold;
-}
-
-div.message-mentions a.mention {
-	color: dimgrey;
-	font-weight: bold;
-	font-size: 75%;
-}
-
-div.message-mentions a.mention:hover {
-	text-decoration: none;
-	color: darkgrey;
-	font-weight: bold;
-	font-size: 75%;
-}
-
 .chat-title .title-text {
 	display: inline;
 	vertical-align: baseline;

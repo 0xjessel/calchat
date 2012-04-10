@@ -103,21 +103,10 @@ function renderChatMessage(entry, mapping) {
 		return $('<p class="system-message">').append(msg);
 	} else {
      	var from = mapping[fromUid].name;
-		var mentionsElement = $('<div>').addClass('message-mentions').attr('id', 'mentions'+mid);
 
 		var totalWidth = 0;
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
-
-			var element = $('<span>').addClass('mention').attr('id', id).append(
-				getUserLink(id).addClass('mention').text(' @'+mapping[id].name+' '));
-
-			totalWidth += $('#'+id).outerWidth();
-			if (i == 0) {
-				element.addClass('first');
-			}
-
-			mentionsElement.append(element);
 
 			var link = $('<div>').append(
 				getUserLink(id).addClass('mention').text('@'+mapping[id].name).clone()).html();
@@ -129,16 +118,9 @@ function renderChatMessage(entry, mapping) {
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
 			$('<span>').addClass('from').append(getUserLink(fromUid).addClass('from').append(from), label, ': '),
-			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid).hover(
-				function() {
-					$('#mentions'+mid).stop().fadeTo(400 ,0, function(){$(this).hide()});
-				}, function() {
-					$('#mentions'+mid).show().stop().fadeTo(300, 1);
-				}),
-			$('<span>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
-			$('<span>').addClass('mentions').append(mentionsElement));
-
-
+			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid),
+			$('<div>').addClass('timestamp').append($('<span>').append(new Date(parseInt(timestamp)).toLocaleTimeString()))
+		);
 		return element;
 	}
 }
