@@ -9,6 +9,7 @@ var chatDiv, sidebar;
 var selfAnnounced = false;
 var unread = {};
 var privateMsgs = [];
+var updateTitleId;
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
@@ -198,6 +199,17 @@ function message (entry, mapping) {
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
 
+		if (entry.from != uid) {
+			var title1 = mapping[entry.from].name+' messaged '+current.pretty;
+			var title2 = document.title;
+			clearInterval(updateTitleId);
+			updateTitleId = setInterval(function() {
+				window.document.title = title1;
+				title1 = title2;
+				title2 = document.title;
+			}, 2000);
+		}
+
 		scrollToBottom();
 	} else {
 		// incr badge
@@ -373,6 +385,11 @@ $(document).ready(function () {
 		}
 		return false;
 	});
+
+	$('#message').focus(function() {
+		document.title = current.pretty;
+		clearInterval(updateTitleId);
+	})
 	
 	// start autocompleting the user names when encountering a @
 	var limit = 5;
