@@ -96,7 +96,6 @@ function renderChatMessage(entry, mapping, enableLink) {
 	var timestamp = entry.timestamp;
 
 	msg = linkify(msg);
-	// msg = mentionize(msg, mapping);
 	
 	var label = getLabel(fromUid, toRoom, mapping);
 	
@@ -108,11 +107,12 @@ function renderChatMessage(entry, mapping, enableLink) {
 		var totalWidth = 0;
 		for (var i = 0; i < mentions.length; i++) {
 			var id = mentions[i];
+			if (id && id in mapping) {
+				var link = $('<div>').append(
+					getUserLink(id, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
 
-			var link = $('<div>').append(
-				getUserLink(id, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
-
-			msg = msg.replace(mapping[id].name, link);
+				msg = msg.replace(mapping[id].name, link);
+			}
 		}
 
 

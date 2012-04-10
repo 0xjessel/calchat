@@ -387,6 +387,47 @@ function isValid(roomId, callback) {
 	}
 }
 
+//ids: list of user ids
+//callback: passes a map of user ids to user objects
+function getUsers(ids, callback) {
+	debug('getUsers', ids);
+	if (!ids || !Object.keys(ids).length) {
+		callback({});
+	}
+
+	var users = {};
+	
+    // INFO
+    // this for loop is asynchronous (because of redis), so lots of things need to be done:
+    var added = 0;
+    for (var i = 0; i < ids.length; i++) {
+        // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
+        function closure() {
+        	var id = ids[i];
+        	client2.hgetall('user:'+id, function(err, user) {
+        		added++;
+        		if (!err && Object.keys(user).length) {
+            		// create a user object
+            		users[id] = {
+            			name		: user.firstname+' '+user.lastname.charAt(0),
+            			gsirooms	: user.gsirooms,
+            			special		: user.special,
+            		}
+            	} else {
+            		debug(err, 'getUsers');
+            	}
+
+            	if (added == ids.length) {
+            		// return from function when all async have processed
+            		callback(users);
+            	}
+            });
+        }
+        // immediately call the created closure
+        closure();
+    }
+}
+
 // transfer user data to session data to access in socket.io
 function postAuthenticate(req) {
 	if (req.user) {
@@ -487,6 +528,7 @@ function debug() {
 	console.log('--');
 }
 
+exports.getUsers = getUsers;
 exports.isPhoneNum = isPhoneNum;
 exports.mentionSMS = mentionSMS;
 exports.getRoomInfo = getRoomInfo;

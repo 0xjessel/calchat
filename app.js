@@ -90,7 +90,7 @@ everyauth.facebook
 		} else {
 			// there were errors getting user from db
 			promise.fail(err);
-			console.log('Error: '+err);
+			console.log('Error: '+err, 'auth');
 		}
 	});
 	return promise;
@@ -196,54 +196,13 @@ io.sockets.on('connection', function (socket) {
         for (id in ids) {
             idsList.push(id);
         }
-		
+        
 		return idsList;
     }
-    
-    //ids: list of user ids
-    //callback: passes a map of user ids to user objects
-    function getUsers(ids, callback) {
-		helper.debug('getUsers', ids);
-    	if (!ids || !Object.keys(ids).length) {
-    		callback({});
-    	}
-
-        var users = {};
-		
-        // INFO
-        // this for loop is asynchronous (because of redis), so lots of things need to be done:
-        var added = 0;
-        for (var i = 0; i < ids.length; i++) {
-            // create closure to make sure variables in one loop iteration don't overwrite the previous iterations
-            function closure() {
-                var id = ids[i];
-                client2.hgetall('user:'+id, function(err, user) {
-                	added++;
-                	if (!err && Object.keys(user).length) {
-                		// create a user object
-                		users[id] = {
-                			name		: user.firstname+' '+user.lastname.charAt(0),
-                			gsirooms	: user.gsirooms,
-                			special		: user.special,
-                		}
-                	} else {
-                		error(err, socket);
-                	}
-
-                	if (added == ids.length) {
-                		// return from function when all async have processed
-                		callback(users);
-                	}
-                });
-            }
-            // immediately call the created closure
-            closure();
-        }
-    }
 	
-	function error(err, socket) {
+	function error(err, socket, msg) {
 		socket.emit('error', err);
-		helper.debug('Error: '+err);
+		helper.debug('Error: '+err+': '+msg);
 	}
 	
 	//uids: list of user ids. exceptuid: exclude this user id
@@ -303,13 +262,13 @@ io.sockets.on('connection', function (socket) {
 								var roomId = roomIds[i];
 								
 								// mapping is needed to convert user ids to user names
-								getUsers(Object.keys(nicknames[roomId]), function(mapping) {
+								helper.getUsers(Object.keys(nicknames[roomId]), function(mapping) {
 									io.sockets.in(roomId).emit('online', roomId, mapping);
 								});
 							})();
 						}
 					} else {
-						error(err, socket);
+						error(err, socket, 'initialize');
 						callback();
 					}
 				});
@@ -319,7 +278,7 @@ io.sockets.on('connection', function (socket) {
 			getChatlog(current, null, null, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
-			getUsers(Object.keys(nicknames[current]), function(mapping) {
+			helper.getUsers(Object.keys(nicknames[current]), function(mapping) {
 				io.sockets.in(current).emit('online', current, mapping);
 			});
 		}
@@ -330,7 +289,7 @@ io.sockets.on('connection', function (socket) {
 	// callback: empty
 	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
-		getUsers(Object.keys(nicknames[room]), function(mapping) {
+		helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
 			// can only leave room if logged in
 			if (session !== undefined && session.uid !== undefined){
 				// removes the client's nickname
@@ -351,7 +310,7 @@ io.sockets.on('connection', function (socket) {
 							callback();
 						});
 					} else {
-						error(err, socket);
+						error(err, socket, 'leave room');
 						callback();
 					}
 				});
@@ -361,7 +320,7 @@ io.sockets.on('connection', function (socket) {
 	        	// broadcast new online users list
 				io.sockets.in(room).emit('online', room, mapping);
 			} else {
-				error("session.uid undefined", socket);
+				error("session.uid undefined", socket, 'leave room');
 				callback();
 			}
 		});
@@ -388,7 +347,7 @@ io.sockets.on('connection', function (socket) {
 		
 				client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
 			} else {
-				error(err, socket);
+				error(err, socket, 'remove room');
 			}
 		});	
 	});
@@ -421,7 +380,7 @@ io.sockets.on('connection', function (socket) {
 					unreads.unshift(unreads.splice(index, 1));
 					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
 				} else {
-					error(err, socket);
+					error(err, socket, 'get chatlog');
 				}
 			});
 		}
@@ -451,7 +410,7 @@ io.sockets.on('connection', function (socket) {
 					if (!err) {
 						getLogs(chatlog, callback);
 					} else {
-						error(err, socket);
+						error(err, socket, 'get chatlog');
 						callback({}, [], room);
 					}
 				});
@@ -460,7 +419,7 @@ io.sockets.on('connection', function (socket) {
 					if (!err) {
 						getLogs(chatlog, callback);
 					} else {
-						error(err, socket);
+						error(err, socket, 'get chatlog');
 						callback({}, [], room);
 					}
 				});
@@ -510,12 +469,12 @@ io.sockets.on('connection', function (socket) {
 								};
 								logs[timestamp] = entry;
 							} else {
-								error(err, socket);
+								error(err, socket, 'get chatlog');
 							}
 							
 							// when all messages have been added, callback
 							if (added == chatlog.length) {
-								getUsers(allMentions, function(mapping) {
+								helper.getUsers(allMentions, function(mapping) {
 									callback(logs, mapping, room);
 								});
 							}
@@ -531,7 +490,7 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get online', function (room) {
 		helper.debug('get online', room);
 		
-		getUsers(Object.keys(nicknames[room]), function(mapping) {
+		helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
 			// send updated online users list
 			socket.emit('online', room, mapping);
 		});
@@ -573,7 +532,7 @@ io.sockets.on('connection', function (socket) {
 					
 					// check for commands
 					var isGSI = false;
-					getUsers(mentions.concat(session.uid), function(mapping){
+					helper.getUsers(mentions.concat(session.uid), function(mapping){
 						var user = mapping[session.uid];
 						var rooms = user.gsirooms.split(',');
 						// check if client's list of gsirooms contains this room
@@ -692,14 +651,14 @@ io.sockets.on('connection', function (socket) {
 									othersockets[i].emit('mention', room, user, msg);
 								};
 							} else {
-								error(err, socket);
+								error(err, socket, 'message');
 							}
 						});
 					});
 				});
 			});
 		} else {
-			error("session.uid not defined", socket);
+			error("session.uid not defined", socket, 'message');
 		}
 	});
 
@@ -760,7 +719,7 @@ io.sockets.on('connection', function (socket) {
 								location.pretty = location.name;
 								buildings.push(location);
 							} else {
-								error(err, socket);
+								error(err, socket, 'get nearest building');
 							}
 
 							// when all locations have been retrieved, callback
@@ -772,7 +731,7 @@ io.sockets.on('connection', function (socket) {
 					closure();
 				}
 			} else {
-				error(err, socket);
+				error(err, socket, 'get nearest building');
 				callback();
 			}
 		});
@@ -791,7 +750,7 @@ io.sockets.on('connection', function (socket) {
 		// query db for users whose names start with filter
 		client2.zrangebyscore('users:'+room, helper.stringScore(filter), helper.capStringScore(filter), 'limit', 0, limit, function(err, ids) {
 			if (!err) {
-				getUsers(ids, function(users) {
+				helper.getUsers(ids, function(users) {
 					var online = [];
 					var offline = [];
 					
@@ -818,7 +777,7 @@ io.sockets.on('connection', function (socket) {
 	function getCommands(filter, uid, roomId, callback) {
 		helper.debug('get commands', uid, filter, roomId);
 		
-		getUsers([uid], function(mapping) {
+		helper.getUsers([uid], function(mapping) {
 			if (Object.keys(mapping).length) {
 				var user = mapping[uid];
 				var commands = [];
@@ -900,7 +859,7 @@ io.sockets.on('connection', function (socket) {
 						callback(rooms.slice(0, limit));
 					});
 				} else {
-					error(err, socket);
+					error(err, socket, 'get validrooms');
 					callback();
 				}
 			});
@@ -930,7 +889,7 @@ io.sockets.on('connection', function (socket) {
 						for (var i = 0; i < rooms.length; i++) {
 							(function closure() {
 								var room = rooms[i];
-								getUsers(Object.keys(nicknames[room]), function(mapping) {
+								helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
 
 									// update unreads to time of d/c
 									unreads[i] = time;
@@ -943,11 +902,11 @@ io.sockets.on('connection', function (socket) {
 						client2.hset('user:'+session.uid, 'unread', unreads.join());
 					}
 				} else {
-					error(err, socket);
+					error(err, socket, 'disconnect');
 				}
 			});
 		} else {
-			error("session.uid not defined", socket);
+			error("session.uid not defined", socket, 'disconnect');
 		}
 	});
 });

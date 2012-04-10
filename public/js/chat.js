@@ -199,7 +199,8 @@ function message (entry, mapping) {
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
 
-		if (entry.from != uid) {
+		// update chat window title
+		if (entry.from != uid && mapping && entry.from in mapping) {
 			var title1 = mapping[entry.from].name+' messaged '+current.pretty;
 			var title2 = document.title;
 			clearInterval(updateTitleId);
@@ -453,7 +454,7 @@ $(document).ready(function () {
 					
 					typeahead.process(users);
 				});
-			} else if (search == '/') { // we are doing typeahead for commands
+			} else if (search == '/' && start == 0) { // we are doing typeahead for commands
 				socket.emit('get commands', filter, current.id, function(commands) {
 					
 					if (!commands.length) {
