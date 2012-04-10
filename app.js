@@ -633,7 +633,6 @@ io.sockets.on('connection', function (socket) {
 						
 						function handleMessage() {
 							// CONTINUE only if we have not processed a command
-							
 							// deduplicate mentions
 							var temp = {};
 							for (var i = 0; i < mentions.length; i++) {
@@ -694,9 +693,9 @@ io.sockets.on('connection', function (socket) {
 										client2.zadd('mentions:'+id, timestamp, mid);
 										
 										// only send offline notifications if user is offline
-										for (room in nicknames) {
+										for (chatroom in nicknames) {
 											// user is not online
-											if (nicknames[room][id] == undefined) {
+											if (nicknames[chatroom][id] == undefined) {
 												// hook to send notifications when mention'd
 												helper.mentionNotification(id, mid);
 												break;
