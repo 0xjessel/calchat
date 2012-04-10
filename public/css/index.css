@@ -1,7 +1,24 @@
 /* CSS Document */
+.fblogin {
+	float: left;
+	position:relative;
+}
+
+.features {
+	clear: both;
+	color: dimgrey;
+}
+
+#why {
+	vertical-align:middle;
+	margin-left:10px;
+	position:absolute;
+	bottom:0px
+}
 
 @media only screen and (max-width:600px) {
 	#login {
+		float: left;
 		display: block;
 		width: 233px;
 		height: 40px;
@@ -11,6 +28,7 @@
 
 @media only screen and (max-width:400px) {
 	#login {
+		float: left;
 		display: block;
 		width: 129px;
 		height: 39px;
@@ -20,6 +38,7 @@
 
 @media screen and (min-width:600px) {
 	#login {
+		float: left;
 		display: block;
 		width: 280px;
 		height: 47px;
