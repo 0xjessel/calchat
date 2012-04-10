@@ -1,16 +1,34 @@
 /* CSS Document */
 
-#login {
-	display: block;
-	width: 280px;
-	height: 47px;
-	background: url('../img/fb-connect.png') bottom;
+@media only screen and (max-width:600px) {
+	#login {
+		display: block;
+		width: 233px;
+		height: 40px;
+		background: url('../img/fb-connect-lg.png');
+	}
 }
 
-#login:hover {
-	background-position: 0 0;
+@media only screen and (max-width:400px) {
+	#login {
+		display: block;
+		width: 129px;
+		height: 39px;
+		background: url('../img/fb-connect-med.png');
+	}
 }
 
+@media screen and (min-width:600px) {
+	#login {
+		display: block;
+		width: 280px;
+		height: 47px;
+		background: url('../img/fb-connect.png') bottom;
+	}
+	#login:hover {
+		background-position: 0 0;
+	}
+}
 h6 {
 	color:grey;
 	text-transform:lowercase;
