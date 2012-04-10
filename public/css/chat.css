@@ -89,12 +89,6 @@ p.message {
 	position: relative;
 }
 
-p.message > span.mentions {
-	position: absolute;
-	right: 10px;
-	visibility: hidden;
-}
-
 .timestamp {
 	display: inline-block;
 	float:right;
