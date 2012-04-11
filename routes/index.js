@@ -121,7 +121,7 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
-		helper.getRoomInfo(rooms[0], null, function(room) {
+		helper.getRoomInfo(rooms[0], req.loggedIn ? req.user.id : null, function(room) {
 			res.redirect('/chat/'+room.url);
 		});
 	} else {
@@ -138,7 +138,7 @@ exports.chatroom = function(req, res) {
 	room = sanitize(room).xss();
 	room = sanitize(room).entityEncode();
 	
-	helper.isValid(room, function(valid, rawId) {
+	helper.isValid(room, req.loggedIn ? req.user.id : null, function(valid, rawId) {
 		if (valid) {
 			if (req.loggedIn) {
 				helper.postAuthenticate(req);
@@ -199,6 +199,7 @@ exports.chatroom = function(req, res) {
 				});
 				return;
 			} else {
+				// not logged in
 				if (req.session.rooms && req.session.rooms.length) {
 					helper.prependRoom(rawId, undefined, req.session.rooms);
 				} else {
@@ -239,33 +240,39 @@ exports.archives = function(req, res) {
 	var room = req.params.room;
 	
 	if (req.loggedIn) {
-		helper.isValid(room, function(valid, rawId) {
-			helper.getRoomInfo(rawId, req.user.id, function(room) {
-				if (room) {
-					var before = new Date();
-					before.setHours(0,0,0,0);
-					var after = new Date();
-					
-					var pretty = room.pretty;
-					if (room.type == 'private') {
-						pretty = room.prettyfor(req.user.id);
+		helper.isValid(room, req.user.id, function(valid, rawId) {
+			if (valid) {
+				helper.getRoomInfo(rawId, req.user.id, function(room) {
+					if (room) {
+						var before = new Date();
+						before.setHours(0,0,0,0);
+						var after = new Date();
+						
+						var pretty = room.pretty;
+						if (room.type == 'private') {
+							var idsplit = room.id.split('::')[0].split(':');
+							var prettysplit = room.pretty.split(':');
+							pretty = req.user.id == idsplit[1] ? prettysplit[0] : prettysplit[1];
+						}
+						
+						res.render('archives', {
+							title: pretty+' Archives',
+							layout: 'layout-archives',
+							loggedIn: req.loggedIn,
+							showChatTab: true,
+							room: room,
+							title: pretty,
+							begin: before.getTime(),
+							end: after.getTime(),
+							index: 3 //wtf should this be
+						});
+					} else {
+						res.redirect('home');
 					}
-					
-					res.render('archives', {
-						title: pretty+' Archives',
-						layout: 'layout-archives',
-						loggedIn: req.loggedIn,
-						showChatTab: true,
-						room: room,
-						title: pretty,
-						begin: before.getTime(),
-						end: after.getTime(),
-						index: 3 //wtf should this be
-					});
-				} else {
-					res.redirect('home');
-				}
-			});
+				});
+			} else {
+				res.redirect('home');
+			}
 		});
 	} else {
 		res.redirect('home');
@@ -285,15 +292,8 @@ exports.features = function (req, res) {
 exports.authenticate = function (req, res, next) {
 	helper.debug('authenticate', req.params);
 	var room = req.params.room;
-	helper.isValid(room, function(valid, rawId) {
-		if (valid) {
-			// mark says to always use rawId..
-			req.session.redirectPath = '/chat/'+room;
-			return res.redirect('/auth/facebook');
-		} else {
-			next();
-		}
-	});
+	req.session.redirectPath = '/chat/'+room;
+	return res.redirect('/auth/facebook');
 }
 
 exports.invalid = function(req, res) {

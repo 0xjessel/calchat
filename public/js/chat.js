@@ -24,9 +24,7 @@ function debug() {
 			console.log(arguments[i]);
 		}
 	}
-	console.log('--');
 	inner.apply(null, arguments);
-	console.log('--');
 }
 
 // on connection to the server
@@ -67,7 +65,7 @@ socket.on('online', function(room, mapping) {
 			var label = getLabel(id, room, mapping);
 			
 			onlineSidebar.append($('<li>').append(
-				getUserLink(id).append(
+				getUserLink(id, mapping, true).append(
 					$('<img>').addClass('avatar').attr('width','30px').attr('height','30px').attr('src',pic),
 					$('<span>').text(mapping[id].name),
 					label)));
@@ -150,36 +148,41 @@ socket.on('command', function(command, room, by, msg) {
 	var alertClass = 'alert-command';
 	var title = null;
 	var text = by.name+': '+msg;
+	var pretty = room.pretty;
+	
+	if (room.type == 'private') {
+		pretty = prettyfor(room, uid);
+	}
 	
 	// COMMANDLIST
 	switch(command.toUpperCase()) {
 		case 'MENTION':
-		buttontext = 'Go to '+room.pretty;
+		buttontext = 'Go to '+pretty;
 		buttonlink = '/chat/'+room.url;
 		type = 0;
-		title = by.name+' mentioned you in '+room.pretty+'!';
+		title = by.name+' mentioned you in '+pretty+'!';
 		break;
 		case 'FORGIVE':
-		buttontext = 'Go to '+room.pretty;
+		buttontext = 'Go to '+pretty;
 		buttonlink = '/chat/'+room.url;
 		type = 0;
 		title = by.name+' has forgiven you';
 		break;
 		case 'ADMIN':
-		buttontext = 'Go to '+room.pretty;
+		buttontext = 'Go to '+pretty;
 		buttonlink = '/chat/'+room.url;
 		type = 1;
-		title = by.name+' made you ADMIN in '+room.pretty+'!';
+		title = by.name+' made you ADMIN in '+pretty+'!';
 		break;
 		case 'GSI':
-		buttontext = 'Go to '+room.pretty;
+		buttontext = 'Go to '+pretty;
 		buttonlink = '/chat/'+room.url;
 		type = 1;
-		title = by.name+' made you GSI in '+room.pretty+'!';
+		title = by.name+' made you GSI in '+pretty+'!';
 		break;
 		case 'DEMOTE':
 		type = 1;
-		title = by.name+' demoted you in '+room.pretty;
+		title = by.name+' demoted you in '+pretty;
 		break;
 		case 'KICK':
 		
@@ -189,15 +192,15 @@ socket.on('command', function(command, room, by, msg) {
 		buttontext = 'Take me back I\'ve learned my lesson';
 		buttonlink = '/chat/'+room.url;
 		type = 2;
-		title = 'You are temporarily kicked from '+room.pretty;
+		title = 'You are temporarily kicked from '+pretty;
 		break;
 		case 'WARN':
 		type = 2;
-		title = 'You are temporarily banned from '+room.pretty;
+		title = 'You are temporarily banned from '+pretty;
 		break;
 		case 'BAN':
 		type = 3;
-		title = 'You are permanently banned from '+room.pretty;
+		title = 'You are permanently banned from '+pretty;
 		break;
 		default: return;
 	}
@@ -278,7 +281,6 @@ function renderChatroom(anchor) {
 
 // callback from 'get chatlog' server command
 function renderChatlogs (logs, mapping, room) {
-	debug('renderChatlogs');
 	if (!logs) logs = {};
 	if (!Object.keys(logs).length) {
 		logs[new Date().getTime()] = {
@@ -310,7 +312,6 @@ function renderChatlogs (logs, mapping, room) {
 	var title = room.title;
 	if (room.type == 'private') {
 		pretty = prettyfor(room, uid);
-		title = titlefor(room, uid);
 		$('.chat-title').prepend('<a id="fb-link" target="_blank" rel="tooltip" title="visit '+pretty+'\'s fb profile" href="http://www.facebook.com/'+getotherfor(room, uid)+'"><img src="/img/fb-small.png"></a>');
 		$('#fb-link').tooltip();
 		$('#share').hide();
@@ -371,6 +372,7 @@ $(document).ready(function () {
 		}
 		if (room.type == 'private') {
 			pretty = prettyfor(room, uid);
+			// fix for jquery crashing due to : character in data
 			id = id.replace(':', '');
 		}
 		// add the chatroom link element
@@ -383,7 +385,7 @@ $(document).ready(function () {
 				$('<span>').addClass('chats-name').append(pretty)));
 		
 		// add to the correct section
-		if (room.type == 'private') {
+		if (room.type == 'group' || room.type == 'private') {
 			privateNav.append(element);
 		} else {
 			chatNav.append(element);

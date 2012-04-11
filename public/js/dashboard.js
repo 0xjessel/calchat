@@ -21,8 +21,7 @@ $(document).ready(function () {
 			}
 
 			var pretty = room.pretty;
-			var isPrivate = (room.type == 'private');
-			if (isPrivate) {
+			if (room.type == 'private') {
 				pretty = prettyfor(room, uid);
 			}
 
@@ -31,7 +30,7 @@ $(document).ready(function () {
 				$('<span>').addClass('chats-name').append(pretty),
 				unreadBadge,
 				$('<span>').addClass('close close-chat').data('room', room.id).text('x')));
-			if (isPrivate) {
+			if (room.type == 'private' || room.type == 'group') {
 				privateList.append(li);
 			} else {
 				chatroomsList.append(li);
