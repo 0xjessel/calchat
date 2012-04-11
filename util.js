@@ -1,6 +1,9 @@
 // Utility functions shared by all server code
+var mURL = 'http://calchat.net';
+var mChatURL = 'http://calchat.net/chat/';
+
 var TwilioClient = require('twilio').Client;
-var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', 'http://calchat.net:3000');
+var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', mURL);
 var phone = client.getPhoneNumber('+15107468123');
 
 var email = require('./node_modules/mailer');
@@ -25,7 +28,7 @@ function mentionNotification(from, to, mid) {
 function mentionEmail(from, to, toName, mid) {
 	getNotificationContent(to, mid, 'email', function(reply) {
 		var content = reply;
-		var link = 'http://calchat.net:3000/chat/'+content['roomUrl'];
+		var link = mChatURL+content['roomUrl'];
 		var subject = content['from']+' mentioned you in '+content['room'];
 		var data = {
 			  'fromName': content['from'],
@@ -70,7 +73,7 @@ function sendEmail(subject, to, template, data, callback) {
 function mentionSMS(to, mid) {
 	getNotificationContent(to, mid, 'phone', function(reply) {
 		content = reply;
-		var footerLink = " - calchat.net:3000/chat/"+content['roomUrl'];
+		var footerLink = ' - '+mChatURL+content['roomUrl'];
 		var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
 		var msgSize = 160 - msg.length - footerLink.length;							
 		var txt = content['txt'];
