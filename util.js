@@ -205,58 +205,50 @@ function getRoomInfo(rawId, callerId, callback) {
 									});
 								} else {
 									// check if room is a user
-									client2.hgetall('user:'+rawId, function(err, user) {
-										if (!err && Object.keys(user).length) {
-											if (rawId == callerId) {
-												callback();
-												return;
+									if (rawId == callerId) {
+										callback();
+										return;
+									} else if (callerId) {									
+										client2.hgetall('user:'+Math.min(rawId,callerId), function(err, user1) {
+											if (!err && Object.keys(user1).length) {
+												client2.hgetall('user:'+Math.max(rawId,callerId), function(err, user2) {
+													if (!err && Object.keys(user2).length) {
+														// if room is a user, turn it into a private group chat
+														var groupId = Math.min(rawId,callerId)+':'+Math.max(rawId,callerId);
+														var title1 = user1.firstname+' '+user1.lastname[0];
+														var title2 = user2.firstname+' '+user2.lastname[0];
+														var groupDescription = title1+':'+title2;
+														rawId = groupId+'::private::'+groupDescription;
+														
+														// room is a user. convert to a private group chat
+														userContinue(rawId, callback);
+													} else {
+														// room is not a user
+														userContinue(rawId, callback);
+													}
+												});
+											} else {
+												// room is not a user
+												userContinue(rawId, callback);
 											}
-											rawId = Math.min(rawId,callerId)+':'+Math.max(rawId,callerId);
-										}
-																				
-										// check if room is another user id
-										if (rawId.indexOf(':') != -1) {
-											var uids = rawId.split(':');
-											client2.hgetall('user:'+uids[0], function(err, user1) {
-												if (!err && Object.keys(user1).length) {
-													client2.hgetall('user:'+uids[1], function(err, user2) {
-														if (!err && Object.keys(user2).length) {
-															var name1 = user1.firstname+' '+user1.lastname[0];
-															var name2 = user2.firstname+' '+user2.lastname[0];
-															var title1 = 'Private Chat with '+name1;
-															var title2 = 'Private Chat with '+name2;
-															var readable = function(uid) { return user1.id == uid || user2.id == uid; };
-															var other = function(uid) { return uid == user1.id ? user2.id : user1.id; };
-															var prettyfor = function(uid) { return uid == user2.id ? name1 : name2; };
-															var titlefor = function(uid) { return uid == user2.id ? title1 : title1; };
-															
-															callback({
-																id			: rawId,
-																url			: stripLow(rawId),
-																pretty		: name1+':'+name2,
-																title		: title1+':'+title2,
-																type		: 'private',
-																
-																readable	: readable,
-																other		: other,
-																prettyfor	: prettyfor,
-																titlefor	: titlefor,
-																
-																id1			: user1.id,
-																id2			: user2.id,
-															});
-														} else {
-															callback();
-														}
-													});
-												} else {
-													callback();
-												}
-											});
-										} else {
-											callback();
-										}
-									});
+										});
+									} else {
+										// did not provide callerId
+										userContinue(rawId, callback);
+									}
+									
+									function userContinue(rawId, callback) {
+										findOrCreateGroup(rawId, callerId, function(isValid, suggestion, groupObject) {
+											if (isValid) {
+												// created private group chat based on user
+												callback(groupObject);
+											} else {
+												// remove callback if there are more cases
+												callback();
+												// check for more cases here
+											}
+										});
+									}
 								}
 							});
 						}
@@ -353,7 +345,7 @@ function prependRoom(room, unreads, rooms) {
 // callback: passes 2 things
 // 		isValid: true if any form of roomid is valid
 //		rawId: if isValid, caller must use rawId, the normalized room id
-function isValid(roomId, callback) {
+function isValid(roomId, callerId, callback) {
 	debug('isValid', roomId);
 	if (!roomId) {
 		callback(false);
@@ -376,7 +368,7 @@ function isValid(roomId, callback) {
 					
 					// if $ is at the end then it means roomId was a room like 306SODA and you need to redirect to class held at 306SODA at the current time
 					if (lastChar == '$') {
-						getRoomInfo(suggestion.substring(0, suggestion.length-1), null, function(room) {
+						getRoomInfo(suggestion.substring(0, suggestion.length-1), callerId, function(room) {
 							if (room) {
 								callback(true, room.id);
 							} else {
@@ -423,26 +415,14 @@ function isValid(roomId, callback) {
 
 				callback(true, sameLastChars[0].suggestion);
 			} else {
-				// not in validrooms db. Check if it is a private chat to another user
-				if (roomId.indexOf(':') != -1) {
-					var uids = roomId.split(':');
-					// both users have to exist
-					client2.exists('user:'+uids[0], function(err, exists) {
-						if (!err && exists) {
-							client2.exists('user:'+uids[1], function(err, exists) {
-								if (!err && exists) {
-									callback(true, roomId);
-								} else {
-									callback(false);
-								}
-							});
-						} else {
-							callback(false);
-						}
-					});
-				} else {
-					callback(false);
-				}
+				// not in validrooms db. Check if it is a group
+				findOrCreateGroup(roomId, callerId, function(isValid, suggestion) {
+					if (isValid) {
+						callback(isValid, suggestion);
+					} else {
+						callback(false);
+					}
+				});
 			}
 		});
 	}
@@ -450,8 +430,8 @@ function isValid(roomId, callback) {
 
 //ids: list of user ids
 //callback: passes a map of user ids to user objects
-function getUsers(ids, callback) {
-	debug('getUsers', ids);
+function getUsers(ids, callerId, callback) {
+	debug('getUsers', ids, callerId);
 	if (!ids || !Object.keys(ids).length) {
 		callback({});
 	}
@@ -497,12 +477,26 @@ function postAuthenticate(req) {
 	}
 }
 
-function stripHigh(string) {
-	return string.replace(/[^A-Za-z0-9:]/g, '').toUpperCase();
+function stripLow(string) {
+	var splitIndex = string.indexOf('::');
+	var front = string;
+	var back = '';
+	if (splitIndex != -1) {
+		front = string.substring(0, splitIndex);
+		back = string.substring(splitIndex);
+	}
+	return front.replace(/[^A-Za-z0-9:]/g, '').toLowerCase()+back;
 }
 
-function stripLow(string) {
-	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
+function stripHigh(string) {
+	var splitIndex = string.indexOf('::');
+	var front = string;
+	var back = '';
+	if (splitIndex != -1) {
+		front = string.substring(0, splitIndex);
+		back = string.substring(splitIndex);
+	}
+	return front.replace(/[^A-Za-z0-9:]/g, '').toUpperCase()+back;
 }
 
 function isPhoneNum(n) {
@@ -576,6 +570,110 @@ function capStringScore(string) {
 	var cap = string.substring(0, string.length - 1) + next;
 	debug('capStringScore', string, cap);
 	return '('+stringScore(cap, false);
+}
+
+function findOrCreateGroup(roomId, callerId, callback) {
+	debug('findOrCreateGroup', roomId, callerId);
+	
+	if (roomId.indexOf('::') != -1) {
+		var roomsplit = roomId.split('::');
+		var groupId = roomsplit[0];
+		var key = roomsplit[1];
+		var description = groupId;
+		
+		if (roomsplit.length >= 3) {
+			description = roomsplit[2];
+		}
+		
+		client2.hgetall('group:'+groupId, function(err, groupObject) {
+			if (!err && Object.keys(groupObject).length) {
+				// group exists
+				var groupKey = groupObject.key;
+				if (groupKey == key) {
+					// correct key for existing group
+					callback(true, groupId+'::'+key, groupObject);
+				} else {
+					callback(false);
+				}
+			} else if (callerId) {
+				// group does not exist. create a new group
+				// only logged in users can create new groups
+				
+				if (key == 'new') {
+					// create new key if not provided								
+					key = generateKey();
+				}
+				
+				var isuserchat = groupId.indexOf(':') != -1;
+				var title = isuserchat ? 'Private user chat' : 'Private group chat';
+				var type = isuserchat ? 'private' : 'group';
+				key = isuserchat ? 'private' : key;
+				
+				groupObject = {
+					id			: groupId+'::'+key,
+					url			: stripLow(groupId+'::'+key),
+					pretty		: description,
+					title		: title,
+					type		: type,
+					
+					key 		: key,
+				};
+				
+				if (!isuserchat) {
+					groupObject.creator = callerId;
+					// set creator as gsi 
+					client2.hget('user:'+callerId, 'gsirooms', function(err, gsirooms) {
+						if (gsirooms) {
+							var roomIds = gsirooms.split(',');
+							var index = roomIds.indexOf(groupId+'::'+key);
+							if (index != -1) {
+								roomIds.unshift(roomIds.splice(index, 1));
+							} else {
+								roomIds.unshift(groupId+'::'+key);
+							}
+							client2.hset('user:'+callerId, 'gsirooms', roomIds.join());
+						} else {
+							client2.hset('user:'+callerId, 'gsirooms', groupId+'::'+key);
+						}
+					});
+				}
+				
+				client2.hmset('group:'+groupId, groupObject, function(err) {
+					// we are not adding groups to validrooms because there is a secret key
+					if (!err) {
+						// group created
+						callback(true, groupId+'::'+key, groupObject);
+					} else {
+						callback(false);
+					}
+				});
+			} else {
+				callback(false);
+			}
+		});
+	} else {
+		callback(false);
+	}
+}
+
+// generates random key if no seed. else generates predictable key
+function generateKey(seed) {
+    var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxy'.split('');
+    var length = 12;
+    if (seed) {
+    	length = seed.length;
+    }
+    var str = '';
+    for (var i = 0; i < length; i++) {
+    	var random = Math.random();
+    	if (seed) {
+    		var c = seed.charCodeAt(i);
+    		if (c == 0) random = 0;
+    		else random = 1 / c;
+    	}
+        str += chars[Math.floor(97*random * chars.length) % chars.length];
+    }
+    return str;
 }
 
 function debug() {

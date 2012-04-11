@@ -63,14 +63,14 @@ everyauth.facebook
 					'firstname': fbUserMetadata.first_name,
 					'lastname': fbUserMetadata.last_name,
 					'email': fbUserMetadata.email,
-					'phone': "",
+					'phone': '',
 					'chatrooms': 'CALCHAT',
 					'unread': timeStamp,
 					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
 					'oauth': accessToken,
 					'special': SPECIAL_NONE,
 					'timestamp' : timeStamp,
-					'gsirooms' : "",
+					'gsirooms' : '',
 				}, function() {
 					// add user to validrooms so other users can search for him
 					client0.zadd('validrooms',
@@ -130,6 +130,8 @@ app.get('/chat/:room', routes.chatroom);
 app.get('/chat/:room/archives', routes.archives);
 app.get('/authenticate/:room', routes.authenticate);
 app.get('/features', routes.features);
+app.get('/about', routes.about);
+app.get('/feedback', routes.feedback)
 app.get('*', routes.invalid);
 
 app.listen(3000);
@@ -140,6 +142,8 @@ app.listen(3000);
 var io = sio.listen(app);
 var nicknames = {};
 
+io.set('transports', ['xhr-polling']);
+io.set('polling duration', 10);
 io.set('log level', 1);
 io.set('authorization', function(data, accept) {
 	if (data.headers.cookie) {
@@ -238,48 +242,39 @@ io.sockets.on('connection', function (socket) {
 			socket.nickname = session.nick;
 			socket.uid = session.uid;
 			
-			getChatlog(current, null, null, function(logs, mentions, room) {	
-				client2.hget('user:'+session.uid, 'chatrooms', function(err, chatrooms) {
-					if (!err) {
-						if (chatrooms) {
-							// add the client to the user list of each chatroom
-							var roomIds = chatrooms.split(',');
-							for (var i = 0; i < roomIds.length; i++) {
-								var roomId = roomIds[i];
-								nicknames[roomId][session.uid] = socket.nickname;
-								client2.zadd('users:'+roomId, helper.stringScore(socket.nickname), session.uid);
-							}
-
-							callback(logs, mentions, room);
-						} else {
-							callback();
-						}
-						
-						// send renewed online list to all chatrooms
-						for (var i = 0; i < roomIds.length; i++) {
-							// use closure to prevent iteration i vars from being overwritten by iteration i+1
-							(function closure() {
-								var roomId = roomIds[i];
+			getChatlog(current, null, null, function(logs, mentions, room) {
+				callback(logs, mentions, room);
+				
+				for (var i = 0; i < roomIds.length; i++) {
+					(function closure() {
+						var roomId = roomIds[i];
+						helper.isValid(roomId, session.uid, function(isValid, rawId) {
+							if (isValid) {
+								if (nicknames[roomId])
+									nicknames[roomId][session.uid] = socket.nickname;
+								client2.zadd('users:'+rawId, helper.stringScore(socket.nickname), session.uid);
 								
 								// mapping is needed to convert user ids to user names
-								helper.getUsers(Object.keys(nicknames[roomId]), function(mapping) {
+								helper.getUsers(Object.keys(nicknames[roomId]), session.uid, function(mapping) {
 									io.sockets.in(roomId).emit('online', roomId, mapping);
 								});
-							})();
-						}
-					} else {
-						error(err, socket, 'initialize');
-						callback();
-					}
-				});
+							}
+						});
+					})();
+				}
 			});
 		} else { // the user is not logged in
 			// allow guests to view chat rooms
 			getChatlog(current, null, null, function(logs, mentions, room) {
 				callback(logs, mentions, room);
 			});
-			helper.getUsers(Object.keys(nicknames[current]), function(mapping) {
-				io.sockets.in(current).emit('online', current, mapping);
+			
+			helper.isValid(current, null, function(isValid, rawId) {
+				if (isValid) {
+					helper.getUsers(Object.keys(nicknames[current]), null, function(mapping) {
+						io.sockets.in(current).emit('online', current, mapping);
+					});
+				}
 			});
 		}
 	});
@@ -289,41 +284,51 @@ io.sockets.on('connection', function (socket) {
 	// callback: empty
 	socket.on('leave room', function (room, callback) {
 		helper.debug('leave room', room);
-		helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
-			// can only leave room if logged in
-			if (session !== undefined && session.uid !== undefined){
-				// removes the client's nickname
-				delete nicknames[room][session.uid];
+		
+		// can only leave room if logged in
+		if (session !== undefined && session.uid !== undefined){
+			client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
+				// removes room from client's list of chatrooms
+				if (!err && reply[0] != null && reply[1] != null) {
+					var rooms = reply[1].split(',');
+					var index = rooms.indexOf(room);
 
-				client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
-					// removes room from client's list of chatrooms
-					if (!err && reply[0] != null && reply[1] != null) {
-						var rooms = reply[1].split(',');
-						var index = rooms.indexOf(room);
+					rooms.splice(index, 1);
 
-						rooms.splice(index, 1);
+					var unreads = reply[0].split(',');
+					unreads.splice(index, 1);
 
-						var unreads = reply[0].split(',');
-						unreads.splice(index, 1);
-
-						client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
-							callback();
-						});
-					} else {
-						error(err, socket, 'leave room');
+					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
 						callback();
-					}
-				});
+					});
+				} else {
+					error(err, socket, 'leave room');
+					callback();
+				}
+			});
 
-				// remove user from chatroom's list of users
-				client2.zrem('users:'+room, session.uid);
-	        	// broadcast new online users list
-				io.sockets.in(room).emit('online', room, mapping);
-			} else {
-				error("session.uid undefined", socket, 'leave room');
-				callback();
-			}
-		});
+			// remove user from chatroom's list of users
+			client2.zrem('users:'+room, session.uid);
+			
+			// remove sockets
+			helper.isValid(room, session.uid, function(isValid, rawId) {
+				if (isValid) {
+					helper.getUsers(Object.keys(nicknames[room]), session.uid, function(mapping) {
+						// removes the client's nickname
+						delete nicknames[room][session.uid];
+
+			        	// broadcast new online users list
+						io.sockets.in(room).emit('online', room, mapping);
+					});
+				} else {
+					error('Room '+room+' is invalid', socket, 'leave room');
+					callback();
+				}
+			});
+		} else {
+			error('session.uid undefined', socket, 'leave room');
+			callback();
+		}
 	});
 	
 	// called from dashboard.js
@@ -363,125 +368,136 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get chatlog', getChatlog);
 	function getChatlog(roomId, min, max, callback) {
 		helper.debug('get chatlog', roomId);
-		// sanitize input
-		roomId = helper.stripHigh(roomId);
+		
+		helper.isValid(roomId, session ? session.uid : null, function(isValid, rawId) {
+			if (isValid) {
+				// sanitize input
+				roomId = helper.stripHigh(roomId);
+				// reset unread counts for logged in users
+				if (session !== undefined && session.uid !== undefined) {
+					// make this chatroom most recent in user's list
+					client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+						if (!err && reply[0] != null && reply[1] != null){
+							var rooms = reply[0].split(',');
+							var unreads = reply[1].split(',');
+					
+							// move room to front of rooms
+							var index = rooms.indexOf(roomId);
+							rooms.unshift(rooms.splice(index, 1));
+							unreads.unshift(unreads.splice(index, 1));
+							client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
+						} else {
+							error(err, socket, 'get chatlog');
+						}
+					});
+				}
 
-		// reset unread counts for logged in users
-		if (session !== undefined && session.uid !== undefined) {
-			// make this chatroom most recent in user's list
-			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
-				if (!err && reply[0] != null && reply[1] != null){
-					var rooms = reply[0].split(',');
-					var unreads = reply[1].split(',');
-			
-					// move room to front of rooms
-					var index = rooms.indexOf(roomId);
-					rooms.unshift(rooms.splice(index, 1));
-					unreads.unshift(unreads.splice(index, 1));
-					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
-				} else {
-					error(err, socket, 'get chatlog');
-				}
-			});
-		}
-
-		// get last 30 messages or all messages between min and max
-		helper.getRoomInfo(roomId, null, function(room) {
-			if (room.type == 'private') {
-				// guest users cannot see private chats
-				if (!session || !session.uid) {
-					error('No permissions: Guests cannot access '+room.id, socket);
-					callback({}, {}, room);
-					return;
-				}
-				
-				// clients cannot see private chats that they do not belong to
-				if(!room.readable(session.uid)) {
-					// not permitted
-					error('No permissions: '+session.uid+' cannot access '+room.id, socket);
-					callback({}, {}, room);
-					return;
-				}
-			}
-			
-			// optional min and max parameters are provided. Return messages between min and max timestamps
-			if (min && max) {
-				client2.zrangebyscore('chatlog:'+room.id, min, max, function(err, chatlog) {
-					if (!err) {
-						getLogs(chatlog, callback);
-					} else {
-						error(err, socket, 'get chatlog');
-						callback({}, [], room);
+				// get last 30 messages or all messages between min and max
+				helper.getRoomInfo(roomId, session ? session.uid : null, function(room) {
+					if (room.type == 'group' || room.type == 'private') {
+						// guest users cannot see private chats
+						if (!session || !session.uid) {
+							error('Please log in: Guests cannot access private chat room '+room.id, socket);
+							callback({}, {}, room);
+							return;
+						}
 					}
-				});
-			} else { // return the 30 most recent messages
-				client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
-					if (!err) {
-						getLogs(chatlog, callback);
-					} else {
-						error(err, socket, 'get chatlog');
-						callback({}, [], room);
+					
+					if (room.type == 'private') {
+						// private chat can only be between 2 users
+						var userIds = room.id.split('::')[0];
+						if (userIds.split(':').indexOf(session.uid) == -1) {
+							// client is neither of the 2 users
+							error('Access denied: attempted to access a private non-group chat room.', socket);
+							callback({}, {}, room);
+							return;
+						}
 					}
-				});
-			}
-			
-			// helper function
-			// chatlog: list of message ids
-			// callback: passes same 3 things as getChatlog()
-			function getLogs(chatlog, callback) {
-				if (chatlog.length == 0) {
-					callback({}, {}, room);
-					return;
-				}
-			
-				var logs = {};
-				var allMentions = [];
-				var added = 0;
-				// for each message id, turn it into a message object
-				for (var i = 0; i < chatlog.length; i++) {
-					function closure() {
-						var mid = chatlog[i];
-						// fetch message data from db
-						client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
-							added++;
-							if (!err){
-								var timestamp = message[0];
-								var fromUid = message[1];
-								var text = message[2];
-								var mentions = message[3]; // turn into array later
-
-								if (mentions) {
-									mentions = mentions.split(',');
-								} else {
-									mentions = [];
-								}
-
-								allMentions = allMentions.concat(mentions, fromUid);
-							
-								//create message object
-								var entry = {
-									'from'		: fromUid,
-									'to'		: room.id,
-									'text'		: text,
-									'mentions'	: mentions,
-									'id'		: mid,
-									'timestamp'	: timestamp,
-								};
-								logs[timestamp] = entry;
+					
+					// optional min and max parameters are provided. Return messages between min and max timestamps
+					if (min && max) {
+						client2.zrangebyscore('chatlog:'+room.id, min, max, function(err, chatlog) {
+							if (!err) {
+								getLogs(chatlog, callback);
 							} else {
 								error(err, socket, 'get chatlog');
+								callback({}, [], room);
 							}
-							
-							// when all messages have been added, callback
-							if (added == chatlog.length) {
-								helper.getUsers(allMentions, function(mapping) {
-									callback(logs, mapping, room);
-								});
+						});
+					} else { // return the 30 most recent messages
+						client2.zrange('chatlog:'+room.id, -30, -1, function(err, chatlog) {
+							if (!err) {
+								getLogs(chatlog, callback);
+							} else {
+								error(err, socket, 'get chatlog');
+								callback({}, [], room);
 							}
 						});
 					}
-					closure();
-				}
+					
+					// helper function
+					// chatlog: list of message ids
+					// callback: passes same 3 things as getChatlog()
+					function getLogs(chatlog, callback) {
+						if (chatlog.length == 0) {
+							callback({}, {}, room);
+							return;
+						}
+					
+						var logs = {};
+						var allMentions = [];
+						var added = 0;
+						// for each message id, turn it into a message object
+						for (var i = 0; i < chatlog.length; i++) {
+							function closure() {
+								var mid = chatlog[i];
+								// fetch message data from db
+								client2.hmget('message:'+mid, 'timestamp', 'from', 'text', 'mentions', function(err, message) {
+									added++;
+									if (!err){
+										var timestamp = message[0];
+										var fromUid = message[1];
+										var text = message[2];
+										var mentions = message[3]; // turn into array later
+
+										if (mentions) {
+											mentions = mentions.split(',');
+										} else {
+											mentions = [];
+										}
+
+										allMentions = allMentions.concat(mentions, fromUid);
+									
+										//create message object
+										var entry = {
+											'from'		: fromUid,
+											'to'		: room.id,
+											'text'		: text,
+											'mentions'	: mentions,
+											'id'		: mid,
+											'timestamp'	: timestamp,
+										};
+										logs[timestamp] = entry;
+									} else {
+										error(err, socket, 'get chatlog');
+									}
+									
+									// when all messages have been added, callback
+									if (added == chatlog.length) {
+										helper.getUsers(allMentions, session ? session.uid : null, function(mapping) {
+											callback(logs, mapping, room);
+										});
+									}
+								});
+							}
+							closure();
+						}
+					}
+				});
+			} else {
+				error('Room '+roomId+' is invalid.', socket);
+				callback({}, {}, null);
+				return;
 			}
 		});
 	}
@@ -490,9 +506,13 @@ io.sockets.on('connection', function (socket) {
 	socket.on('get online', function (room) {
 		helper.debug('get online', room);
 		
-		helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
-			// send updated online users list
-			socket.emit('online', room, mapping);
+		helper.isValid(room, session ? session.uid : null, function(isValid, rawId) {
+			if (isValid) {
+				helper.getUsers(Object.keys(nicknames[room]), session ? session.uid : null, function(mapping) {
+					// send updated online users list
+					socket.emit('online', room, mapping);
+				});
+			}
 		});
 	});
 
@@ -503,222 +523,231 @@ io.sockets.on('connection', function (socket) {
 	socket.on('message', function (roomId, msg, mentions) {
 		helper.debug('message', roomId, msg, mentions);
 		
-		var timestamp = new Date().getTime();
-		
-		// sanitize input to prevent malicious code
-		msg = sanitize(msg).xss();
-		msg = sanitize(msg).entityEncode();
-		
-		// reject long messages
-		if (msg.length > 256) {
-			socket.emit('error', 'Message not sent. Message length too long.');
-			return;
-		}
-		// client can only send messages if he has logged in
-		if (session !== undefined && session.uid !== undefined) {
-			helper.getRoomInfo(roomId, session.uid, function(room) {
-				// check for ban
-				client2.hget('banlist:'+room.id, session.uid, function(err, ban) {
-					if (!err && ban != null) {
-						// banned
-						var banlength = timestamp - ban;
-						var totalbanlength = 5 * 60 * 1000;
-						if (ban == -1 || banlength < totalbanlength) { // 5 minutes
-							var banlengthstring = ban == -1 ? 'ever' : Math.round((totalbanlength-banlength)/(60*1000))+' minutes';
-							socket.emit('error', 'Message not sent. You\'ve been banned from chatting in this room for '+banlengthstring+'.');
-							return;
-						}
-					}
-					
-					helper.getUsers(mentions.concat(session.uid), function(mapping){
-						var user = mapping[session.uid];
-						var commandreceivers = mentions.filter(function(mention) {
-							// if you are not a Founder, you cannot execute a command against a Founder
-							return mapping[session.uid].special == SPECIAL_FOUNDER || mapping[mention].special != SPECIAL_FOUNDER;
-						});
-						
-						// check for commands
-						// we received a command if the user is a gsi of this room and the first character is the special char /
-						if (msg.charAt(0) == '/') {
-							var commandend = msg.indexOf(' ');
-							if (commandend == -1) commandend = msg.length;
-							var command = msg.substring(1, commandend);
-							var commandmsg = msg.substring(commandend).trim();
+		helper.isValid(roomId, session ? session.uid : null, function(isValid, rawId) {
+			if (isValid) {		
+				var timestamp = new Date().getTime();
+				
+				// sanitize input to prevent malicious code
+				msg = sanitize(msg).xss();
+				msg = sanitize(msg).entityEncode();
+				
+				// reject long messages
+				if (msg.length > 256) {
+					socket.emit('error', 'Message not sent. Message length too long.');
+					return;
+				}
+				// client can only send messages if he has logged in
+				if (session !== undefined && session.uid !== undefined) {
+					helper.getRoomInfo(roomId, session.uid, function(room) {
+						// check for ban
+						client2.hget('banlist:'+room.id, session.uid, function(err, ban) {
+							if (!err && ban != null) {
+								// banned
+								var banlength = timestamp - ban;
+								var totalbanlength = 5 * 60 * 1000;
+								if (ban == -1 || banlength < totalbanlength) { // 5 minutes
+									var banlengthstring = ban == -1 ? 'ever' : Math.round((totalbanlength-banlength)/(60*1000))+' minutes';
+									socket.emit('error', 'Message not sent. You\'ve been banned from chatting in this room for '+banlengthstring+'.');
+									return;
+								}
+							}
 							
-							getCommands(command, socket.uid, roomId, function(commands) {
-								for (var i = 0; i < commands.length; i++) {
-									var command = commands[i];
-									
-									// COMMANDLIST
-									switch(command.name) {
-										case 'KICK':
-										case 'BAN':
-										case 'WARN':
-										case 'FORGIVE':
-										case 'ADMIN':
-										case 'GSI':
-										case 'DEMOTE':
-										
-										// send command message to each mentioned socket
-										var othersockets = getSockets(commandreceivers, session.uid);
-										for (var i = 0; i < othersockets.length; i++) {
-											var s = othersockets[i];
-											s.emit('command', command.name.toLowerCase(), room, user, commandmsg);
-										};
-										
-										// update the banlist
-										for (var i = 0; i < commandreceivers.length; i++) {
-											var mention = commandreceivers[i];
-											if (command.name == 'BAN' || command.name == 'WARN') {
-												// ban is permanent while warn is temporary
-												client2.hset('banlist:'+room.id, mention, command.name == 'BAN' ? -1 : timestamp);
-											} else if (command.name == 'FORGIVE') {
-												client2.hdel('banlist:'+room.id, mention);
-											} else if (command.name == 'ADMIN') {
-												client2.hset('user:'+mention, 'special', 2);
-											} else if (command.name == 'GSI') {
-												// add roomId to existing gsirooms
-												client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
-													if (gsirooms) {
-														var roomIds = gsirooms.split(',');
-														var index = roomIds.indexOf(roomId);
-														if (index != -1) {
-															roomIds.unshift(roomIds.splice(index, 1));
-														} else {
-															roomIds.unshift(roomId);
-														}
-														client2.hset('user:'+mention, 'gsirooms', roomIds.join());
-													} else {
-														client2.hset('user:'+mention, 'gsirooms', roomId);
-													}
-												});
-											} else if (command.name == 'DEMOTE') {
-												// remove this room id from gsirooms, set user special field to 0
-												client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
-													var roomIds = [''];
-													if (gsirooms) {
-														roomIds = gsirooms.split(',');
-														var index = roomIds.indexOf(roomId);
-														if (index != -1) {
-															roomIds.splice(index, 1);
-														}
-													}
-													client2.hmset('user:'+mention, 'gsirooms', roomIds.join(), 'special', 0);
-												});
-											}
-										};
-										
-										var commandsdone = commandreceivers.length;
-										if (command.name == 'KICK') {
-											commandsdone = othersockets.length;
-										}
-										
-										// announce back to the gsi that his command has been done
-										var capitalcommand = command.name.charAt(0)+command.name.substring(1);
-										socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
-										
-										// DO NOT CONTINUE once we've processed a command
-										return;
-										default:
-										break;
-									}		
-								};
+							helper.getUsers(mentions.concat(session.uid), session.uid, function(mapping){
+								var user = mapping[session.uid];
+								var commandreceivers = mentions.filter(function(mention) {
+									// if you are not a Founder, you cannot execute a command against a Founder
+									return mapping[session.uid].special == SPECIAL_FOUNDER || mapping[mention].special != SPECIAL_FOUNDER;
+								});
 								
-								// since we haven't returned yet, we must have not processed a command
-								handleMessage();
-							});
-						} else { // no command
-							handleMessage();
-						}
-						
-						function handleMessage() {
-							// CONTINUE only if we have not processed a command
-							// deduplicate mentions
-							var temp = {};
-							for (var i = 0; i < mentions.length; i++) {
-								temp[mentions[i]] = null;
-							};
-							mentions = Object.keys(temp);
-
-							// get the next unique message id
-							client2.incr('message:id:next', function(err, mid) {
-								if (!err) {
-									// create message object
-									var entry = {
-										'from'		: session.uid,
-										'to'		: roomId,
-										'text'		: msg,
-										'mentions'	: mentions,
-										'id'		: mid,
-										'timestamp' : timestamp,
-									};
+								// check for commands
+								// we received a command if the user is a gsi of this room and the first character is the special char /
+								if (msg.charAt(0) == '/') {
+									var commandend = msg.indexOf(' ');
+									if (commandend == -1) commandend = msg.length;
+									var command = msg.substring(1, commandend);
+									var commandmsg = msg.substring(commandend).trim();
 									
-									// send the special 'private chat' message to the receiving client
-									if (room.type == 'private') {
-										var other = room.other(session.uid);
-										var othersocket = getSockets([other])[0];
-										if (othersocket) {
-											// the client will be notified in a special way for private chats
-											othersocket.emit('private chat', roomId, entry, mapping);
-										}
-										
-										// update unread counts
-										client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
-											if (!err) {
-												var roomsArray = user[0].split(',');
-												var unreadsArray = user[1].split(',');
-												helper.prependRoom(roomId, unreadsArray, roomsArray);
-												client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
-											}
-										});
-									}
-									
-									// general broadcast to all clients in a room of the new message
-									io.sockets.in(roomId).emit('message', entry, mapping);
-									
-									// save the message to the database
-									client2.hmset('message:'+mid, {
-										'from'		: session.uid,
-										'to'		: roomId,
-										'text'		: msg,
-										'mentions'	: mentions.join(),
-										'timestamp'	: timestamp,
-									});
-									// add the message id to the db chatlog
-									client2.zadd('chatlog:'+roomId, timestamp, mid);
-									
-									// @mentions send persistent notifications
-									for (var i = 0; i < mentions.length; i++) {
-										var id = mentions[i];
-										client2.zadd('mentions:'+id, timestamp, mid);
-										
-										// only send offline notifications if user is offline
-										for (chatroom in nicknames) {
-											// user is not online
-											if (nicknames[chatroom][id] == undefined) {
-												// hook to send notifications when mention'd
-												helper.mentionNotification(socket.nickname, id, mid);
+									getCommands(command, socket.uid, roomId, function(commands) {
+										for (var i = 0; i < commands.length; i++) {
+											var command = commands[i];
+											
+											// COMMANDLIST
+											switch(command.name) {
+												case 'KICK':
+												case 'BAN':
+												case 'WARN':
+												case 'FORGIVE':
+												case 'ADMIN':
+												case 'GSI':
+												case 'DEMOTE':
+												
+												// send command message to each mentioned socket
+												var othersockets = getSockets(commandreceivers, session.uid);
+												for (var i = 0; i < othersockets.length; i++) {
+													var s = othersockets[i];
+													s.emit('command', command.name.toLowerCase(), room, user, commandmsg);
+												};
+												
+												// update the banlist
+												for (var i = 0; i < commandreceivers.length; i++) {
+													var mention = commandreceivers[i];
+													if (command.name == 'BAN' || command.name == 'WARN') {
+														// ban is permanent while warn is temporary
+														client2.hset('banlist:'+room.id, mention, command.name == 'BAN' ? -1 : timestamp);
+													} else if (command.name == 'FORGIVE') {
+														client2.hdel('banlist:'+room.id, mention);
+													} else if (command.name == 'ADMIN') {
+														client2.hset('user:'+mention, 'special', 2);
+													} else if (command.name == 'GSI') {
+														// add roomId to existing gsirooms
+														client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
+															if (gsirooms) {
+																var roomIds = gsirooms.split(',');
+																var index = roomIds.indexOf(roomId);
+																if (index != -1) {
+																	roomIds.unshift(roomIds.splice(index, 1));
+																} else {
+																	roomIds.unshift(roomId);
+																}
+																client2.hset('user:'+mention, 'gsirooms', roomIds.join());
+															} else {
+																client2.hset('user:'+mention, 'gsirooms', roomId);
+															}
+														});
+													} else if (command.name == 'DEMOTE') {
+														// remove this room id from gsirooms, set user special field to 0
+														client2.hget('user:'+mention, 'gsirooms', function(err, gsirooms) {
+															var roomIds = [''];
+															if (gsirooms) {
+																roomIds = gsirooms.split(',');
+																var index = roomIds.indexOf(roomId);
+																if (index != -1) {
+																	roomIds.splice(index, 1);
+																}
+															}
+															client2.hmset('user:'+mention, 'gsirooms', roomIds.join(), 'special', 0);
+														});
+													}
+												};
+												
+												var commandsdone = commandreceivers.length;
+												if (command.name == 'KICK') {
+													commandsdone = othersockets.length;
+												}
+												
+												// announce back to the gsi that his command has been done
+												var capitalcommand = command.name.charAt(0)+command.name.substring(1);
+												socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
+												
+												// DO NOT CONTINUE once we've processed a command
+												return;
+												default:
 												break;
-											}
-										}
-									}
-									
-									// @mentions send temporary notifications
-									var othersockets = getSockets(mentions);
-									for (var i = 0; i < othersockets.length; i++) {
-										othersockets[i].emit('command', 'mention', room, user, msg);
+											}		
+										};
+										
+										// since we haven't returned yet, we must have not processed a command
+										handleMessage();
+									});
+								} else { // no command
+									handleMessage();
+								}
+								
+								function handleMessage() {
+									// CONTINUE only if we have not processed a command
+									// deduplicate mentions
+									var temp = {};
+									for (var i = 0; i < mentions.length; i++) {
+										temp[mentions[i]] = null;
 									};
-								} else {
-									error(err, socket, 'message');
+									mentions = Object.keys(temp);
+
+									// get the next unique message id
+									client2.incr('message:id:next', function(err, mid) {
+										if (!err) {
+											// create message object
+											var entry = {
+												'from'		: session.uid,
+												'to'		: roomId,
+												'text'		: msg,
+												'mentions'	: mentions,
+												'id'		: mid,
+												'timestamp' : timestamp,
+											};
+											
+											console.log('message -> message.next room', room);
+											// send the special 'private chat' message to the receiving client
+											if (room.type == 'private') {
+												var groupidsplit = room.id.split('::',1)[0].split(':');
+												var other = session.uid == groupidsplit[0] ? groupidsplit[1] : groupidsplit[0];
+												console.log('message -> private other', other);
+												var othersocket = getSockets([other])[0];
+												if (othersocket) {
+													// the client will be notified in a special way for private chats
+													othersocket.emit('private chat', roomId, entry, mapping);
+												}
+												
+												// update unread counts
+												client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
+													if (!err) {
+														var roomsArray = user[0].split(',');
+														var unreadsArray = user[1].split(',');
+														helper.prependRoom(roomId, unreadsArray, roomsArray);
+														client2.hmset('user:'+other, 'chatrooms', roomsArray.join(), 'unreads', unreadsArray.join());
+													}
+												});
+											}
+											
+											// general broadcast to all clients in a room of the new message
+											io.sockets.in(roomId).emit('message', entry, mapping);
+											
+											// save the message to the database
+											client2.hmset('message:'+mid, {
+												'from'		: session.uid,
+												'to'		: roomId,
+												'text'		: msg,
+												'mentions'	: mentions.join(),
+												'timestamp'	: timestamp,
+											});
+											// add the message id to the db chatlog
+											client2.zadd('chatlog:'+roomId, timestamp, mid);
+											
+											// @mentions send persistent notifications
+											for (var i = 0; i < mentions.length; i++) {
+												var id = mentions[i];
+												client2.zadd('mentions:'+id, timestamp, mid);
+												
+												// only send offline notifications if user is offline
+												for (chatroom in nicknames) {
+													// user is not online
+													if (nicknames[chatroom][id] == undefined) {
+														// hook to send notifications when mention'd
+														helper.mentionNotification(socket.nickname, id, mid);
+														break;
+													}
+												}
+											}
+											
+											// @mentions send temporary notifications
+											var othersockets = getSockets(mentions);
+											for (var i = 0; i < othersockets.length; i++) {
+												othersockets[i].emit('command', 'mention', room, user, msg);
+											};
+										} else {
+											error(err, socket, 'message');
+										}
+									});
 								}
 							});
-						}
+						});
 					});
-				});
-			});
-		} else {
-			error("session.uid not defined", socket, 'message');
-		}
+				} else {
+					error('session.uid not defined', socket, 'message');
+				}
+			} else {
+				error('Room '+roomId+' is invalid.', socket, 'message');
+			}
+		});
 	});
 
 	// client asks for the nearest buildings for chatroom recommendation
@@ -740,7 +769,7 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('get nearest buildings', lat, lng, limit);
 		
 		// get known locations from db
-		client0.hgetall("location:all", function (err, locations) {
+		client0.hgetall('location:all', function (err, locations) {
 			if (!err) {
 				// create coordinates array for sorting
 				var coordinates = [];
@@ -750,11 +779,11 @@ io.sockets.on('connection', function (socket) {
 
 				//sort coordinates from nearest to furthest
 				coordinates.sort(function(a,b) {
-					var latA = a.split(",")[0];
-					var lngA = a.split(",")[1];
+					var latA = a.split(',')[0];
+					var lngA = a.split(',')[1];
 					var distA = dist(lat, lng, latA, lngA);
-					var latB = b.split(",")[0];
-					var lngB = b.split(",")[1];
+					var latB = b.split(',')[0];
+					var lngB = b.split(',')[1];
 					var distB = dist(lat, lng, latB, lngB);
 
 					return distA - distB;
@@ -766,8 +795,8 @@ io.sockets.on('connection', function (socket) {
 				for (var i = 0; i < limit; i++) {
 					function closure() {						
 						var coordinate = coordinates[i];
-						var lat2 = coordinate.split(",")[0];
-						var lng2 = coordinate.split(",")[1];
+						var lat2 = coordinate.split(',')[0];
+						var lng2 = coordinate.split(',')[1];
 						var id = locations[coordinate];
 						var distance = dist(lat,lng,lat2,lng2);
 
@@ -806,24 +835,32 @@ io.sockets.on('connection', function (socket) {
     // 		offline: list of user ids who are offline
 	socket.on('get users', function(room, filter, limit, callback) {
 		helper.debug('get users', room, filter, limit);
-		// query db for users whose names start with filter
-		client2.zrangebyscore('users:'+room, helper.stringScore(filter), helper.capStringScore(filter), 'limit', 0, limit, function(err, ids) {
-			if (!err) {
-				helper.getUsers(ids, function(users) {
-					var online = [];
-					var offline = [];
-					
-					// sort users into online and offline
-					for (id in users) {					
-						if (nicknames[room][id]) {
-							online.push(id);
-						} else {
-							offline.push(id);
-						}
+		
+		helper.isValid(room, session ? session.uid : null, function(isValid, rawId) {
+			if (isValid) {
+				// query db for users whose names start with filter
+				client2.zrangebyscore('users:'+room, helper.stringScore(filter), helper.capStringScore(filter), 'limit', 0, limit, function(err, ids) {
+					if (!err) {
+						helper.getUsers(ids, session ? session.uid : null, function(users) {
+							var online = [];
+							var offline = [];
+							
+							// sort users into online and offline
+							for (id in users) {					
+								if (nicknames[room][id]) {
+									online.push(id);
+								} else {
+									offline.push(id);
+								}
+							}
+							callback(users, online, offline);
+						});
+					} else {
+						callback();
 					}
-					callback(users, online, offline);
 				});
 			} else {
+				error('Room '+roomId+' is invalid.', socket, 'message');
 				callback();
 			}
 		});
@@ -836,59 +873,66 @@ io.sockets.on('connection', function (socket) {
 	function getCommands(filter, uid, roomId, callback) {
 		helper.debug('get commands', uid, filter, roomId);
 		
-		helper.getUsers([uid], function(mapping) {
-			console.log(mapping);
-			if (Object.keys(mapping).length) {
-				var user = mapping[uid];
-				var commands = [];
-				var isGSI = false;
-				var gsirooms = user.gsirooms.split(',');
-				for (var i = 0; i <  gsirooms.length; i++){
-					if (gsirooms[i] == roomId){
-						isGSI = true;
-						break;
+		helper.isValid(roomId, uid, function(isValid, rawId) {
+			if (isValid) {
+				helper.getUsers([uid], uid, function(mapping) {
+					console.log(mapping);
+					if (Object.keys(mapping).length) {
+						var user = mapping[uid];
+						var commands = [];
+						var isGSI = false;
+						var gsirooms = user.gsirooms.split(',');
+						for (var i = 0; i <  gsirooms.length; i++){
+							if (gsirooms[i] == roomId){
+								isGSI = true;
+								break;
+							}
+						}
+						
+						// COMMANDLIST
+						// kick, ban, warn, unban
+						if (isGSI || (user.special > 0 && user.special <= SPECIAL_ADMIN)) {
+							commands = commands.concat({
+								name: 			'KICK',
+								description: 	'Boots the @users from the room. The @users can join back immediately.',
+								type: 			'GSI',
+							}, {
+								name: 			'WARN',
+								description: 	'Temporarily silences the @users. The @users can still view messages. The @users can speak again after 5 minutes.',
+								type: 			'GSI',
+							}, {
+								name: 			'BAN',
+								description: 	'Permanently silences the @users. The @users can still view messages. The @users can never speak again.',
+								type: 			'GSI',
+							}, {
+								name: 			'FORGIVE',
+								description: 	'Allows the @users to talk again.',
+								type: 			'GSI',
+							});
+						}
+						
+						if (user.special > 0 && user.special <= SPECIAL_ADMIN) {
+							commands = commands.concat({
+								name: 			'ADMIN',
+								description: 	'Gives administrator priviledges to the @users.',
+								type: 			'ADMIN',
+							}, {
+								name: 			'GSI',
+								description: 	'Gives GSI priviledges to the @users.',
+								type: 			'ADMIN',
+							}, {
+								name: 			'DEMOTE',
+								description: 	'Removes all priviledges from the @users.',
+								type: 			'ADMIN',
+							});
+						}
+						commands = commands.filter(function(command) { return command.name.indexOf(filter) == 0});
+						callback(commands);
 					}
-				}
-				
-				// COMMANDLIST
-				// kick, ban, warn, unban
-				if (isGSI || (user.special > 0 && user.special <= SPECIAL_ADMIN)) {
-					commands = commands.concat({
-						name: 			'KICK',
-						description: 	'Boots the @users from the room. The @users can join back immediately.',
-						type: 			'GSI',
-					}, {
-						name: 			'WARN',
-						description: 	'Temporarily silences the @users. The @users can still view messages. The @users can speak again after 5 minutes.',
-						type: 			'GSI',
-					}, {
-						name: 			'BAN',
-						description: 	'Permanently silences the @users. The @users can still view messages. The @users can never speak again.',
-						type: 			'GSI',
-					}, {
-						name: 			'FORGIVE',
-						description: 	'Allows the @users to talk again.',
-						type: 			'GSI',
-					});
-				}
-				
-				if (user.special > 0 && user.special <= SPECIAL_ADMIN) {
-					commands = commands.concat({
-						name: 			'ADMIN',
-						description: 	'Gives administrator priviledges to the @users.',
-						type: 			'ADMIN',
-					}, {
-						name: 			'GSI',
-						description: 	'Gives GSI priviledges to the @users.',
-						type: 			'ADMIN',
-					}, {
-						name: 			'DEMOTE',
-						description: 	'Removes all priviledges from the @users.',
-						type: 			'ADMIN',
-					});
-				}
-				commands = commands.filter(function(command) { return command.name.indexOf(filter) == 0});
-				callback(commands);
+				});
+			} else {
+				error('Room '+roomId+' is invalid.', socket, 'message');
+				callback();
 			}
 		});
 	};
@@ -954,14 +998,19 @@ io.sockets.on('connection', function (socket) {
 					if (rooms.length && reply[0]) {
 						for (var i = 0; i < rooms.length; i++) {
 							(function closure() {
-								var room = rooms[i];
-								helper.getUsers(Object.keys(nicknames[room]), function(mapping) {
+								var roomId = rooms[i];
+								
+								helper.isValid(roomId, session.uid, function(isValid, rawId) {
+									if (isValid) {
+										helper.getUsers(Object.keys(nicknames[roomId]), session.uid, function(mapping) {
 
-									// update unreads to time of d/c
-									unreads[i] = time;
+											// update unreads to time of d/c
+											unreads[i] = time;
 
-									// broadcast to other clients in the room of the new online users list
-									io.sockets.in(room).emit('online', room, mapping);
+											// broadcast to other clients in the room of the new online users list
+											io.sockets.in(roomId).emit('online', roomId, mapping);
+										});
+									}
 								});
 							})();
 						}
@@ -972,9 +1021,9 @@ io.sockets.on('connection', function (socket) {
 				}
 			});
 		} else {
-			error("session.uid not defined", socket, 'disconnect');
+			error('session.uid not defined', socket, 'disconnect');
 		}
 	});
 });
 
-console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+console.log('Express server listening on port %d in %s mode', app.address().port, app.settings.env);

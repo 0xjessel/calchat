@@ -1,4 +1,12 @@
 /* CSS Document */
+h1.splash{
+	width:445px;
+	height:161px;
+	background: url('/img/logo-lg.png');
+	font-size:1px;
+	color:white;
+}
+
 .fblogin {
 	float: left;
 	position:relative;
@@ -22,6 +30,14 @@
 		width: 233px;
 		height: 40px;
 		background: url('../img/fb-connect-lg.png');
+	}
+
+	h1.splash {
+		width:160px;
+		height:160px;
+		background: url('/img/logo-sm.png');
+		font-size:1px;
+		color:white;
 	}
 }
 
@@ -56,6 +72,8 @@
 
 .hero-unit {
 	background-image: url('/img/grid_noise.png');
+	padding-top: 30px;
+	padding-bottom: 30px;
 }
 
 /* stupid hero-unit p overriding this css property */
@@ -63,4 +81,8 @@
 	color:white;
 	font-size:13px;
 	line-height:18px;
+}
+
+.fb-like {
+	margin-top: 20px;
 }

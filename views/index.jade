@@ -1,47 +1,66 @@
 include includes/navbar
 
+#fb-root
+  script
+      (function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=297402036983700";
+      fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+
 div.container-fluid
   div.hero-unit
     div.row-fluid
       div.span6
-        img(src='/img/logo-lg.png', width='445px', height='161px')
+        h1.splash
+          | CalChat
         if loggedIn
           h2 Welcome back, #{everyauth.facebook.user.name}
-          p hope you're enjoying CalChat! 
+          p hope you're enjoying CalChat! in the meantime...
+          h3
+            a(href="/feedback") send us some feedback!
+          div.fb-like(data-href='http://calchat.net', data-send='false', data-width='450', data-show-faces='true')
         else 
           h2 Welcome to CalChat!
-          p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or builtilding in chatrooms all over campus (and more!). built by cal students for cal students.
+          p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or building in chatrooms all over campus (and more!). built by Cal students for Cal students.
         if !loggedIn
+          div.
           div.fblogin
             a(href='/auth/facebook')#login
             a(href="#", rel="tooltip", title="we will never post to your fb without your permission. we only use fb connect to discourage spamming and trolling.")#why [why?]
-          div.features
-            br
-            h2
-              a(href='/features').features check out some of our features! &raquo;
+          div
+            div.fb-like(data-href='http://calchat.net', data-send='false', data-width='450', data-show-faces='true')
+
       div.span6
         #myCarousel.carousel.slide
           .carousel-inner
             .item.active
-              img(src='/img/carousel/1.jpg', alt='')
-              .carousel-caption
-                h4 Meet, talk, learn
-                p
-                  | Chat and collaborate with students and instructors with public group chats -meet classmates, ask questions, set up study groups... all that jazz.
+              a(href='/features')
+                img(src='/img/carousel/1.jpg', alt='')
+                .carousel-caption
+                  h4 Meet, talk, learn
+                  p
+                    | Chat and collaborate with students and instructors with public group chats -meet classmates, ask questions, set up study groups... all that jazz.
             .item
-              img(src='/img/carousel/2.jpg', alt='')
-              .carousel-caption
-                h4 Location-based chat rooms
-                p
-                  | CalChat has chat rooms for every class, building, and dorm. No need to find or create groups, just jump in and join the conversation. 
+              a(href='/features')
+                img(src='/img/carousel/2.jpg', alt='')
+                .carousel-caption
+                  h4 Location-based chat rooms
+                  p
+                    | CalChat has chat rooms for every class, building, and dorm. No need to find or create groups, just jump in and join the conversation. 
             .item
-              img(src='/img/carousel/3.jpg', alt='')
-              .carousel-caption
-                h4 Facebook integration
-                p 
-                  | Easily connect with you classmates - no more trying to remember how that guy spells his last name or wondering if youre friending the wrong person. 
+              a(href='/features')
+                img(src='/img/carousel/3.jpg', alt='')
+                .carousel-caption
+                  h4 Facebook integration
+                  p 
+                    | Easily connect with your classmates - no more trying to remember how that guy spells his last name or wondering if you're friending the wrong person. 
           a.carousel-control.left(href='#myCarousel', data-slide='prev') ‹
           a.carousel-control.right(href='#myCarousel', data-slide='next') ›
+        h2
+          a(href='/features').features check out some of our features! &raquo;  
 
           
   div.row-fluid
@@ -57,6 +76,4 @@ div.container-fluid
       h2 Private chat
       p We're not just about public chat rooms. CalChat lets you private message any other user if you prefer to talk one-on-one.
       a(href='/features#privchat').btn Read more &raquo;
-  hr
-  div.footer 
-    p &copy; calchat 2012
+
