@@ -141,6 +141,8 @@ app.listen(3000);
 var io = sio.listen(app);
 var nicknames = {};
 
+io.set('transports', ['xhr-polling']);
+io.set('polling duration', 10);
 io.set('log level', 1);
 io.set('authorization', function(data, accept) {
 	if (data.headers.cookie) {

@@ -3,7 +3,7 @@
 // socket.io specific code
 var opts = {};
 opts['sync disconnect on unload'] = false;
-var socket = io.connect(null, opts);
+var socket = io.connect('http://www.calchat.net:3000', opts);
 var current = rooms[0];
 var chatDiv, sidebar;
 var selfAnnounced = false;
