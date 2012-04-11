@@ -3,12 +3,19 @@ p {
 }
 
 .avatar {
-	        border-radius:5px;
-	   -moz-border-radius:5px;
-	-webkit-border-radius:5px;
+	        border-radius:7px;
+	   -moz-border-radius:7px;
+	-webkit-border-radius:7px;
 }
 
 .container-fluid {
 	width: 75%;
 	margin: 0px auto;
+}
+
+.badge {
+	height: 25px;
+	width: 25px;
+	padding-left: 1px;
+	background-color: white;
 }
