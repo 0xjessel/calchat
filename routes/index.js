@@ -295,7 +295,7 @@ exports.about = function (req, res) {
 		layout: 'layout-about',
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
-		index: 5
+		index: 4
 	})
 }
 
