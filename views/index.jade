@@ -18,8 +18,10 @@ div.container-fluid
           | CalChat
         if loggedIn
           h2 Welcome back, #{everyauth.facebook.user.name}
-          p hope you're enjoying CalChat! 
-          a(href="/feedback") send us some feedback!
+          p hope you're enjoying CalChat! in the meantime...
+          h3
+            a(href="/feedback") send us some feedback!
+          div.fb-like(data-href='http://calchat.net', data-send='false', data-width='450', data-show-faces='true')
         else 
           h2 Welcome to CalChat!
           p ever have trouble connecting with people in your classes or on campus? CalChat lets you talk to people in the same lecture hall, class, or building in chatrooms all over campus (and more!). built by Cal students for Cal students.
@@ -54,8 +56,8 @@ div.container-fluid
                   | Easily connect with your classmates - no more trying to remember how that guy spells his last name or wondering if you're friending the wrong person. 
           a.carousel-control.left(href='#myCarousel', data-slide='prev') ‹
           a.carousel-control.right(href='#myCarousel', data-slide='next') ›
-      h2
-        a(href='/features').features check out some of our features! &raquo;  
+        h2
+          a(href='/features').features check out some of our features! &raquo;  
 
           
   div.row-fluid
