@@ -1,4 +1,4 @@
-var socket = io.connect('http:www.//calchat.net:3000', null);
+var socket = io.connect('http:www.//calchat.net', null);
 
 // for user.special field
 var SPECIAL_NONE		= 0;

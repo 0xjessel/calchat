@@ -134,7 +134,7 @@ app.get('/about', routes.about);
 app.get('/feedback', routes.feedback)
 app.get('*', routes.invalid);
 
-app.listen(3000);
+app.listen(80);
 
 /**
 * Socket.IO server (single process only)

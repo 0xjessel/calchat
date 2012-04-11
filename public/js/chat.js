@@ -2,7 +2,7 @@
 
 // socket.io specific code
 var opts = {};
-var socket = io.connect('http://www.calchat.net:3000', null);
+var socket = io.connect('http://www.calchat.net', null);
 var current = rooms[0];
 var chatDiv, sidebar;
 var selfAnnounced = false;
