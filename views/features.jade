@@ -7,81 +7,91 @@ div.container-fluid
       h4 a list of all the neat stuff we've built into CalChat
       hr
 
-  #classchat.row-fluid
-    div.span4
-      img(src='/img/features/classchat.jpg', alt='', width='260px', height='180px').thumbnail
-    div.span8
-      h2 Classroom Chat
-      p CalChat has created a chatroom for every class at Berkeley (in the current semester). This gives students and instructors a common meeting ground to talk, ask questions, connect with peers, and form study partners.
-  br
+  div.row-fluid
+    div.span12
+      #container.row-fluid
+        div.span6
+          #classchat.row-fluid
+            div.span6
+              img(src='/img/features/classchat.jpg', alt='', width='260px', height='180px').thumbnail
+            div.span6
+              h2 Classroom Chat
+              p CalChat has created a chatroom for every class at Berkeley (in the current semester). This gives students and instructors a common meeting ground to talk, ask questions, connect with peers, and form study partners.
+        div.span6
+          #bldgchat.row-fluid
+            div.span6
+              img(src='/img/features/bldgchat.jpg', alt='').thumbnail
+            div.span6
+              h2 Building Chat
+              p There are also chatrooms for every building on campus. These may be used by students simply to talk to others nearby, or for certain buildings, a "water cooler" for an entire department (i.e. Soda for CS, South Hall for ISchool, Morrison for Music, etc.) This can also be very useful for announcements such as building-specific events, dept-wide alerts, etc.
 
-  #bldgchat.row-fluid
-    div.span4
-      img(src='/img/features/bldgchat.jpg', alt='').thumbnail
-    div.span8
-      h2 Building Chat
-      p There are also chatrooms for every building on campus. These may be used by students simply to talk to others nearby, or for certain buildings, a "water cooler" for an entire department (i.e. Soda for CS, South Hall for ISchool, Morrison for Music, etc.) This can also be very useful for announcements such as building-specific events, dept-wide alerts, etc.
-  br
+  div.row-fluid
+    div.span12
+      #container.row-fluid
+        div.span6
+          #privchat.row-fluid
+            div.span6   
+                img(src='/img/features/privchat.jpg', alt='').thumbnail
+            div.span6
+              h2 Private Messaging
+              p Any user can be private messaged on CalChat. Its natural for students to want to talk one-on-one, whether its a private matter, just for fun, or for convenience's sake. This hopefully encourages you to meet more classmates and find study partners and friends. 
+        div.span6
+          #mentions.row-fluid
+            div.span6
+                img(src='/img/features/mentions.jpg', alt='').thumbnail
+            div.span6
+              h2 @mentions
+              p CalChat supports the ability to '@mention' users, in the same vein as Twitter, Facebook, etc, so that there is a covenient and consistent way to address specific users in a group chat. This will display a link to chat with them in the message text and also alert the user (if they choose so) that they have been mentioned in a chat.
 
-  #privchat.row-fluid
-    div.span4 	
-        img(src='/img/features/privchat.jpg', alt='').thumbnail
-    div.span8
-      h2 Private Messaging
-      p Any user can be private messaged on CalChat. Its natural for students to want to talk one-on-one, whether its a private matter, just for fun, or for convenience's sake. This hopefully encourages you to meet more classmates and find study partners and friends. 
-  br
+  div.row-fluid
+    div.span12
+      #container.row-fluid
+        div.span6
+          #fb.row-fluid
+            div.span6
+              img(src='/img/features/fb.jpg', alt='').thumbnail
+            div.span6
+              h2 Facebook Integration
+              p Every CalChat user needs to be authenticated and logged in via Facebook. This makes it easier to connect with classmates offline (no need to worry about spelling so-and-so's name right in a fb search, or whether you're friending the wrong person), but also is there to discourage trolling and spamming. Remember, on CalChat everyone knows that you're you.
+        div.span6
+          #nearby.row-fluid
+            div.span6
+              img(src='/img/features/nearby.jpg', alt='').thumbnail
+            div.span6
+              h2 Nearby Rooms
+              p If you allow CalChat to grab your location (don't worry, we don't store or stalk), we can recommend buildings and rooms nearby so you can chat with the people who are close by. Who knows, maybe you'll even discover cool things happening near where you are!
 
-  #mentions.row-fluid
-    div.span4
-        img(src='/img/features/mentions.jpg', alt='').thumbnail
-    div.span8
-      h2 @mentions
-      p CalChat supports the ability to '@mention' users, in the same vein as Twitter, Facebook, etc, so that there is a covenient and consistent way to address specific users in a group chat. This will display a link to chat with them in the message text and also alert the user (if they choose so) that they have been mentioned in a chat.
-  br
-
-  #fb.row-fluid
-    div.span4
-      img(src='/img/features/fb.jpg', alt='').thumbnail
-    div.span8
-      h2 Facebook Integration
-      p Every CalChat user needs to be authenticated and logged in via Facebook. This makes it easier to connect with classmates offline (no need to worry about spelling so-and-so's name right in a fb search, or whether you're friending the wrong person), but also is there to discourage trolling and spamming. Remember, on CalChat everyone knows that you're you.
-  br
-
-  #nearby.row-fluid
-    div.span4
-      img(src='/img/features/nearby.jpg', alt='').thumbnail
-    div.span8
-      h2 Nearby Rooms
-      p If you allow CalChat to grab your location (don't worry, we don't store or stalk), we can recommend buildings and rooms nearby so you can chat with the people who are close by. Who knows, maybe you'll even discover cool things happening near where you are!
-  br
-
-  #redirect.row-fluid
-    div.span4
-      img(src='/img/features/redirect.jpg', alt='').thumbnail
-    div.span8
-      h2 Room+Time URL Redirect
-      p If you tell CalChat which room you're in, we'll automatically redirect you to the class that's going on in there right now (try going to /chat/306soda or /chat/100wheeler while you're sitting in lecture). You can write a URL using any room name and throw it up on the whiteboard so all your classmates can hop in the chatroom.
-  br
-
-  #mobile.row-fluid
-    div.span4
-      img(src='/img/features/mobile.jpg', alt='').thumbnail
-    div.span8
-      h2 Mobile Access
-      p CalChat is designed to work on modern mobile devices such as HTML5-capable smartphones and tablets. We automatically resize elements depending on the size of your device's screen. 
-  br
-
-  #archives.row-fluid
-    div.span4
-      img(src='/img/features/archives.jpg', alt='').thumbnail
-    div.span8
-      h2 Archives
-      p Structured archives (by date) are available for any chatroom. So don't worry if you forgot what your GSI said in yesterday's discussion, you can hop over to the archives and find it. 
-  br
-
-  #admin.row-fluid
-    div.span4
-      img(src='/img/features/moderator.jpg', alt='').thumbnail
-    div.span8
-      h2 Moderator Tools
-      p Of course, no chatroom app would be complete without moderator functions. Authorized GSI/instructor accounts have the ability to warn, kick, or ban users from their class chatrooms by typing '\warn', '\kick', '\ban' into the chat console. 
+  div.row-fluid
+    div.span12
+      #container.row-fluid
+        div.span6
+          #redirect.row-fluid
+            div.span6
+              img(src='/img/features/redirect.jpg', alt='').thumbnail
+            div.span6
+              h2 Room+Time URL Redirect
+              p If you tell CalChat which room you're in, we'll automatically redirect you to the class that's going on in there right now (try going to /chat/306soda or /chat/100wheeler while you're sitting in lecture). You can write a URL using any room name and throw it up on the whiteboard so all your classmates can hop in the chatroom.
+        div.span6
+          #mobile.row-fluid
+            div.span6
+              img(src='/img/features/mobile.jpg', alt='').thumbnail
+            div.span6
+              h2 Mobile Access
+              p CalChat is designed to work on modern mobile devices such as HTML5-capable smartphones and tablets. We automatically resize elements depending on the size of your device's screen. 
+  div.row-fluid
+    div.span12
+      #container.row-fluid
+        div.span6
+          #archives.row-fluid
+            div.span6
+              img(src='/img/features/archives.jpg', alt='').thumbnail
+            div.span6
+              h2 Archives
+              p Structured archives (by date) are available for any chatroom. So don't worry if you forgot what your GSI said in yesterday's discussion, you can hop over to the archives and find it. 
+        div.span6
+          #admin.row-fluid
+            div.span6
+              img(src='/img/features/moderator.jpg', alt='').thumbnail
+            div.span6
+              h2 Moderator Tools
+              p Of course, no chatroom app would be complete without moderator functions. Authorized GSI/instructor accounts have the ability to warn, kick, or ban users from their class chatrooms by typing '\warn', '\kick', '\ban' into the chat console. 
