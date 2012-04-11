@@ -1,5 +1,3 @@
-var socket = io.connect();
-
 function getGeo() {
 	if (Modernizr.geolocation) {
 		navigator.geolocation.getCurrentPosition(handle_geolocation_query, handle_errors);

@@ -3,13 +3,14 @@
 // socket.io specific code
 var opts = {};
 opts['sync disconnect on unload'] = false;
-var socket = io.connect(null, opts);
+var socket = io.connect('http://www.calchat.net:3000', opts);
 var current = rooms[0];
 var chatDiv, sidebar;
 var selfAnnounced = false;
 var unread = {};
 var privateMsgs = [];
 var updateTitleId;
+var focused = true;
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
@@ -236,6 +237,9 @@ function message (entry, mapping) {
 				title1 = title2;
 				title2 = document.title;
 			}, 2000);
+			if (!focused) {
+				$('#ping').trigger('play');
+			}
 		}
 
 		scrollToBottom();
@@ -594,6 +598,14 @@ $(document).ready(function () {
 	
 	$('a[rel=tooltip]').tooltip();
 });
+
+$(window).focus(function() {
+	focused = true;
+});
+
+$(window).blur(function() {
+	focused = false;
+})
 
 var init = true;
 window.addEventListener('popstate', function(e) {

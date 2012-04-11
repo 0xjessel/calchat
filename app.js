@@ -130,6 +130,8 @@ app.get('/chat/:room', routes.chatroom);
 app.get('/chat/:room/archives', routes.archives);
 app.get('/authenticate/:room', routes.authenticate);
 app.get('/features', routes.features);
+app.get('/about', routes.about);
+app.get('/feedback', routes.feedback)
 app.get('*', routes.invalid);
 
 app.listen(3000);
@@ -140,6 +142,8 @@ app.listen(3000);
 var io = sio.listen(app);
 var nicknames = {};
 
+io.set('transports', ['xhr-polling']);
+io.set('polling duration', 10);
 io.set('log level', 1);
 io.set('authorization', function(data, accept) {
 	if (data.headers.cookie) {

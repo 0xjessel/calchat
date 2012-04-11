@@ -264,7 +264,7 @@ exports.archives = function(req, res) {
 							title: pretty,
 							begin: before.getTime(),
 							end: after.getTime(),
-							index: 3 //wtf should this be
+							index: 9
 						});
 					} else {
 						res.redirect('home');
@@ -281,11 +281,31 @@ exports.archives = function(req, res) {
 
 exports.features = function (req, res) {
 	res.render('features', {
-		title: 'Features',
+		title: 'Features | CalChat',
 		layout: 'layout-features',
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
-		index: 4
+		index: 3
+	})
+}
+
+exports.about = function (req, res) {
+	res.render('about', {
+		title: 'About | CalChat',
+		layout: 'layout-about',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 5
+	})
+}
+
+exports.feedback = function (req, res) {
+	res.render('feedback', {
+		title: 'Feedback | CalChat',
+		layout: 'layout-about',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 6
 	})
 }
 
