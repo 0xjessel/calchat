@@ -93,8 +93,6 @@ function getNotificationContent(to, mid, type, callback) {
 					client2.hget('user:'+replies[0], 'nick', function (err, reply) {
 						if (!err && reply != '') {
 							getRoomInfo(replies[1], null, function(roomInfo) {
-								console.log('sldkfjsldkfjlsdkjf');
-								console.log(reply);
 								var room = roomInfo;
 								toReturn['roomUrl'] = room.url;
 								toReturn['from'] = reply;
