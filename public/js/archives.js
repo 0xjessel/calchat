@@ -1,4 +1,4 @@
-var socket = io.connect();
+var socket = io.connect('http://www.calchat.net');
 var chatDiv;
 var today = begin;
 

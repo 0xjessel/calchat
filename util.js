@@ -1,6 +1,6 @@
 // Utility functions shared by all server code
-var mURL = 'http://calchat.net';
-var mChatURL = 'http://calchat.net/chat/';
+var mURL = 'http://www.calchat.net';
+var mChatURL = 'http://www.calchat.net/chat/';
 
 var TwilioClient = require('twilio').Client;
 var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', mURL);
