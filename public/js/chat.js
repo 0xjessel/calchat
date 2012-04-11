@@ -10,6 +10,7 @@ var selfAnnounced = false;
 var unread = {};
 var privateMsgs = [];
 var updateTitleId;
+var focused = true;
 for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
@@ -233,9 +234,10 @@ function message (entry, mapping) {
 				title1 = title2;
 				title2 = document.title;
 			}, 2000);
+			if (!focused) {
+				$('#ping').trigger('play');
+			}
 		}
-
-		$('#ping').trigger('play');
 
 		scrollToBottom();
 	} else {
@@ -594,6 +596,16 @@ $(document).ready(function () {
 	
 	$('a[rel=tooltip]').tooltip();
 });
+
+$(window).focus(function() {
+	$('h2').text('true');
+	focused = true;
+});
+
+$(window).blur(function() {
+	$('h2').text('false');
+	focused = false;
+})
 
 var init = true;
 window.addEventListener('popstate', function(e) {
