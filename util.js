@@ -71,9 +71,7 @@ function sendEmail(subject, to, template, data, callback) {
 // to: user id to send message to
 // mid: message id that generated the notification
 function mentionSMS(to, mid) {
-	console.log('totally');
 	getNotificationContent(to, mid, 'phone', function(reply) {
-		console.log('abcdefghijklm');
 		content = reply;
 		var footerLink = ' - '+mChatURL+content['roomUrl'];
 		var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
@@ -84,7 +82,6 @@ function mentionSMS(to, mid) {
 			txt = txt+'..';
 		}
 		msg = msg+txt+footerLink;
-		console.log('oh knows');
 		// call helper function
 		sendSMS(content['dest'], msg, null, function (sms) {
 			console.log('done');
