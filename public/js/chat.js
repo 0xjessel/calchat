@@ -598,12 +598,10 @@ $(document).ready(function () {
 });
 
 $(window).focus(function() {
-	$('h2').text('true');
 	focused = true;
 });
 
 $(window).blur(function() {
-	$('h2').text('false');
 	focused = false;
 })
 
