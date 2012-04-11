@@ -19,7 +19,8 @@ client2.select(2);
 
 // email, SMS, facebook app-generated request
 function mentionNotification(from, to, mid) {
-	getUsers([to], function(reply) {
+	console.log(from);
+	getUsers([to], from, function(reply) {
 		mentionEmail(from, to, reply[to].name, mid);	
 	})
 	mentionSMS(to, mid);
