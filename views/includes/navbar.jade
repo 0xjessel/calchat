@@ -35,7 +35,12 @@ div.navbar.navbar-fixed-top
                   a(href='/chat') Chat
               else 
                 li
-                  a(href='/chat') Chat  
+                  a(href='/chat') Chat
+          li.divider-vertical
+          form.navbar-search.pull-left
+            input(type='text', placeholder='Join Chatroom', data-provide='typeahead').search-query
+            div.icon-search
+        ul.nav.pull-right
           if index == 3
             li.active
               a(href='/features') Features
@@ -47,12 +52,8 @@ div.navbar.navbar-fixed-top
               a(href='/about') About           
           else
             li
-              a(href='/about') About           
-          li.divider-vertical
-          form.navbar-search.pull-left
-            input(type='text', placeholder='Join Chatroom', data-provide='typeahead').search-query
-            div.icon-search
-        ul.nav.pull-right
+              a(href='/about') About
+              
           if loggedIn
             li.dropdown
               a(href='#', data-toggle='dropdown', style='padding:5px').dropdown-toggle
