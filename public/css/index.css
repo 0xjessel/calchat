@@ -72,6 +72,8 @@ h1.splash{
 
 .hero-unit {
 	background-image: url('/img/grid_noise.png');
+	padding-top: 30px;
+	padding-bottom: 30px;
 }
 
 /* stupid hero-unit p overriding this css property */
