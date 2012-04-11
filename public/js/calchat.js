@@ -126,7 +126,7 @@ function getTypeaheadItem(name, description, icontype) {
 		$('<span>').addClass('typeahead-firstline').append(name));
 	var secondLine = $('<div>').addClass('typeahead-secondline').addClass('typeahead-secondline').append(description);
 	var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);					
-	var icon = getIcon(icontype).addClass('typeahead-icon');
+	var icon = $('<i>').addClass(getIconClass(icontype)).addClass('typeahead-icon');
 	
 	var html = $('<div>').addClass('typeahead-container').append(
 		icon,
@@ -259,22 +259,22 @@ function getLabelOf(type) {
 	return label;
 }
 
-function getIcon(type) {
+function getIconClass(type) {
 	switch(type) {
 		case 'class':
-			return $('<i>').addClass('icon-book');
+			return 'icon-book';
 		case 'building':
-			return $('<i>').addClass('icon-home');
+			return 'icon-home';
 		case 'special':
-			return $('<i>').addClass('icon-gift');
+			return 'icon-gift';
 		case 'redirect':
-			return $('<i>').addClass('icon-time');
+			return 'icon-time';
 		case 'new':
-			return $('<i>').addClass('icon-plus');
+			return 'icon-plus';
 		case 'private':
-			return $('<i>').addClass('icon-user');
+			return 'icon-user';
 		case 'group':
-			return $('<i>').addClass('icon-glass');
+			return 'icon-glass';
 		default:
 			return null;
 	}

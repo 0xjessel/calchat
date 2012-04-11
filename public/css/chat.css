@@ -119,6 +119,12 @@ h3.title-text {
 	color: dimgrey;
 }
 
+.chat-title > i {
+	vertical-align:baseline;
+	margin-left:6px;	
+	margin-right:12px;	
+}
+
 #fb-link {
 	vertical-align:super;
 	margin-right:8px;

@@ -11,7 +11,7 @@ $(document).ready(function () {
 		for (var i = 0; i < rooms.length; i++) {
 			var room = rooms[i];
 			
-			var icon = getIcon(room.type).addClass('chats-icon');
+			var icon = $('<i>').addClass(getIconClass(room.type)).addClass('chats-icon');
 
 			var unread = room.unread;
 			var unreadBadge = $('<span>').css('display', 'none').addClass('badge').addClass('badge-error').text(unread);

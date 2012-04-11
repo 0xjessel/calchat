@@ -272,6 +272,8 @@ function renderChatroom(anchor) {
 	unread[current.id] = 0;
 	
 	$('.loading').removeClass('hidden');
+	$('.chat-title > i').addClass('hidden');
+	
 	$('.actions').addClass('hidden');
 	$('.rooms .active').removeClass('active');
 	anchor.parent().addClass('active');
@@ -322,6 +324,7 @@ function renderChatlogs (logs, mapping, room) {
 	}
 	$('.chat-title h2').text(pretty);
 	$('.chat-title h3').text(title);
+	$('.chat-title > i').removeClass().addClass(getIconClass(room.type));
 	
 	window.History.replaceState(null, null, '/chat/'+room.url);			
 	
@@ -369,7 +372,7 @@ $(document).ready(function () {
 		var pretty = room.pretty;
 		var id = room.id;
 		var element = $('<li>');
-		var icon = getIcon(room.type).addClass('chats-icon');
+		var icon = $('<i>').addClass(getIconClass(room.type)).addClass('chats-icon');
 		
 		if (i == 0) {
 			element.addClass('active');
