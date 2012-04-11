@@ -260,7 +260,7 @@ exports.archives = function(req, res) {
 						title: pretty,
 						begin: before.getTime(),
 						end: after.getTime(),
-						index: 3 //wtf should this be
+						index: 9 //wtf should this be
 					});
 				} else {
 					res.redirect('home');
@@ -278,7 +278,7 @@ exports.features = function (req, res) {
 		layout: 'layout-features',
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
-		index: 4
+		index: 3
 	})
 }
 
