@@ -1,7 +1,4 @@
 // Responsible for rendering the chat room
-audiojs.events.ready(function() {
-	var as = audiojs.createAll();
-});
 
 // socket.io specific code
 var opts = {};
@@ -237,6 +234,8 @@ function message (entry, mapping) {
 				title2 = document.title;
 			}, 2000);
 		}
+
+		$('#ping').trigger('play');
 
 		scrollToBottom();
 	} else {
