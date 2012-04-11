@@ -1,4 +1,12 @@
 /* CSS Document */
+h1.splash{
+	width:445px;
+	height:161px;
+	background: url('/img/logo-lg.png');
+	font-size:1px;
+	color:white;
+}
+
 .fblogin {
 	float: left;
 	position:relative;
@@ -22,6 +30,14 @@
 		width: 233px;
 		height: 40px;
 		background: url('../img/fb-connect-lg.png');
+	}
+
+	h1.splash {
+		width:160px;
+		height:160px;
+		background: url('/img/logo-sm.png');
+		font-size:1px;
+		color:white;
 	}
 }
 
