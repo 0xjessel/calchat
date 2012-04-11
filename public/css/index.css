@@ -76,6 +76,10 @@ h1.splash{
 	padding-bottom: 30px;
 }
 
+a, a:hover, a:visited, a:active, a:link {
+	text-decoration:none;
+}
+
 /* stupid hero-unit p overriding this css property */
 .carousel-caption p {
 	color:white;
