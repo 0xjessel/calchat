@@ -282,6 +282,16 @@ exports.features = function (req, res) {
 	})
 }
 
+exports.about = function (req, res) {
+	res.render('about', {
+		title: 'About',
+		layout: 'layout-about',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 4
+	})
+}
+
 exports.authenticate = function (req, res, next) {
 	helper.debug('authenticate', req.params);
 	var room = req.params.room;
