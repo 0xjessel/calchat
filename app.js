@@ -131,6 +131,7 @@ app.get('/chat/:room/archives', routes.archives);
 app.get('/authenticate/:room', routes.authenticate);
 app.get('/features', routes.features);
 app.get('/about', routes.about);
+app.get('/feedback', routes.feedback)
 app.get('*', routes.invalid);
 
 app.listen(3000);

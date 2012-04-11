@@ -274,7 +274,7 @@ exports.archives = function(req, res) {
 
 exports.features = function (req, res) {
 	res.render('features', {
-		title: 'Features',
+		title: 'Features | CalChat',
 		layout: 'layout-features',
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
@@ -284,11 +284,21 @@ exports.features = function (req, res) {
 
 exports.about = function (req, res) {
 	res.render('about', {
-		title: 'About',
+		title: 'About | CalChat',
 		layout: 'layout-about',
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
-		index: 4
+		index: 5
+	})
+}
+
+exports.feedback = function (req, res) {
+	res.render('feedback', {
+		title: 'Feedback | CalChat',
+		layout: 'layout-about',
+		loggedIn: req.loggedIn,
+		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+		index: 6
 	})
 }
 
