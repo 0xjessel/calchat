@@ -1,4 +1,7 @@
 // Responsible for rendering the chat room
+audiojs.events.ready(function() {
+	var as = audiojs.createAll();
+});
 
 // socket.io specific code
 var opts = {};
