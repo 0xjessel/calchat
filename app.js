@@ -773,6 +773,7 @@ io.sockets.on('connection', function (socket) {
 			if (!err) {
 				// create coordinates array for sorting
 				var coordinates = [];
+				console.log(locations);
 				for (var key in locations) {
 					coordinates.push(key);
 				}
