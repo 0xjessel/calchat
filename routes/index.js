@@ -62,7 +62,7 @@ exports.dashboard = function(req, res) {
 		var roomIds = req.user.chatrooms.split(',');
 		helper.getRoomsInfo(roomIds, req.user.id, function(rooms) {
 			if (rooms[0] != null) {
-				client2.hget('user:'+req.user.id, 'unread', function (err, unread) {
+				client2.hget('user:'+req.user.id, 'unreads', function (err, unread) {
 					if (!err) {
 						var unreads = unread.split(',');
 						if (unreads.length > 0) {
@@ -153,10 +153,10 @@ exports.chatroom = function(req, res) {
 				if (req.user.chatrooms != "") {
 					userChatrooms = req.user.chatrooms.split(',');
 				}
-				if (req.user.unread != "") {
-					unreads = req.user.unread.split(',');
+				if (req.user.unreads != "") {
+					unreads = req.user.unreads.split(',');
 				}
-				if (sessionRooms === undefined && userChatrooms === undefined && req.user.unread === undefined) {
+				if (sessionRooms === undefined && userChatrooms === undefined && req.user.unreads === undefined) {
 					req.send(404);
 				}
 
@@ -185,7 +185,7 @@ exports.chatroom = function(req, res) {
 				}
 
 				// convert array to string, update db
-				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unread', unreads.join(), function() {
+				client2.hmset('user:'+req.user.id, 'chatrooms', userChatrooms.join(), 'unreads', unreads.join(), function() {
 					helper.getRoomsInfo(userChatrooms, req.user.id, function(rooms) {
 						res.render('chat', {
 							title: rooms[0].pretty,

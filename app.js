@@ -65,7 +65,7 @@ everyauth.facebook
 					'email': fbUserMetadata.email,
 					'phone': '',
 					'chatrooms': 'CALCHAT',
-					'unread': timeStamp,
+					'unreads': timeStamp,
 					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
 					'oauth': accessToken,
 					'special': SPECIAL_NONE,
@@ -221,7 +221,7 @@ io.sockets.on('connection', function (socket) {
 		}
 		return sockets;
 	}
-	
+
 	// sent by client when it loads /chat/..
 	// roomIds: list of room ids that the user wants to join. current: active chatroom id
 	// callback: same callback as get chatlog. see getChatlog()
@@ -287,7 +287,7 @@ io.sockets.on('connection', function (socket) {
 		
 		// can only leave room if logged in
 		if (session !== undefined && session.uid !== undefined){
-			client2.hmget('user:'+session.uid, 'unread', 'chatrooms', function (err, reply) {
+			client2.hmget('user:'+session.uid, 'unreads', 'chatrooms', function (err, reply) {
 				// removes room from client's list of chatrooms
 				if (!err && reply[0] != null && reply[1] != null) {
 					var rooms = reply[1].split(',');
@@ -298,7 +298,7 @@ io.sockets.on('connection', function (socket) {
 					var unreads = reply[0].split(',');
 					unreads.splice(index, 1);
 
-					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join(), function (err, reply) {
+					client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unreads', unreads.join(), function (err, reply) {
 						callback();
 					});
 				} else {
@@ -338,7 +338,7 @@ io.sockets.on('connection', function (socket) {
 		helper.debug('remove room', room);
 
 		// remove room from user's list of chatrooms and unread
-		client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+		client2.hmget('user:'+session.uid, 'chatrooms', 'unreads', function(err, reply) {
 			if (!err && reply[0] != null && reply[1] != null) {
 
 				var rooms = reply[0].split(',');
@@ -350,7 +350,7 @@ io.sockets.on('connection', function (socket) {
 					unreads.splice(index, 1)
 				}
 		
-				client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
+				client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unreads', unreads.join());
 			} else {
 				error(err, socket, 'remove room');
 			}
@@ -376,7 +376,7 @@ io.sockets.on('connection', function (socket) {
 				// reset unread counts for logged in users
 				if (session !== undefined && session.uid !== undefined) {
 					// make this chatroom most recent in user's list
-					client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+					client2.hmget('user:'+session.uid, 'chatrooms', 'unreads', function(err, reply) {
 						if (!err && reply[0] != null && reply[1] != null){
 							var rooms = reply[0].split(',');
 							var unreads = reply[1].split(',');
@@ -385,7 +385,7 @@ io.sockets.on('connection', function (socket) {
 							var index = rooms.indexOf(roomId);
 							rooms.unshift(rooms.splice(index, 1));
 							unreads.unshift(unreads.splice(index, 1));
-							client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unread', unreads.join());
+							client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unreads', unreads.join());
 						} else {
 							error(err, socket, 'get chatlog');
 						}
@@ -688,7 +688,7 @@ io.sockets.on('connection', function (socket) {
 												}
 												
 												// update unread counts
-												client2.hmget('user:'+other, 'chatrooms', 'unread', function(err, user) {
+												client2.hmget('user:'+other, 'chatrooms', 'unreads', function(err, user) {
 													if (!err) {
 														var roomsArray = user[0].split(',');
 														var unreadsArray = user[1].split(',');
@@ -987,26 +987,25 @@ io.sockets.on('connection', function (socket) {
 				delete nicknames[room][session.uid];
 			}
 
-			// set unread start timestamp so we can calculate how many messages the client missed
-			client2.hmget('user:'+session.uid, 'chatrooms', 'unread', function(err, reply) {
+			// reset unread start timestamp so we can calculate how many messages the client missed next time
+			client2.hmget('user:'+session.uid, 'chatrooms', 'unreads', function(err, reply) {
 				if (!err && reply[0] != null && reply[1] != null) {
 					var rooms = reply[0].split(',');
-					var unreads = reply[1].split(',');
+					var unreads = [];
 					var time = new Date().getTime();
 
+					for (i in rooms) {
+						unreads.push(time);
+					}
+					client2.hset('user:'+session.uid, 'unreads', unreads.join());
 					// do not run if array is [''] (which happens b/c ''.split(',') becomes [''])
 					if (rooms.length && reply[0]) {
 						for (var i = 0; i < rooms.length; i++) {
-							(function closure() {
+							(function closure(callback) {
 								var roomId = rooms[i];
-								
 								helper.isValid(roomId, session.uid, function(isValid, rawId) {
 									if (isValid) {
 										helper.getUsers(Object.keys(nicknames[roomId]), session.uid, function(mapping) {
-
-											// update unreads to time of d/c
-											unreads[i] = time;
-
 											// broadcast to other clients in the room of the new online users list
 											io.sockets.in(roomId).emit('online', roomId, mapping);
 										});
@@ -1014,7 +1013,6 @@ io.sockets.on('connection', function (socket) {
 								});
 							})();
 						}
-						client2.hset('user:'+session.uid, 'unread', unreads.join());
 					}
 				} else {
 					error(err, socket, 'disconnect');
