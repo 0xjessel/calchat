@@ -105,8 +105,6 @@ function getNotificationContent(to, mid, type, callback) {
 							getRoomInfo(replies[1], null, function(roomInfo) {
 								var room = roomInfo;
 								toReturn['roomUrl'] = room.url;
-								console.log('tagalog');
-								console.log(reply);
 								toReturn['from'] = reply;
 								toReturn['txt'] = replies[2];
 								toReturn['room'] = room.pretty;
