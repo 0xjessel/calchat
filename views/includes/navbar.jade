@@ -55,6 +55,7 @@ div.navbar.navbar-fixed-top
               a(href='/about') About
               
           if loggedIn
+            li.divider-vertical
             li.dropdown
               a(href='#', data-toggle='dropdown', style='padding:5px').dropdown-toggle
                 img(src='http://graph.facebook.com/'+user.id+'/picture?type=square', height='30', width='30').avatar 
