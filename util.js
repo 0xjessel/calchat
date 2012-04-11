@@ -4,6 +4,8 @@ var TwilioClient = require('twilio').Client;
 var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', 'http://calchat.net:3000');
 var phone = client.getPhoneNumber('+15107468123');
 
+var email = require('./node_modules/mailer');
+
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
@@ -15,54 +17,98 @@ client2.select(2);
 
 // email, SMS, facebook app-generated request
 function mentionNotification(to, mid) {
+	mentionEmail(to, mid);	
 	mentionSMS(to, mid);
+}
+
+function mentionEmail(to, mid) {
+	getNotificationContent(to, mid, 'email', function(reply) {
+		var content = reply;
+		var link = 'http://calchat.net:3000/chat/'+content['roomUrl'];
+		var msg = 'Hi,\n Message: '+content['txt']+'\n link: '+link;
+		var toEmail = content['dest'];
+		var subject = content['from']+' mentioned you in '+content['room'];
+		sendEmail(toEmail, subject, msg, function() {
+			console.log('sweet');				
+		})
+	});
+}
+
+function sendEmail(to, subject, body, callback) {
+	console.log('sending email to '+to);
+	console.log('subject: '+subject);
+	console.log('body: '+body);
+	email.send({
+		host: "smtp.gmail.com",
+		port: "465",
+		ssl: true,
+		domain: "localhost",
+		to: to,
+		from: "notifications@calchat.net",
+		subject: subject,
+		body: body,
+		authentication: "login",
+		username: "notifications@calchat.net",
+		password: "sanrensei"
+	}, 
+	function(err, result) {
+		if (err) { console.log('email: '+err); }
+		console.log('email sent!');
+		callback();
+	});
 }
 
 // helper function to send an SMS notification
 // to: user id to send message to
 // mid: message id that generated the notification
 function mentionSMS(to, mid) {
-	// get to's phone number
-	client2.hget('user:'+to, 'phone', function (err, reply) {
+	getNotificationContent(to, mid, 'phone', function(reply) {
+		content = reply;
+		var footerLink = " - calchat.net:3000/chat/"+content['roomUrl'];
+		var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
+		var msgSize = 160 - msg.length - footerLink.length;							
+		var txt = content['txt'];
+		if (txt.length > msgSize) {
+			txt = txt.substring(0, msgSize - 2);
+			txt = txt+'..';
+		}
+		msg = msg+txt+footerLink;
+		// call helper function
+		sendSMS(content['dest'], msg, null, function (sms) {
+			console.log('done');
+		});
+	});
+}
+
+// to: destination uid
+// mid: message id
+// type: "email" or "phone"
+function getNotificationContent(to, mid, type, callback) {
+	var toReturn = {};	
+	client2.hget('user:'+to, type, function(err, reply) {
 		if (!err && reply != '') {
-			var phoneNum = reply;	
-			// fetch the message object
-			client2.hmget('message:'+mid, 'from', 'to', 'text', function (err, replies) {
+			toReturn['dest'] = reply;
+			client2.hmget('message:'+mid, 'from', 'to', 'text', function(err, replies) {
 				if (!err && replies.length) {
-					var fromUid = replies[0];
-					// fetch nickname of the user that generated the notification
-					client2.hget('user:'+fromUid, 'nick', function (err, reply) {
+					client2.hget('user:'+replies[0], 'nick', function (err, reply) {
 						if (!err && reply != '') {
-							var from = reply;
-							var room = replies[1];
-							var roomUrl = room;
-							// change room text if private chat
-							if (room.split(':').length == 2) {
-								room = 'a private chat';
-							}
-							var txt = replies[2];
-							var footerLink = " - calchat.net:3000/chat/"+roomUrl;
-							var msg = from+' mentioned you in '+room+'!  Message: ';
-							var msgSize = 160 - msg.length - footerLink.length;							
-							if (txt.length > msgSize) {
-								txt = txt.substring(0, msgSize - 2);
-								txt = txt+'..';
-							}
-							msg = msg+txt+footerLink;
-							// call helper function
-							sendSMS(phoneNum, msg, null, function (sms) {
-								console.log('done');
-							})
-						} else {
-							console.log('getting nick from user:fromUid '+err + reply);
+							getRoomInfo(replies[1], null, function(roomInfo) {
+								console.log('sldkfjsldkfjlsdkjf');
+								console.log(reply);
+								var room = roomInfo;
+								toReturn['roomUrl'] = room.url;
+								toReturn['from'] = reply;
+								toReturn['txt'] = replies[2];
+								toReturn['room'] = room.pretty;
+								if (room.type == "private") {
+									toReturn['room'] = "a private chat";
+								}
+								callback(toReturn);
+							});
 						}
-					})	
-				} else {
-					console.log('getting message contents '+err+reply);
+					});
 				}
 			});
-		} else {
-			// user has no phone number associated
 		}
 	});
 }
