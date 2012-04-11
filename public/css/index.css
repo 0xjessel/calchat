@@ -15,6 +15,7 @@ h1.splash{
 .features {
 	clear: both;
 	color: dimgrey;
+	margin-left: 25px;
 }
 
 #why {
@@ -79,4 +80,8 @@ h1.splash{
 	color:white;
 	font-size:13px;
 	line-height:18px;
+}
+
+.fb-like {
+	margin-top: 20px;
 }
