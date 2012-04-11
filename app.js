@@ -697,7 +697,7 @@ io.sockets.on('connection', function (socket) {
 											// user is not online
 											if (nicknames[chatroom][id] == undefined) {
 												// hook to send notifications when mention'd
-												helper.mentionNotification(id, mid);
+												helper.mentionNotification(socket.nickname, id, mid);
 												break;
 											}
 										}

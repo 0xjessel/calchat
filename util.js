@@ -1,5 +1,4 @@
 // Utility functions shared by all server code
-
 var TwilioClient = require('twilio').Client;
 var client = new TwilioClient('ACdd4df176cb5b41e6a424f60633982d8e', '8c2cc16d9a8570469569682b92283030', 'http://calchat.net:3000');
 var phone = client.getPhoneNumber('+15107468123');
@@ -16,28 +15,36 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
 // email, SMS, facebook app-generated request
-function mentionNotification(to, mid) {
-	mentionEmail(to, mid);	
+function mentionNotification(from, to, mid) {
+	getUsers([to], function(reply) {
+		console.log('sldfjsldfkj');
+		console.log(reply);
+		mentionEmail(from, to, reply[to].name, mid);	
+	})
 	mentionSMS(to, mid);
 }
 
-function mentionEmail(to, mid) {
+function mentionEmail(from, to, toName, mid) {
 	getNotificationContent(to, mid, 'email', function(reply) {
 		var content = reply;
 		var link = 'http://calchat.net:3000/chat/'+content['roomUrl'];
-		var msg = 'Hi,\n Message: '+content['txt']+'\n link: '+link;
-		var toEmail = content['dest'];
 		var subject = content['from']+' mentioned you in '+content['room'];
-		sendEmail(toEmail, subject, msg, function() {
+		var data = {
+			  'fromName': content['from'],
+			  'toName': toName,
+			  'chatroom': content['room'],
+			  'message': content['txt'],
+			  'link': link
+		};
+		var template = './views/templates/mentionEmail.txt';
+		sendEmail(subject, content['dest'], template, data, function() {
 			console.log('sweet');				
-		})
+		});
 	});
 }
 
-function sendEmail(to, subject, body, callback) {
+function sendEmail(subject, to, template, data, callback) {
 	console.log('sending email to '+to);
-	console.log('subject: '+subject);
-	console.log('body: '+body);
 	email.send({
 		host: "smtp.gmail.com",
 		port: "465",
@@ -46,7 +53,8 @@ function sendEmail(to, subject, body, callback) {
 		to: to,
 		from: "notifications@calchat.net",
 		subject: subject,
-		body: body,
+		template: template,
+		data: data,
 		authentication: "login",
 		username: "notifications@calchat.net",
 		password: "sanrensei"
@@ -95,6 +103,8 @@ function getNotificationContent(to, mid, type, callback) {
 							getRoomInfo(replies[1], null, function(roomInfo) {
 								var room = roomInfo;
 								toReturn['roomUrl'] = room.url;
+								console.log('tagalog');
+								console.log(reply);
 								toReturn['from'] = reply;
 								toReturn['txt'] = replies[2];
 								toReturn['room'] = room.pretty;
