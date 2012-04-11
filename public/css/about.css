@@ -1,0 +1,14 @@
+p {
+	font-size: 14px;
+}
+
+.avatar {
+	        border-radius:5px;
+	   -moz-border-radius:5px;
+	-webkit-border-radius:5px;
+}
+
+.container-fluid {
+	width: 75%;
+	margin: 0px auto;
+}
