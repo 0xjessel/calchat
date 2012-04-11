@@ -146,7 +146,7 @@ socket.on('command', function(command, room, by, msg) {
 	var buttonlink = null;
 	
 	var type = 0;
-	var alertClass = 'alert-command';
+	var alertClass = 'notify-command';
 	var title = null;
 	var text = by.name+': '+msg;
 	var pretty = room.pretty;

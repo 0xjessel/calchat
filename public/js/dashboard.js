@@ -54,6 +54,7 @@ $(document).ready(function () {
 		);
 		container.prepend(
 			notify(1, 
+				'notify-phoneNum',
 				"Important!", 
 				"Enter your phone number (e.g. 5553234764) to be notified when someone @mentions you", 
 				callToAction, 
