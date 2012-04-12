@@ -1057,6 +1057,13 @@ io.sockets.on('connection', function (socket) {
 			error('session.uid not defined', socket, 'disconnect');
 		}
 	});
+
+	socket.on('add rooms', function(rooms, callback){
+		rooms.unshift("CALCHAT");
+		client2.hset('user:'+session.uid, 'chatrooms', rooms.join(), function() {
+			callback();
+		});
+	});
 });
 
 console.log('Express server listening on port %d in %s mode', app.address().port, app.settings.env);

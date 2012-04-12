@@ -1,4 +1,4 @@
-var socket = io.connect('http://www.calchat.net', null);
+var socket = io.connect(null, null);
 
 // for user.special field
 var SPECIAL_GSI			= -1;
@@ -6,9 +6,7 @@ var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 var SPECIAL_ADMIN		= 2;
 var SPECIAL_ALPHA		= 10;
-
 $(document).ready(function () {
-	var addChatForm = $('.navbar-search');
 	// addChatInput includes the input form in /dashboard 
 	// so that the typeahead code below populates both inputs
 	var addChatInput = $('.search-query');
@@ -47,9 +45,12 @@ $(document).ready(function () {
 				value		: $('<div>').append(addroomhtml.clone()).html(),
 			}
 
+			// don't allow first time users to add private group chats
+			var fromFirstTime = typeahead.$element.hasClass('modal-input');
+
 			if (query.indexOf(addChatInput.data('filter-empty')) == 0) {
 				var noresults = [];
-				if (isRoomAddable(addroom.id)) {
+				if (!fromFirstTime && isRoomAddable(addroom.id)) {
 					noresults = noresults.concat(addroom);
 				}
 				typeahead.process(noresults);
@@ -92,7 +93,7 @@ $(document).ready(function () {
 					room.value = $('<div>').append(html.clone()).html();
 				};
 				
-				if (!addroomexists && isRoomAddable(addroom.id)) {
+				if (!addroomexists && !fromFirstTime && isRoomAddable(addroom.id)) {
 					rooms = rooms.concat(addroom);
 				}
 				typeahead.process(rooms);
@@ -111,14 +112,20 @@ $(document).ready(function () {
 		
 		onselect: function(item) {
 			// item.pretty is the abbrev. form, o/w the pretty form
-			addChatInput.val(item.url);
-			addChatForm.submit();
+			addChatInput.data('item', item);
+			var form = $(this).get(0).$element.get(0).form;
+			$(form).data('item', item);
+			$(form).submit();
+
+			addChatInput.val('');
 		},
 	});
 	
-	addChatForm.submit(function () {
-		// no validation on text input, done on server side
-		window.location.href = '/chat/'+addChatInput.val();
+	$('.navbar-search').submit(function () {
+		if (addChatInput.data('item')) {
+			// no validation on text input, done on server side
+			window.location.href = '/chat/'+addChatInput.data('item').url;
+		}
 		return false;
 	});
 });

@@ -12,6 +12,8 @@ html(lang='en')
     var uid = #{user.id};
     var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
     var hasPhoneNum = #{hasPhoneNum}
+    var firstTime = #{firstTimeUser}
+    window.firstlogin = firstTime;
   script
     Modernizr.load([{
       test: Modernizr.history,
@@ -36,5 +38,11 @@ html(lang='en')
     if (window.location.hash) {
       window.location.hash = '';
       window.History.replaceState(null, null, window.location.href.slice(0, -1));
+    }
+  script
+    if (firstTime){
+      $(function () { 
+        $("#firstlogin").modal();
+      });
     }
   script(src='/js/dashboard.js')
