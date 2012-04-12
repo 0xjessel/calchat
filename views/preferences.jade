@@ -33,5 +33,5 @@ div.container-fluid
               input(type='email', name='email', value=user.email, disabled=user.emailenable==0).input-medium.inline#input-email
               label.checkbox.inline
               input(type='checkbox', name='emailenable', checked=user.emailenable!=0).inline#input-emailenable
-          button(type='submit').btn.btn-primary.btn-left Save
-          button(type='submit').btn.btn-right Cancel
+          button(type='submit').btn.btn-primary.save-button Save
+          button(type='submit').btn.cancel-button Cancel
