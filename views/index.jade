@@ -9,7 +9,12 @@ include includes/navbar
       js.src = "//connect.facebook.net/en_US/all.js#xfbml=1&appId=297402036983700";
       fjs.parentNode.insertBefore(js, fjs);
       }(document, 'script', 'facebook-jssdk'));
-
+div.alert.alert-success
+  a(data-dismiss="alert").close x
+  if !loggedIn
+    <a class="promo" target="_blank" href='http://www.surveygizmo.com/s3/883523/STC-Web-App-Competition-2012-Peoples-Choice-Awards'><b>We've been selected as finalists for the STC Web App Competition!</b> Vote for CalChat here! <i class="icon-share-alt"></i></a>
+  else
+    <a class="promo" target="_blank" href='http://www.surveygizmo.com/s3/883523/STC-Web-App-Competition-2012-Peoples-Choice-Awards'><b>Liked what you see?</b> Vote for CalChat in the final round of the STC Web App Competition! <i class="icon-share-alt"></i></a>
 div.container-fluid
   div.hero-unit
     div.row-fluid
@@ -18,7 +23,7 @@ div.container-fluid
           | CalChat
         if loggedIn
           h2 Welcome back, #{everyauth.facebook.user.name}
-          p hope you're enjoying CalChat! in the meantime...
+          p <a class="promo" target="_blank" href="http://www.surveygizmo.com/s3/883523/STC-Web-App-Competition-2012-Peoples-Choice-Awards">Vote for us</a> if you like CalChat! You can also..
           h3
             a(href="/feedback") send us some feedback!
           div.fb-like(data-href='http://www.calchat.net', data-send='false', data-width='450', data-show-faces='true')
