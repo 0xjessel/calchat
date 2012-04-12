@@ -234,10 +234,19 @@ function getLabel(fromUid, toRoom, mapping) {
 		special = mapping[fromUid].special;
 	}
 	
-	if (gsi) {
+	special = Number(special);
+	
+	// need this in preference order
+	if (special == SPECIAL_FOUNDER) {
+		return getLabelOf(SPECIAL_FOUNDER);
+	} else if (special == SPECIAL_ADMIN) {
+		return getLabelOf(SPECIAL_ADMIN);
+	} else if (gsi) {
 		return getLabelOf(SPECIAL_GSI);
+	} else if (special == SPECIAL_ALPHA) {
+		return getLabelOf(SPECIAL_ALPHA);
 	} else {
-		return getLabelOf(special);
+		return getLabelOf(SPECIAL_NONE);
 	}
 }
 
