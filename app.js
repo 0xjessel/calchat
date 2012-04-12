@@ -1061,6 +1061,10 @@ io.sockets.on('connection', function (socket) {
 	});
 
 	socket.on('add rooms', function(rooms, callback){
+		helper.debug('add rooms');
+		if (rooms == undefined) {
+			rooms = [];
+		}
 		rooms.unshift("CALCHAT");
 		client2.hset('user:'+session.uid, 'chatrooms', rooms.join(), function() {
 			callback();

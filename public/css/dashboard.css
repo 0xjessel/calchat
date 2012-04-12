@@ -1,4 +1,8 @@
 /* CSS Document */
+.phoneNum {
+	margin-top:10px;
+}
+
 .picture {
 	//width:160px;
 	//height:220px;
@@ -27,4 +31,17 @@ dd .btn {
 
 dd .btn-primary {
 	margin-left:5px;
+}
+
+.modal-classes ul {
+	list-style-type:none;
+}
+
+.modal-classes li i {
+	margin-right:5px;
+}
+
+.modal-join-chatrooms i {
+	margin-top:2px;
+	margin-right:5px;
 }

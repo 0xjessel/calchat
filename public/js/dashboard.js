@@ -48,22 +48,6 @@ $(document).ready(function () {
 		}
 	}
 
-	if (!hasPhoneNum) {
-		var callToAction = $('<form>').addClass('form-inline').addClass('phoneSubmit');
-		callToAction.append(
-			$('<input>').attr('type', 'text').attr('placeholder', 'Phone Number').addClass('input-medium').addClass('phone-number'),
-			$('<button>').attr('type', 'submit').addClass('btn').addClass('btn-submit').text('Save')
-		);
-		container.prepend(
-			notify(1, 
-				'notify-phoneNum',
-				"Important!", 
-				"Enter your phone number (e.g. 5553234764) to be notified when someone @mentions you", 
-				callToAction, 
-				false,
-				false));
-	}
-
 	$('.phoneSubmit').submit(function () {
 		socket.emit('phone num', uid, $('.phone-number').val(), function () {
 			$('.alert-info a').click();
@@ -95,7 +79,7 @@ $(document).ready(function () {
 
 		if (!initialRooms) initialRooms = [];
 		if ($.inArray(id, initialRooms) == -1){
-			$('.modal-classes').append(
+			$('.modal-classes-added').append(
 				$('<span>').addClass('label label-info label-initialroom').append(
 					item.pretty));
 			initialRooms.push(id);
@@ -107,10 +91,18 @@ $(document).ready(function () {
 
 	$('#initialsubmit').click(function(event) {
 		var initialRooms = $('#initialsubmit').data('initialRooms');
-		socket.emit('add rooms', initialRooms, function(){
-			window.firstTime = false;
-			window.location.href = '/chat/';
-		});
+		var phoneNumber = $('.phone-number').val();
+		if (isPhoneNumber(phoneNumber) || phoneNumber == '') {
+			socket.emit('add rooms', initialRooms, function(){
+				socket.emit('phone num', uid, phoneNumber, function() {
+					window.firstTime = false;
+					window.location.href = '/chat/';
+				});
+			});
+		} else {
+			$('.phoneSubmit .control-group').addClass('error');
+			$('.phoneSubmit .help-inline').text('invalid phone number');
+		}
 	    return false;
 	});
 

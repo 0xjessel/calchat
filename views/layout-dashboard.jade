@@ -10,7 +10,7 @@ html(lang='en')
   script
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
-    var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
+    var name = '#{user.nick}';
     var hasPhoneNum = #{hasPhoneNum}
     var firstTime = #{firstTimeUser}
     window.firstlogin = firstTime;
@@ -40,7 +40,7 @@ html(lang='en')
       window.History.replaceState(null, null, window.location.href.slice(0, -1));
     }
   script
-    if (firstTime){
+    if (true){
       $(function () { 
         $("#firstlogin").modal();
       });

@@ -353,3 +353,10 @@ function notify(type, alertClass, title, body, callToAction, hasButton, corner) 
 		null);
 	return alert;
 }
+
+function isPhoneNumber(n) {
+	if (n.length == 10) {
+	  return !isNaN(parseFloat(n)) && isFinite(n);
+	}
+	return false;
+}
