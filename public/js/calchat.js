@@ -244,6 +244,8 @@ function getLabel(fromUid, toRoom, mapping) {
 function getLabelOf(type) {
 	var label = $('<span>').addClass('label').css('display', 'none');
 	
+	// http://twitter.github.com/bootstrap/components.html#labels
+	
 	switch(Number(type)) {
 		case SPECIAL_GSI:
 		label.addClass('label-warning').text('GSI').show();

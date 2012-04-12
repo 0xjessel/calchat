@@ -28,7 +28,8 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 redis.debug_mode = false;
 
-// for the user: special field
+// for the user: special field and command type
+var SPECIAL_GSI			= -1;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 var SPECIAL_ADMIN		= 2;
@@ -138,7 +139,7 @@ app.get('/chat/:room/archives', routes.archives);
 app.get('/authenticate/:room', routes.authenticate);
 app.get('/features', routes.features);
 app.get('/about', routes.about);
-app.get('/feedback', routes.feedback)
+app.get('/feedback', routes.feedback);
 app.get('*', routes.invalid);
 
 app.listen(80);
@@ -903,19 +904,19 @@ io.sockets.on('connection', function (socket) {
 							commands = commands.concat({
 								name: 			'KICK',
 								description: 	'Boots the @users from the room. The @users can join back immediately.',
-								type: 			'GSI',
+								type: 			SPECIAL_GSI,
 							}, {
 								name: 			'WARN',
 								description: 	'Temporarily silences the @users. The @users can still view messages. The @users can speak again after 5 minutes.',
-								type: 			'GSI',
+								type: 			SPECIAL_GSI,
 							}, {
 								name: 			'BAN',
 								description: 	'Permanently silences the @users. The @users can still view messages. The @users can never speak again.',
-								type: 			'GSI',
+								type: 			SPECIAL_GSI,
 							}, {
 								name: 			'FORGIVE',
 								description: 	'Allows the @users to talk again.',
-								type: 			'GSI',
+								type: 			SPECIAL_GSI,
 							});
 						}
 						
@@ -923,15 +924,15 @@ io.sockets.on('connection', function (socket) {
 							commands = commands.concat({
 								name: 			'ADMIN',
 								description: 	'Gives administrator priviledges to the @users.',
-								type: 			'ADMIN',
+								type: 			SPECIAL_ADMIN,
 							}, {
 								name: 			'GSI',
 								description: 	'Gives GSI priviledges to the @users.',
-								type: 			'ADMIN',
+								type: 			SPECIAL_ADMIN,
 							}, {
 								name: 			'DEMOTE',
 								description: 	'Removes all priviledges from the @users.',
-								type: 			'ADMIN',
+								type: 			SPECIAL_ADMIN,
 							});
 						}
 						commands = commands.filter(function(command) { return command.name.indexOf(filter) == 0});

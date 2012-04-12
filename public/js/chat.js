@@ -12,10 +12,6 @@ for (var i = 0; i < rooms.length; i++) {
 	unread[rooms[i].id] = 0;
 }
 
-// for user.special field
-var SPECIAL_NONE		= 0;
-var SPECIAL_FOUNDER		= 1;
-
 function debug() {
 	function inner() {
 		for(var i = 0; i < arguments.length; i++) {
