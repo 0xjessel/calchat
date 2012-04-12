@@ -81,8 +81,33 @@ $(document).ready(function () {
 		return false;
 	});
 
-	$("#initialsubmit").click(function(event) {
-	    alert('hihihi');
+	$('.modal-join-chatrooms').submit(function() {
+		var item = $(this).data('item');
+		var id = item.id;
+
+		var initialRooms = $('#initialsubmit').data('initialRooms');
+
+		console.log('before', initialRooms);
+
+		if (!initialRooms) initialRooms = [];
+		if ($.inArray(id, initialRooms) == -1){
+			$('.modal-classes').append(
+				$('<span>').addClass('label label-info label-initialroom').append(
+					item.pretty));
+			initialRooms.push(id);
+			$('#initialsubmit').data('initialRooms', initialRooms);
+		}
+		console.log('after', initialRooms);
+		return false;
+	});
+
+	$('#initialsubmit').click(function(event) {
+		var initialRooms = $('#initialsubmit').data('initialRooms');
+		socket.emit('add rooms', initialRooms, function(){
+			window.firstTime = false;
+			window.location.href = '/chat/';
+		});
+	    return false;
 	});
 
 });

@@ -12,7 +12,7 @@ html(lang='en')
     var uid = #{user.id};
     var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
     var hasPhoneNum = #{hasPhoneNum}
-    var firstTime = true//#{firstTimeUser}
+    var firstTime = #{firstTimeUser}
     window.firstlogin = firstTime;
   script
     Modernizr.load([{
@@ -40,7 +40,7 @@ html(lang='en')
       window.History.replaceState(null, null, window.location.href.slice(0, -1));
     }
   script
-    if (firstTime){ //TODO: change this back to firstTime
+    if (firstTime){
       $(function () { 
         $("#firstlogin").modal();
       });

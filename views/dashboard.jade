@@ -15,7 +15,6 @@ div.container-fluid
           span.separator
             ·
           a(href='/logout') Logout
-
   div.row-fluid
     div.span12
       div.well
@@ -30,7 +29,6 @@ div.container-fluid
               form.form-search.form-inline.join-chatrooms
                 input(type='text', placeholder='Join Chatroom', data-provide='typeahead').input-medium.search-query
                 button(type='submit').btn.btn-primary Join
-       
   div.row-fluid
         div.span4
           h2 Chatrooms
@@ -52,23 +50,21 @@ div.container-fluid
               a(href='#') Feedback
             li
               a(href='#') Contact Us
-
-
 #firstlogin.modal.hide.fade.in(style='display: none;')
   .modal-header
     a.close(data-dismiss='modal') ×
     h3 Welcome to CalChat
+    h3 Since this is your first time, please add some classes to begin
   .modal-body
-    h4 Since this is your first time, please add some classes to begin
-    dt Search for rooms:
+    h3 Search for classes:
       dd
         form.form-search.form-inline.modal-join-chatrooms
-          input(type='text', placeholder='Join Chatroom', data-provide='typeahead').input-medium.search-query
+          input(type='text', placeholder='Join Chatroom', data-provide='typeahead').input-medium.search-query.modal-input
           //button(type='submit').btn.btn-primary Join
     //p You can add some text here.
     .modal-classes
-      h4 Classes Added:
+      h3 Classes Added:
   .modal-footer
     //a.btn.btn-success(href='#') Call to action
-      button#initialsubmit(type='submit').btn.btn-primary Submit
-      a.btn(href='#', data-dismiss='modal') Close
+    button#initialsubmit(type='submit').btn.btn-primary Submit
+    a.btn(href='#', data-dismiss='modal') Close
