@@ -1,5 +1,3 @@
-// socket variable already instantiated via geo.js
-
 $(document).ready(function () {
 	var container = $('.container-fluid');
 	if (rooms[0] == null) {

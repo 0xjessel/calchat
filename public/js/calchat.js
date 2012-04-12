@@ -1,4 +1,4 @@
-var socket = io.connect('http://www.calchat.net', null);
+var socket = io.connect(null, null);
 
 // for user.special field
 var SPECIAL_GSI			= -1;
