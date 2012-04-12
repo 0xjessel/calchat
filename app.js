@@ -995,6 +995,11 @@ io.sockets.on('connection', function (socket) {
 			});
 		}
 	});
+	
+	socket.on('save preferences', function(userprefs) {
+		helper.debug('save preferences', userprefs);
+		
+	});
 
 	// client disconnects from the server
 	socket.on('disconnect', function () {
