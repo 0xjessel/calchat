@@ -33,13 +33,17 @@ exports.dashboard = function(req, res) {
 		client2.hmget('user:'+req.user.id, 'phone', 'timestamp', function (err, reply) {
 			var hasPhoneNum = false;
 			var firstTimeUser = false;
-			if (!err && reply[0] && reply[1]) {
+			if (!err && reply[0]) {
 				if (reply[0].length == 10) {
 					if(helper.isPhoneNum(reply[0])) {
 						hasPhoneNum = true;
 					}
 				}
-				if(reply[1] + 30000 > Date.now()){
+			}
+			if (!err && reply[1]){
+				var timeJoined = (reply[1] * 1) + 30000; //need to multiply reply[1] by 1 to turn string to int
+				//checks to see if the user just joined
+				if(timeJoined > Date.now()){
 					firstTimeUser = true;
 				}
 			}
@@ -51,6 +55,7 @@ exports.dashboard = function(req, res) {
 				hasPhoneNum: hasPhoneNum,
 				rooms: rooms,
 				index: 1,
+				firstTimeUser: firstTimeUser,
 			});
 		});
 	}
@@ -63,7 +68,7 @@ exports.dashboard = function(req, res) {
 		helper.getRoomsInfo(roomIds, req.user.id, function(rooms) {
 			if (rooms[0] != null) {
 				client2.hget('user:'+req.user.id, 'unread', function (err, unread) {
-					if (!err) {
+					if (!err && unread != null) {
 						var unreads = unread.split(',');
 						if (unreads.length > 0) {
 							var added = 0;

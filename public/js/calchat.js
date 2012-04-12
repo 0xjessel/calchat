@@ -69,8 +69,14 @@ $(document).ready(function () {
 		
 		onselect: function(item) {
 			// item.pretty is the abbrev. form, o/w the pretty form
-			addChatInput.val(item.url);
-			addChatForm.submit();
+			if (!window.firstTime){
+				addChatInput.val(item.url);
+				addChatForm.submit();
+			}
+			else{
+				$('.modal-classes').append('<span class="label label-info">'+item.id+'</span> ');
+				addChatInput.val("");
+			}
 		},
 	});
 	

@@ -77,9 +77,14 @@ $(document).ready(function () {
 		return false;
 	});
 	
-	$('.form-search').submit(function () {
+	$('.join-chatrooms').submit(function () {
 		// no validation on text input, needs to be done on server side
 		window.location.href = '/chat/'+$('.form-search .search-query').val();
 		return false;
 	});
+
+	$("#initialsubmit").click(function(event) {
+	    alert('hihihi');
+	});
+
 });
