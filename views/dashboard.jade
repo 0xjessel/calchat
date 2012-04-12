@@ -62,12 +62,10 @@ div.container-fluid
     h3 Search for classes:
       dd
         form.form-search.form-inline.modal-join-chatrooms
-          input(type='text', placeholder='Join Chatroom', data-provide='typeahead').input-medium.search-query.modal-input
-          //button(type='submit').btn.btn-primary Join
-    //p You can add some text here.
+          input(type='text', placeholder='Join Chatroom', data-provide='typeahead',autofocus='autofocus').input-medium.search-query.modal-input
+          //$("#firstinput").focus();
     .modal-classes
       h3 Classes Added:
   .modal-footer
-    //a.btn.btn-success(href='#') Call to action
     button#initialsubmit(type='submit').btn.btn-primary Submit
     a.btn(href='#', data-dismiss='modal') Close
