@@ -3,7 +3,9 @@
 $(document).ready(function () {
 	var container = $('.container-fluid');
 	if (rooms[0] == null) {
-		container.prepend('<div class="alert alert-error"><a class="close fade in" data-dismiss="alert">x</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.</div>');
+		var alert = $('<div>').addClass('alert').addClass('alert-error');
+		alert.html('<a class="close fade in" data-dismiss="alert">&times;</a>You haven\'t added any chatrooms yet!  Search for a chatroom in the navbar above or in the Add Chatroom section below.');
+		container.prepend(alert);
 	} else {
 		var chatroomsList = $('#chatrooms');
 		var privateList = $('#privatechats');
@@ -29,7 +31,7 @@ $(document).ready(function () {
 				icon,
 				$('<span>').addClass('chats-name').append(pretty),
 				unreadBadge,
-				$('<span>').addClass('close close-chat').data('room', room.id).text('x')));
+				$('<span>').addClass('close close-chat').data('room', room.id).html('&times;')));
 			if (room.type == 'private' || room.type == 'group') {
 				privateList.append(li);
 			} else {
@@ -42,7 +44,9 @@ $(document).ready(function () {
 	if (path.length > 1) {
 		var invalid = path[1].split('=');
 		if (invalid[0] == 'invalid') {
-			container.prepend('<div class="alert alert-error"><a class="close" data-dismiss="alert">x</a><b>Error: </b>\"'+invalid[1]+'\" is an invalid chatroom, please try again.</div>');
+			var alert = $('<div>').addClass('alert').addClass('alert-error');
+			alert.html('<a class="close" data-dismiss="alert">&times;</a><b>Error: </b>\"'+invalid[1]+'\" is an invalid chatroom, please try again.');
+			container.prepend(alert);
 		}
 	}
 
