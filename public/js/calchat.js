@@ -1,9 +1,11 @@
 var socket = io.connect('http://www.calchat.net', null);
 
 // for user.special field
+var SPECIAL_GSI			= -1;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 var SPECIAL_ADMIN		= 2;
+var SPECIAL_ALPHA		= 10;
 
 $(document).ready(function () {
 	var addChatForm = $('.navbar-search');
@@ -231,29 +233,29 @@ function getLabel(fromUid, toRoom, mapping) {
 		};
 		special = mapping[fromUid].special;
 	}
-	if (special == SPECIAL_FOUNDER) {
-		return getLabelOf('FOUNDER');
-	} else if (special == SPECIAL_ADMIN) {
-		return getLabelOf('ADMIN');
-	} else if (gsi) {
-		return getLabelOf('GSI');
+	
+	if (gsi) {
+		return getLabelOf(SPECIAL_GSI);
 	} else {
-		return getLabelOf(null);
+		return getLabelOf(special);
 	}
 }
 
 function getLabelOf(type) {
 	var label = $('<span>').addClass('label').css('display', 'none');
 	
-	switch(type) {
-		case 'GSI':
+	switch(Number(type)) {
+		case SPECIAL_GSI:
 		label.addClass('label-warning').text('GSI').show();
 		break;
-		case 'ADMIN':
+		case SPECIAL_ADMIN:
 		label.addClass('label-important').text('ADMIN').show();
 		break;
-		case 'FOUNDER':
+		case SPECIAL_FOUNDER:
 		label.addClass('label-inverse').text('FOUNDER').show();
+		break;
+		case SPECIAL_ALPHA:
+		label.addClass('label-info').text('ALPHA').show();
 		break;
 	}
 	return label;

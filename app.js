@@ -32,6 +32,7 @@ redis.debug_mode = false;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 var SPECIAL_ADMIN		= 2;
+var SPECIAL_ALPHA		= 10;
 
 /**
 * Facebook Connect
@@ -58,30 +59,36 @@ everyauth.facebook
 		if (!err) { // no errors
 			if (Object.keys(reply).length == 0) { 
 				// no user found, create new user
-				client2.hmset('user:'+fbUserMetadata.id, {
-					'id': fbUserMetadata.id, 
-					'firstname': fbUserMetadata.first_name,
-					'lastname': fbUserMetadata.last_name,
-					'email': fbUserMetadata.email,
-					'phone': '',
-					'chatrooms': 'CALCHAT',
-					'unreads': timeStamp,
-					'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
-					'oauth': accessToken,
-					'special': SPECIAL_NONE,
-					'timestamp' : timeStamp,
-					'gsirooms' : '',
-				}, function() {
-					// add user to validrooms so other users can search for him
-					client0.zadd('validrooms',
-						helper.stringScore(fbUserMetadata.first_name+fbUserMetadata.last_name.charAt(0)),
-						fbUserMetadata.id);
-					// fetch the user we just saved to db
-					client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
-						if (err == null) {
-							promise.fulfill(reply);
-						}
-					})
+				client2.incr('user:count', function(err, count) {
+					var special = SPECIAL_NONE;
+					if (count < 50) {
+						special = SPECIAL_ALPHA;
+					}
+					client2.hmset('user:'+fbUserMetadata.id, {
+						'id': fbUserMetadata.id, 
+						'firstname': fbUserMetadata.first_name,
+						'lastname': fbUserMetadata.last_name,
+						'email': fbUserMetadata.email,
+						'phone': '',
+						'chatrooms': 'CALCHAT',
+						'unreads': timeStamp,
+						'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
+						'oauth': accessToken,
+						'special': special,
+						'timestamp' : timeStamp,
+						'gsirooms' : '',
+					}, function() {
+						// add user to validrooms so other users can search for him
+						client0.zadd('validrooms',
+							helper.stringScore(fbUserMetadata.first_name+fbUserMetadata.last_name.charAt(0)),
+							fbUserMetadata.id);
+						// fetch the user we just saved to db
+						client2.hgetall('user:'+fbUserMetadata.id, function(err, reply) {
+							if (err == null) {
+								promise.fulfill(reply);
+							}
+						})
+					});
 				});
 			} else { 
 				// fetch the user we just saved to db
