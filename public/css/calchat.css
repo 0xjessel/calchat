@@ -8,6 +8,10 @@ h1, h2, h3 {
         text-shadow: 0 1px 0 white;
 }
 
+a, a:hover, a:visited, a:active, a:link {
+	text-decoration:none;
+}
+
 .navbar-search {
 	position:relative;
 }
@@ -99,4 +103,9 @@ div.typeahead-main-left {
 
 .chats-name {
 	margin-left:5px;
+}
+
+.feedback, .about {
+	margin-left:25px;
+	float:right;
 }
