@@ -996,9 +996,19 @@ io.sockets.on('connection', function (socket) {
 		}
 	});
 	
-	socket.on('save preferences', function(userprefs) {
+	socket.on('save preferences', function(userprefs, callback) {
 		helper.debug('save preferences', userprefs);
 		
+		// preferences only work for logged in clients
+		if (session && session.uid) {
+			client2.hmset('user:'+session.uid, userprefs, function(err, set) {
+				// success if no err
+				callback(!err);
+			});
+		} else {
+			// fail due to not logged in
+			callback(false);
+		}
 	});
 
 	// client disconnects from the server

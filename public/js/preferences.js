@@ -21,13 +21,24 @@ $(document).ready(function () {
 			emailenable : 		emailenable,
 		};
 		
-		socket.emit('save preferences', userprefs);
+		$('.save-button').prop('disabled', true).html("Saving");
+		$('.fail-message').css('visibility', 'hidden');
+		socket.emit('save preferences', userprefs, function(success) {
+			if (success) {
+				// leave preferences
+				history.back();
+			} else {
+				// server error
+				$('.save-button').prop('disabled', false).html("Save");
+				$('.fail-message').css('visibility', 'visible');
+			}
+		});
 	});
 	
 	// Cancel button
 	$('.cancel-button').click(function() {
-		window.location.href = '/dashboard';
-		return false;
+		// leave preferences
+		history.back();
 	});
 	
 	

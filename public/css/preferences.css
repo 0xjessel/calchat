@@ -45,3 +45,8 @@ input.input-medium {
 .icon-hidden {
 	visibility: hidden;
 }
+
+.fail-message {
+	visibility: hidden;
+	color: red;
+}
