@@ -1,0 +1,30 @@
+h1.name {
+	display: inline-block;
+	vertical-align: bottom;
+}
+
+div.name {
+	padding-bottom:20px;
+}
+
+div.split {
+	display:inline-block;
+	width:50%;
+	min-width:100px;
+}
+
+div.left > p {
+	font-weight:bold;
+}
+
+input.input-medium {
+	width:80%;
+}
+
+#preferences-form label, .labels > p {
+	font-weight:bold;
+}
+
+#preferences-form > button {
+	margin: 0px 10px 0px 0px;
+}

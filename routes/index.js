@@ -22,7 +22,7 @@ exports.index = function(req, res) {
 		layout: 'layout-index', 
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
-		index: 0
+		index: 0,
 	});
 };
 
@@ -286,7 +286,7 @@ exports.features = function (req, res) {
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
 		index: 3
-	})
+	});
 }
 
 exports.about = function (req, res) {
@@ -296,7 +296,7 @@ exports.about = function (req, res) {
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
 		index: 4
-	})
+	});
 }
 
 exports.feedback = function (req, res) {
@@ -306,7 +306,23 @@ exports.feedback = function (req, res) {
 		loggedIn: req.loggedIn,
 		showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
 		index: 6
-	})
+	});
+}
+
+exports.preferences = function (req, res) {
+	if (req.loggedIn) {
+		res.render('preferences', {
+			title: 'Preferences | CalChat',
+			layout: 'layout-preferences',
+			loggedIn: req.loggedIn,
+			user: req.user,
+			showChatTab: (req.session.rooms && req.session.rooms.length) ? true : false,
+			index: 7
+		});
+	} else {
+		// must be logged in to use preferences
+		res.redirect('/?error=0');
+	}
 }
 
 exports.authenticate = function (req, res, next) {

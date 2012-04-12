@@ -1,0 +1,37 @@
+include includes/navbar
+
+div.container-fluid
+  div.row-fluid#main-row
+    div.span3
+      div.well
+        div.name
+          a(href='http://www.facebook.com/'+user.id)
+            img(src='http://graph.facebook.com/'+user.id+'/picture?type=square').avatar
+          h1.name #{user.firstname + ' ' + user.lastname.charAt(0)}
+        div.info
+          div.split.labels
+            p First name
+            p Last name
+            p Email address
+          div.split
+            p #{user.firstname}
+            p #{user.lastname}
+            p #{user.email}
+    div.span4
+      div.well
+        h1 Preferences
+        form#preferences-form
+          fieldset
+            legend Notifications
+            div.control-group
+              label(for='input-phone') Phone number
+              input(type='tel', name='phone', value=user.phone, disabled=user.phoneenable==0).input-medium.inline#input-phone
+              label.checkbox.inline
+              input(type='checkbox', name='phoneenable', checked=user.phoneenable!=0).inline#input-phoneenable
+            div.control-group
+              label(for='input-email') Email address
+              input(type='email', name='email', value=user.email, disabled=user.emailenable==0).input-medium.inline#input-email
+              label.checkbox.inline
+              input(type='checkbox', name='emailenable', checked=user.emailenable!=0).inline#input-emailenable
+          button(type='submit').btn.btn-primary.btn-left Save
+          button(type='submit').btn.btn-right Cancel

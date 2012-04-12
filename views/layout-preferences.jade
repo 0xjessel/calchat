@@ -1,0 +1,16 @@
+!!! 5
+html(lang='en')
+  head
+    include includes/head
+    link(rel='stylesheet', href='/css/preferences.css')
+
+  body!= body
+
+  include includes/footer
+  script
+    var uid = #{user.id};
+    var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
+  script(src='/js/libs/bootstrap/alert.js')
+  script(src='/js/libs/bootstrap/modal.js')
+  
+  script(src='/js/preferences.js')
