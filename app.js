@@ -62,22 +62,22 @@ everyauth.facebook
 				// no user found, create new user
 				client2.incr('user:count', function(err, count) {
 					var special = SPECIAL_NONE;
-					if (count < 50) {
+					if (count < 30) {
 						special = SPECIAL_ALPHA;
 					}
 					client2.hmset('user:'+fbUserMetadata.id, {
-						'id': fbUserMetadata.id, 
-						'firstname': fbUserMetadata.first_name,
-						'lastname': fbUserMetadata.last_name,
-						'email': fbUserMetadata.email,
-						'phone': '',
-						'chatrooms': 'CALCHAT',
-						'unreads': timeStamp,
-						'nick': fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
-						'oauth': accessToken,
-						'special': special,
-						'timestamp' : timeStamp,
-						'gsirooms' : '',
+						id: fbUserMetadata.id, 
+						firstname: fbUserMetadata.first_name,
+						lastname: fbUserMetadata.last_name,
+						email: fbUserMetadata.email,
+						phone: '',
+						chatrooms: 'CALCHAT',
+						unreads: timeStamp,
+						nick: fbUserMetadata.first_name+' '+fbUserMetadata.last_name.charAt(0),
+						oauth: accessToken,
+						special: special,
+						timestamp : timeStamp,
+						gsirooms : '',
 					}, function() {
 						// add user to validrooms so other users can search for him
 						client0.zadd('validrooms',
@@ -589,16 +589,20 @@ io.sockets.on('connection', function (socket) {
 												case 'GSI':
 												case 'DEMOTE':
 												
+												var kickusernames = {};
 												// send command message to each mentioned socket
 												var othersockets = getSockets(commandreceivers, session.uid);
 												for (var i = 0; i < othersockets.length; i++) {
 													var s = othersockets[i];
+													kickusernames[mapping[s.uid].name] = null;
 													s.emit('command', command.name.toLowerCase(), room, user, commandmsg);
 												};
 												
+												var commandusernames = {};
 												// update the banlist
 												for (var i = 0; i < commandreceivers.length; i++) {
 													var mention = commandreceivers[i];
+													commandusernames[mapping[mention].name] = null;
 													if (command.name == 'BAN' || command.name == 'WARN') {
 														// ban is permanent while warn is temporary
 														client2.hset('banlist:'+room.id, mention, command.name == 'BAN' ? -1 : timestamp);
@@ -638,14 +642,20 @@ io.sockets.on('connection', function (socket) {
 													}
 												};
 												
+												commandusernames = Object.keys(commandusernames);
 												var commandsdone = commandreceivers.length;
 												if (command.name == 'KICK') {
 													commandsdone = othersockets.length;
+													commandusernames = Object.keys(kickusernames);
 												}
 												
 												// announce back to the gsi that his command has been done
 												var capitalcommand = command.name.charAt(0)+command.name.substring(1);
-												socket.emit('announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
+												socket.emit(
+													'announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
+												console.log('announcement', commandusernames, commandusernames.join());
+												io.sockets.in(roomId).emit(
+													'announcement', roomId, capitalcommand+': '+commandusernames.join());
 												
 												// DO NOT CONTINUE once we've processed a command
 												return;
