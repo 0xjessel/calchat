@@ -63,7 +63,7 @@ exports.dashboard = function(req, res) {
 		helper.getRoomsInfo(roomIds, req.user.id, function(rooms) {
 			if (rooms[0] != null) {
 				client2.hget('user:'+req.user.id, 'unreads', function (err, unread) {
-					if (!err) {
+					if (!err && unread != null) {
 						var unreads = unread.split(',');
 						if (unreads.length > 0) {
 							var added = 0;
