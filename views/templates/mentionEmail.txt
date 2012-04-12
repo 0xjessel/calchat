@@ -1,0 +1,12 @@
+<div>Hello {{toName}},</div>
+<br/>
+<div>{{fromName}} mentioned you in {{chatroom}}.</div>
+<br/>
+<div>"{{message}}"
+<br/>
+<br/>
+<div>Click <a href="{{link}}">here</a> to view the chatroom.<div>
+<br/>
+<div>Thanks,</div>
+<br/>
+<div>The CalChat Team</div>

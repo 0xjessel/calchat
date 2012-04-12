@@ -14,7 +14,7 @@ meta(name='author', content='')
 
 meta(property='og:title', content=title)
 meta(property='og:description', content='CalChat is a web app that hosts chatrooms for every class and building on campus with the goal of connecting the cal campus community. By logging in with Facebook, students can talk to fellow students in the same building or class, make friends, find study partners, and stay in the loop.')
-meta(property='og:image', content='http://calchat.net:3000/img/logo-fb.png')
+meta(property='og:image', content='http://www.calchat.net/img/logo-fb.png')
 
 link(rel='stylesheet', href='/css/bootstrap.css') 
 link(rel='stylesheet', href='/css/calchat.css')
@@ -23,3 +23,14 @@ link(rel='stylesheet', href='/css/bootstrap-responsive.css')
 link(rel="apple-touch-icon-precomposed", sizes="114x114", href="/img/ico/apple-touch-icon-114-precomposed.png")
 link(rel="apple-touch-icon-precomposed", sizes="72x72", href="/img/ico/apple-touch-icon-72-precomposed.png")
 link(rel="apple-touch-icon-precomposed", href="/img/ico/apple-touch-icon-57-precomposed.png")
+
+script(type='text/javascript')
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-30787829-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();

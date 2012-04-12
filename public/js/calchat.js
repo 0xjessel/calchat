@@ -1,29 +1,72 @@
-var socket = io.connect();
+var socket = io.connect('http://www.calchat.net', null);
 
 // for user.special field
+var SPECIAL_GSI			= -1;
 var SPECIAL_NONE		= 0;
 var SPECIAL_FOUNDER		= 1;
 var SPECIAL_ADMIN		= 2;
+var SPECIAL_ALPHA		= 10;
 
 $(document).ready(function () {
 	var addChatForm = $('.navbar-search');
 	// addChatInput includes the input form in /dashboard 
 	// so that the typeahead code below populates both inputs
 	var addChatInput = $('.search-query');
-	var limit = 8;
+	var limit = 9;
 	addChatInput.typeahead({
 		source: function(typeahead, query) {
 			if (!query) {
 				typeahead.process([]);
 				return;
 			}
+			
+			// add room
+			var addroomname = stripHigh(query);
+			var addroomtitle = stripHigh(query);
+			var addroomtitletext = '';
+			var addroomdescriptiontext = ' Type : to add a description.';
+			var nametitlesplitindex = query.indexOf(':');
+			if (nametitlesplitindex != -1) {
+				if (nametitlesplitindex != query.length-1) {
+					addroomname = stripHigh(query.substring(0, nametitlesplitindex));
+					addroomtitle = query.substring(nametitlesplitindex+1);
+					addroomtitletext = ' ('+addroomtitle+')';
+				} else {
+					addroomname = addroomname.substring(0, addroomname.length - 1);
+				}
+				addroomdescriptiontext = ' Add a description.';
+			}
+			
+			var addroomhtml = getTypeaheadItem('Add '+addroomname+addroomtitletext, 'Create a new private room.'+addroomdescriptiontext, 'new');
+			var addroom = {
+				id			: addroomname,
+				url			: stripLow(addroomname)+'::new::'+addroomtitle,
+				pretty		: addroomname,
+				title		: addroomtitle,
+				type		: 'new',
+				value		: $('<div>').append(addroomhtml.clone()).html(),
+			}
 
 			if (query.indexOf(addChatInput.data('filter-empty')) == 0) {
-				typeahead.process([]);
+				var noresults = [];
+				if (isRoomAddable(addroom.id)) {
+					noresults = noresults.concat(addroom);
+				}
+				typeahead.process(noresults);
 				return;
 			}
+			
+			var querysplitindex = query.indexOf(':');
+			if (querysplitindex != -1) {
+				query = query.substring(0, querysplitindex);
+			}
+			
+			addChatInput.data('query', query);
 			// query db for valid rooms that begin with query
-			socket.emit('get validrooms', query, limit, function(rooms) {
+			socket.emit('get validrooms', query, limit-1, function(rooms) {
+				if (query != addChatInput.data('query')) return;
+				
+				var addroomexists = false;
 				if (!rooms.length) {
 					addChatInput.data('filter-empty', query);
 				} else {
@@ -36,23 +79,22 @@ $(document).ready(function () {
 					var pretty = room.pretty;
 					var title = room.title;
 					
+					if (room.id == addroom.id) {
+						addroomexists = true;
+					}
+					
 					if (room.type == 'private') {
 						pretty = prettyfor(room, uid);
-						title = titlefor(room, uid);
 					}
 
-					var firstLine = $('<div>').addClass('typeahead-firstline').append(
-						$('<span>').addClass('typeahead-firstline').append(pretty));
-					var secondLine = $('<div>').addClass('typeahead-secondline').addClass('typeahead-secondline').append(title);
-					var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);					
-					var icon = getIcon(room.type).addClass('typeahead-icon');
-					
-					var html = $('<div>').addClass('typeahead-container').append(
-						icon,
-						main);
+					var html = getTypeaheadItem(pretty, title, room.type);
 
 					room.value = $('<div>').append(html.clone()).html();
 				};
+				
+				if (!addroomexists && isRoomAddable(addroom.id)) {
+					rooms = rooms.concat(addroom);
+				}
 				typeahead.process(rooms);
 			});
 		},
@@ -82,13 +124,50 @@ $(document).ready(function () {
 	
 	addChatForm.submit(function () {
 		// no validation on text input, done on server side
-		window.location.href = '/chat/'+stripLow(addChatInput.val());
+		window.location.href = '/chat/'+addChatInput.val();
 		return false;
 	});
 });
 
+function getTypeaheadItem(name, description, icontype) {
+	var firstLine = $('<div>').addClass('typeahead-firstline').append(
+		$('<span>').addClass('typeahead-firstline').append(name));
+	var secondLine = $('<div>').addClass('typeahead-secondline').addClass('typeahead-secondline').append(description);
+	var main = $('<div>').addClass('typeahead-main').append(firstLine, secondLine);					
+	var icon = $('<i>').addClass(getIconClass(icontype)).addClass('typeahead-icon');
+	
+	var html = $('<div>').addClass('typeahead-container').append(
+		icon,
+		main);
+	
+	return html;
+}
+
 function stripLow(string) {
-	return string.replace(/[^A-Za-z0-9:]/g, '').toLowerCase();
+	var splitIndex = string.indexOf('::');
+	var front = string;
+	var back = '';
+	if (splitIndex != -1) {
+		front = string.substring(0, splitIndex);
+		back = string.substring(splitIndex);
+	}
+	return front.replace(/[^A-Za-z0-9:]/g, '').toLowerCase()+back;
+}
+
+function stripHigh(string) {
+	var splitIndex = string.indexOf('::');
+	var front = string;
+	var back = '';
+	if (splitIndex != -1) {
+		front = string.substring(0, splitIndex);
+		back = string.substring(splitIndex);
+	}
+	return front.replace(/[^A-Za-z0-9:]/g, '').toUpperCase()+back;
+}
+
+function isRoomAddable(name) {
+	name = stripHigh(name)
+	return name.replace(/[^A-Za-z:]/g, '') == name;
 }
 
 // helper function to render individual chat messages
@@ -115,7 +194,7 @@ function renderChatMessage(entry, mapping, enableLink) {
 			var id = mentions[i];
 			if (id && id in mapping) {
 				var link = $('<div>').append(
-					getUserLink(id, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
+					getUserLink(id, mapping, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
 
 				msg = msg.replace(mapping[id].name, link);
 			}
@@ -125,7 +204,7 @@ function renderChatMessage(entry, mapping, enableLink) {
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
 			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
-			$('<span>').addClass('from').append(getUserLink(fromUid, enableLink).addClass('from').append(from), label, ': '),
+			$('<span>').addClass('from').append(getUserLink(fromUid, mapping, enableLink).addClass('from').append(from), label, ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)
 		);
 		return element;
@@ -133,11 +212,15 @@ function renderChatMessage(entry, mapping, enableLink) {
 }
 
 // helper function to return a jquery anchor tag for a user's name
-function getUserLink(id, enable) {
-	if (!enable || uid == id || (uid == null && name == 'null')) {
+function getUserLink(id, mapping, enable) {
+	if (!enable || uid == id || (uid == null && name == 'null') || !mapping[id]) {
 		return $('<a>').attr('href', 'javascript:void(0)');
 	}
-	return $('<a>').attr('href', '/chat/'+Math.min(uid, id)+':'+Math.max(uid, id));
+	var lowid = Math.min(id,uid);
+	var highid = Math.max(id,uid);
+	var lowname = lowid == uid ? name : mapping[lowid].name;
+	var highname = highid == uid ? name : mapping[highid].name;
+	return $('<a>').attr('href', '/chat/'+lowid+':'+highid+'::private::'+lowname+':'+highname);
 }
 
 // helper function that returns a jquery GSI or FOUNDER label, etc
@@ -156,63 +239,66 @@ function getLabel(fromUid, toRoom, mapping) {
 		};
 		special = mapping[fromUid].special;
 	}
-	if (special == SPECIAL_FOUNDER) {
-		return getLabelOf('FOUNDER');
-	} else if (special == SPECIAL_ADMIN) {
-		return getLabelOf('ADMIN');
-	} else if (gsi) {
-		return getLabelOf('GSI');
+	
+	if (gsi) {
+		return getLabelOf(SPECIAL_GSI);
 	} else {
-		return getLabelOf(null);
+		return getLabelOf(special);
 	}
 }
 
 function getLabelOf(type) {
 	var label = $('<span>').addClass('label').css('display', 'none');
 	
-	switch(type) {
-		case 'GSI':
+	// http://twitter.github.com/bootstrap/components.html#labels
+	
+	switch(Number(type)) {
+		case SPECIAL_GSI:
 		label.addClass('label-warning').text('GSI').show();
 		break;
-		case 'ADMIN':
+		case SPECIAL_ADMIN:
 		label.addClass('label-important').text('ADMIN').show();
 		break;
-		case 'FOUNDER':
+		case SPECIAL_FOUNDER:
 		label.addClass('label-inverse').text('FOUNDER').show();
+		break;
+		case SPECIAL_ALPHA:
+		label.addClass('label-info').text('ALPHA').show();
 		break;
 	}
 	return label;
 }
 
-function getIcon(type) {
+function getIconClass(type) {
 	switch(type) {
 		case 'class':
-			return $('<i>').addClass('icon-book');
+			return 'icon-book';
 		case 'building':
-			return $('<i>').addClass('icon-home');
+			return 'icon-home';
 		case 'special':
-			return $('<i>').addClass('icon-gift');
-		case 'private':
-			return $('<i>').addClass('icon-comment');
+			return 'icon-gift';
 		case 'redirect':
-			return $('<i>').addClass('icon-time');
+			return 'icon-time';
+		case 'new':
+			return 'icon-plus';
+		case 'private':
+			return 'icon-user';
+		case 'group':
+			return 'icon-glass';
 		default:
 			return null;
 	}
 }
 
 function prettyfor(privateRoom, uid) {
-	var split = privateRoom.pretty.split(':');
-	return uid == privateRoom.id2 ? split[0] : split[1];
-}
-
-function titlefor(privateRoom, uid) {
-	var split = privateRoom.title.split(':');
-	return uid == privateRoom.id2 ? split[0] : split[1];
+	var idsplit = privateRoom.id.split('::')[0].split(':');
+	var prettysplit = privateRoom.pretty.split(':');
+	return uid == idsplit[1] ? prettysplit[0] : prettysplit[1];
 }
 
 function getotherfor(privateRoom, uid) {
-	return uid == privateRoom.id2 ? privateRoom.id1 : privateRoom.id2;
+	var idsplit = privateRoom.id.split('::')[0].split(':');
+	return uid == idsplit[1] ? idsplit[0] : idsplit[1];
 }
 
 // helper function to pop up a notification
@@ -251,7 +337,7 @@ function notify(type, alertClass, title, body, callToAction, hasButton, corner) 
 
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
 		, $('<h4>').addClass('alert-heading').text(title)
-		, $('<p>').text(body).addClass('alert-msg')
+		, $('<p>').addClass('alert-msg').text(body)
 		, (callToAction) ? 
 		$('<p>').append(callToAction) :
 		null);

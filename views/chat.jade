@@ -13,9 +13,9 @@ div.container-fluid
             img(src='/img/loading.gif').loading
         ul.nav.nav-list.sidebar.unstyled.rooms#private
           li.nav-header 
-            i.icon-user
+            i.icon-lock
             span.header-text
-              | Private Chats
+              | Private Rooms
             img(src='/img/loading.gif').loading
 
       div.well.sidebar-nav
@@ -31,6 +31,7 @@ div.container-fluid
         div.chat-header
           img(src='/img/loading.gif', style='float:right').loading
           div.chat-title
+            i
             h2.title-text Loading...
             h3.title-text
           div.actions.hidden
@@ -49,8 +50,10 @@ div.container-fluid
           form.form-inline#send-message
             div.input-append
               input(type='text', size='16', disabled='true', autocomplete='off', name='input-message', data-provide='typeahead').span7#message<
-              button(type='submit').btn Send
+              button(type='submit').btn.btn-primary Send
         else 
           div.fake-input
             input(type='text', size='16', disabled='true', title='login with facebook to participate!').span6
             a(href='/auth/facebook', rel='tooltip', title='login with facebook to participate!')#login
+
+audio(id='ping', src='/audio/simple_l.mp3', style='display:none')
