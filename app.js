@@ -656,7 +656,6 @@ io.sockets.on('connection', function (socket) {
 												var capitalcommand = command.name.charAt(0)+command.name.substring(1);
 												socket.emit(
 													'announcement', roomId, capitalcommand+' '+commandsdone+' user(s) with message: '+commandmsg);
-												console.log('announcement', commandusernames, commandusernames.join());
 												io.sockets.in(roomId).emit(
 													'announcement', roomId, capitalcommand+': '+commandusernames.join());
 												
@@ -696,12 +695,10 @@ io.sockets.on('connection', function (socket) {
 												'timestamp' : timestamp,
 											};
 											
-											console.log('message -> message.next room', room);
 											// send the special 'private chat' message to the receiving client
 											if (room.type == 'private') {
 												var groupidsplit = room.id.split('::',1)[0].split(':');
 												var other = session.uid == groupidsplit[0] ? groupidsplit[1] : groupidsplit[0];
-												console.log('message -> private other', other);
 												var othersocket = getSockets([other])[0];
 												if (othersocket) {
 													// the client will be notified in a special way for private chats
@@ -799,7 +796,6 @@ io.sockets.on('connection', function (socket) {
 			if (!err) {
 				// create coordinates array for sorting
 				var coordinates = [];
-				console.log(locations);
 				for (var key in locations) {
 					coordinates.push(key);
 				}
@@ -903,7 +899,6 @@ io.sockets.on('connection', function (socket) {
 		helper.isValid(roomId, uid, function(isValid, rawId) {
 			if (isValid) {
 				helper.getUsers([uid], uid, function(mapping) {
-					console.log(mapping);
 					if (Object.keys(mapping).length) {
 						var user = mapping[uid];
 						var commands = [];
