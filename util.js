@@ -18,11 +18,14 @@ var client2 = redis.createClient(null, redisUrl);
 client2.select(2);
 
 // email, SMS, facebook app-generated request
-function mentionNotification(from, to, mid) {
-	getUsers([to], null, function(reply) {
-		mentionEmail(from, to, reply[to].name, mid);	
-		mentionSMS(to, mid);
-	});
+function mentionNotification(from, user, mid) {
+	if (user.emailenable != 0) {
+		mentionEmail(from, user.id, user.name, mid);
+	}
+	
+	if (user.phoneenable != 0) {
+		mentionSMS(user.id, mid);
+	}
 }
 
 function mentionEmail(from, to, toName, mid) {
@@ -449,9 +452,12 @@ function getUsers(ids, callerId, callback) {
         		if (!err && Object.keys(user).length) {
             		// create a user object
             		users[id] = {
+            			id 			: id,
             			name		: user.firstname+' '+user.lastname.charAt(0),
             			gsirooms	: user.gsirooms,
             			special		: user.special,
+            			emailenable : user.emailenable,
+            			phoneenable : user.phoneenable,
             		}
             	} else {
             		debug(err, 'getUsers');

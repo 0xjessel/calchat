@@ -78,6 +78,8 @@ everyauth.facebook
 						special: special,
 						timestamp : timeStamp,
 						gsirooms : '',
+						emailenable : 1,
+						phoneenable : 0,
 					}, function() {
 						// add user to validrooms so other users can search for him
 						client0.zadd('validrooms',
@@ -736,14 +738,19 @@ io.sockets.on('connection', function (socket) {
 												var id = mentions[i];
 												client2.zadd('mentions:'+id, timestamp, mid);
 												
+												var useroffline = true;
 												// only send offline notifications if user is offline
 												for (chatroom in nicknames) {
-													// user is not online
-													if (nicknames[chatroom][id] == undefined) {
-														// hook to send notifications when mention'd
-														helper.mentionNotification(socket.nickname, id, mid);
+													if (nicknames[chatroom][id]) {
+														// user is not online
+														useroffline = false;
 														break;
 													}
+												}
+												
+												if (useroffline) {
+													// hook to send notifications when mention'd
+													helper.mentionNotification(socket.nickname, mapping[id], mid);
 												}
 											}
 											
