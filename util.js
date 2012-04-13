@@ -11,11 +11,17 @@ var email = require('./node_modules/mailer');
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
-client0.select(0);
+client0.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
+	client0.select(0);
+});
 var client1 = redis.createClient(null, redisUrl);
-client1.select(1);
+client1.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
+	client1.select(1);
+});
 var client2 = redis.createClient(null, redisUrl);
-client2.select(2);
+client2.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
+	client2.select(2);
+});
 
 // email, SMS, facebook app-generated request
 function mentionNotification(from, user, mid) {
