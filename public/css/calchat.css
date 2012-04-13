@@ -43,7 +43,7 @@ a, a:hover, a:visited, a:active, a:link {
 }
 
 .corner-alert {
-	width:auto;
+	width:20%;
 	position:fixed;
 	left:15px;
 	bottom:15px;
