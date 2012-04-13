@@ -38,7 +38,7 @@ html(lang='en')
       }
       window.History.replaceState(null, null, '/dashboard');
       var uid = #{user.id};
-      var name = '#{user.nick}
+      var name = '#{user.nick}'
       var rooms = !{JSON.stringify(rooms)}
   else 
     script
@@ -48,4 +48,3 @@ html(lang='en')
       var rooms = !{JSON.stringify(rooms)}
   script(src='/js/libs/linkify.min.js')
   script(src='/js/chat.js')
-
