@@ -198,14 +198,15 @@ function renderChatMessage(entry, mapping, enableLink) {
 			if (id && id in mapping) {
 				var link = $('<div>').append(
 					getUserLink(id, mapping, enableLink).addClass('mention').text('@'+mapping[id].name).clone()).html();
-
+					console.log(getUserLink(id, mapping, enableLink).text('test'));
 				msg = msg.replace(mapping[id].name, link);
 			}
 		}
 
 
+
 		var element = $('<p>').addClass('message').append(
-			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(18).height(18)),
+			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(20).height(20)),
 			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
 			$('<span>').addClass('from').append(getUserLink(fromUid, mapping, enableLink).addClass('from').append(from), label, ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)

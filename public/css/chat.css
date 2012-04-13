@@ -1,6 +1,6 @@
 /* CSS Document */
 ul#online {
-	font-size:17px;
+	font-size:14px;
 }
 
 .badge {
@@ -8,7 +8,10 @@ ul#online {
 }
 
 .hero-unit {
-	padding: 20px;
+	padding-top:10px;
+	padding-left: 20px;
+	padding-right: 20px;
+	padding-bottom:10px;
 }
 
 #chat {
@@ -62,9 +65,9 @@ ul#online {
 }
 
 .avatar-msg {
-	        border-radius:5px;
-	   -moz-border-radius:5px;
-	-webkit-border-radius:5px;
+	        border-radius:2px;
+	   -moz-border-radius:2px;
+	-webkit-border-radius:2px;
 	margin-right:5px;
 	margin-top:4px;
 	vertical-align:top;
