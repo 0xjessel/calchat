@@ -1,16 +1,23 @@
 $(document).ready(function () {
 	// Save button
 	$('.save-button').click(function() {
+		var err = false;
+
 		var phone = stripLow($('#input-phone').val());
-		if (!phone) {
-			phone = user.phone;
+		if (!isPhoneNumber(phone)) {
+			$('.phone').addClass('error');
+			$('.phone label[for=\'input-phone\']').text('Phone Number (invalid phone number)');
+			err = true;
 		}
-		var phoneenable = $('#input-phoneenable').is(':checked') ? 1 : 0;
-		
 		var email = $('#input-email').val().toLowerCase();
-		if (!email) {
-			email = user.email;
+		if (!filter.test(email)) {
+			$('.email').addClass('error');
+			$('.email label[for=\'input-email\']').text('Email Address (invalid email)');			
+			err = true;
 		}
+		if (err) return false; 
+
+		var phoneenable = $('#input-phoneenable').is(':checked') ? 1 : 0;
 		var emailenable = $('#input-emailenable').is(':checked') ? 1 : 0;
 		
 		// new preferences for user
@@ -26,19 +33,20 @@ $(document).ready(function () {
 		socket.emit('save preferences', userprefs, function(success) {
 			if (success) {
 				// leave preferences
-				history.back();
+				window.location.href = '/dashboard';
 			} else {
 				// server error
 				$('.save-button').prop('disabled', false).html("Save");
 				$('.fail-message').css('visibility', 'visible');
 			}
 		});
+		return false;
 	});
 	
 	// Cancel button
 	$('.cancel-button').click(function() {
 		// leave preferences
-		history.back();
+		window.location.href = '/dashboard';
 	});
 	
 	

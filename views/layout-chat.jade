@@ -38,7 +38,7 @@ html(lang='en')
       }
       window.History.replaceState(null, null, '/dashboard');
       var uid = #{user.id};
-      var name = '#{user.firstname + ' ' + user.lastname.charAt(0)}';
+      var name = '#{user.nick}
       var rooms = !{JSON.stringify(rooms)}
   else 
     script

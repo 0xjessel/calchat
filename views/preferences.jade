@@ -23,15 +23,15 @@ div.container-fluid
         form#preferences-form
           fieldset
             legend Notifications
-            div.control-group
-              label(for='input-phone') Phone number
+            div.control-group.phone
+              label(for='input-phone') Phone Number
               input(type='tel', name='phone', value=user.phone, placeholder='eg: 5102252428', disabled=user.phoneenable==0).input-medium.inline#input-phone
               label.checkbox.inline
               input(type='checkbox', name='phoneenable', checked=user.phoneenable!=0).inline#input-phoneenable
               a(href='javascript:void(0)', rel='tooltip', title='Enable notifications to this device', class=user.phoneenable!=0 ? 'icon-visible' : 'icon-hidden').icon-phoneenable
                 i.icon-exclamation-sign
-            div.control-group
-              label(for='input-email') Email address
+            div.control-group.email
+              label(for='input-email') Email Address
               input(type='email', name='email', value=user.email, placeholder='eg: username@example.com', disabled=user.emailenable==0).input-medium.inline#input-email
               label.checkbox.inline
               input(type='checkbox', name='emailenable', checked=user.emailenable!=0).inline#input-emailenable

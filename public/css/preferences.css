@@ -5,7 +5,6 @@
 
 h1.name {
 	display: inline-block;
-	vertical-align: bottom;
 }
 
 div.name {
@@ -49,4 +48,8 @@ input.input-medium {
 .fail-message {
 	visibility: hidden;
 	color: red;
+}
+
+.icon-emailenable, .icon-phoneenable {
+	margin-top:3px
 }
