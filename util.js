@@ -22,7 +22,6 @@ function mentionNotification(from, user, mid) {
 	if (user.emailenable != 0) {
 		mentionEmail(from, user.id, user.name, mid);
 	}
-	
 	if (user.phoneenable != 0) {
 		mentionSMS(user.id, mid);
 	}
@@ -453,7 +452,7 @@ function getUsers(ids, callerId, callback) {
             		// create a user object
             		users[id] = {
             			id 			: id,
-            			name		: user.firstname+' '+user.lastname.charAt(0),
+            			name		: user.nick,
             			gsirooms	: user.gsirooms,
             			special		: user.special,
             			emailenable : user.emailenable,
