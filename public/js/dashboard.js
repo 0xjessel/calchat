@@ -48,13 +48,6 @@ $(document).ready(function () {
 		}
 	}
 
-	$('.phoneSubmit').submit(function () {
-		socket.emit('phone num', uid, $('.phone-number').val(), function () {
-			$('.alert-info a').click();
-		});
-		return false;
-	});
-	
 	$('.close-chat').click(function () {
 		socket.emit('remove room', $(this).data('room'), function(success) {
 			alert('check');
@@ -93,7 +86,7 @@ $(document).ready(function () {
 		var phoneNumber = $('.phone-number').val();
 		if (isPhoneNumber(phoneNumber) || phoneNumber == '') {
 			socket.emit('add rooms', initialRooms, function(){
-				socket.emit('phone num', uid, phoneNumber, function(success) {
+				socket.emit('phone num', phoneNumber, function(success) {
 					window.firstTime = false;
 					window.location.href = '/chat/';
 				});

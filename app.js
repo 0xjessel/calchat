@@ -963,11 +963,11 @@ io.sockets.on('connection', function (socket) {
 	// uid: client's id
 	// phoneNum: client's entered phone number
 	// returns true if success, false if invalid
-	socket.on('phone num', function(uid, phoneNum, callback) {
-		helper.debug('phone num', uid, phoneNum);
-		if (helper.isPhoneNum(phoneNum)) {
+	socket.on('phone num', function(phoneNum, callback) {
+		if (helper.isPhoneNum(phoneNum) && session && session.uid) {
+			helper.debug('phone num', session.uid, phoneNum);
 			// save phone number to db
-			client2.hset('user:'+uid, 'phone', phoneNum, callback(true));
+			client2.hset('user:'+session.uid, 'phone', phoneNum, callback(true));
 		}
 		callback(false);
 	});
