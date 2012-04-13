@@ -126,6 +126,7 @@ exports.chat = function(req, res) {
 		var rooms = req.session.rooms;
 	}
 	if (rooms && rooms.length) {
+		console.log('test', rooms, rooms[0], req.loggedIn ? req.user.id : null);
 		helper.getRoomInfo(rooms[0], req.loggedIn ? req.user.id : null, function(room) {
 			res.redirect('/chat/'+room.url);
 		});

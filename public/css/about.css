@@ -26,3 +26,8 @@ p {
 	-moz-opacity:1;
 	     opacity:1;
 }
+
+.about-pic {
+	width:200px !important;
+	height:200px;
+}

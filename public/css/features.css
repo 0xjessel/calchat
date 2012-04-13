@@ -1,8 +1,12 @@
 .span6 {
 	background-color: white;
 	border-radius: 5px;
-
 }
+
+.feature-pic {
+	width:260px !important;
+}
+
 h2 {
 	background-color: white;
 	border-radius: 5px;

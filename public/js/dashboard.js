@@ -62,30 +62,27 @@ $(document).ready(function () {
 		$(this).parent().parent().remove();
 		return false;
 	});
-	
-	$('.join-chatrooms').submit(function () {
-		// no validation on text input, needs to be done on server side
-		window.location.href = '/chat/'+$('.form-search .search-query').val();
-		return false;
-	});
 
 	$('.modal-join-chatrooms').submit(function() {
-		var item = $(this).data('item');
+		var item = $('.search-query').data('item');
 		var id = item.id;
 
 		var initialRooms = $('#initialsubmit').data('initialRooms');
 
-		console.log('before', initialRooms);
-
 		if (!initialRooms) initialRooms = [];
 		if ($.inArray(id, initialRooms) == -1){
+			var labeltext = item.pretty;
+			if (item.type == 'redirect') {
+				labeltext = item.id;
+			}
 			$('.modal-classes-added').append(
 				$('<span>').addClass('label label-info label-initialroom').append(
-					item.pretty));
+					labeltext));
 			initialRooms.push(id);
 			$('#initialsubmit').data('initialRooms', initialRooms);
 		}
-		console.log('after', initialRooms);
+		
+		$('.search-query').val('');
 		return false;
 	});
 

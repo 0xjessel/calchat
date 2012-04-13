@@ -112,19 +112,21 @@ $(document).ready(function () {
 		
 		onselect: function(item) {
 			// item.pretty is the abbrev. form, o/w the pretty form
-			addChatInput.data('item', item);
+			$('.search-query').data('item', item);
+			$('.search-query').val(item.pretty);
+			
 			var form = $(this).get(0).$element.get(0).form;
-			$(form).data('item', item);
 			$(form).submit();
-
-			addChatInput.val('');
 		},
 	});
 	
-	$('.navbar-search').submit(function () {
-		if (addChatInput.data('item')) {
-			// no validation on text input, done on server side
-			window.location.href = '/chat/'+addChatInput.data('item').url;
+	$('.join-chatrooms').submit(function () {
+		var item = $('.search-query').data('item');
+		if (item) {
+			if (!$(this).hasClass('modal-join-chatrooms')) {
+				// no validation on text input, done on server side
+				window.location.href = '/chat/'+item.url;
+			}
 		}
 		return false;
 	});

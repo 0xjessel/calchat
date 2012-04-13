@@ -23,6 +23,19 @@ h1.splash{
 	position:absolute;
 }
 
+@media only screen and (max-width:1070px) {
+	.span6 {
+		width:auto !important;
+	}
+	.fblogin {
+		float:none;
+		height:50px;
+	}
+	.fb-like {
+		margin-bottom:20px;
+	}
+}
+
 @media only screen and (max-width:600px) {
 	#login {
 		float: left;
