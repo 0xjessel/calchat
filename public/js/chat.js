@@ -68,7 +68,7 @@ socket.on('online', function(room, mapping) {
 	}
 });
 
-// server asks client to reconnect if there was an interruption
+// server reconnected
 socket.on('reconnect', function () {
 	debug('reconnect');
 	$('#lines').empty();
@@ -78,9 +78,10 @@ socket.on('reconnect', function () {
 		'text'	: 'Reconnected to the server',
 	});
 	$('.chat-header .loading').addClass('hidden');
+	errModal.modal();
 });
 
-// server comes back up from interruption
+// server is disconnected
 socket.on('reconnecting', function () {
 	debug('reconnecting');
 	message({
@@ -91,14 +92,33 @@ socket.on('reconnecting', function () {
 	$('.chat-header .loading').removeClass('hidden');
 });
 
+var errModal = $('<div>').addClass('modal').addClass('fade').addClass('errModal');
+errModal.append(
+	$('<div>').addClass('modal-header').append(
+			$('<h3>').text('Sorry!')
+		),
+	$('<div>').addClass('modal-body').append(
+			$('<p>').text('An error has occurred.  Please refresh the page and try again.'),
+			$('<p>').text('NOTE: You may have to re-login with Facebook')
+		),
+	$('<div>').addClass('modal-footer').append(
+			$('<button>').addClass('btn').addClass('btn-primary').text('Refresh').click(function() {
+				window.location.reload();
+			})
+		)
+);
+
 // server sends an error message to the client
-socket.on('error', function (e) {
+socket.on('error', function (e, code) {
 	debug('Error: '+e);
 	message({
 		'from'	: 'System',
 		'to'	: current.id,
 		'text'	: e ? e : 'A unknown error occurred',
 	});
+	if (code == 1) {
+		errModal.modal();
+	}
 });
 
 // server alerts client of a private chat

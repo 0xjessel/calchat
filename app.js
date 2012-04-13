@@ -215,8 +215,8 @@ io.sockets.on('connection', function (socket) {
 		return idsList;
     }
 	
-	function error(err, socket, msg) {
-		socket.emit('error', err);
+	function error(err, socket, msg, code) {
+		socket.emit('error', err, code);
 		helper.debug('Error: '+err+': '+msg);
 	}
 	
@@ -313,7 +313,7 @@ io.sockets.on('connection', function (socket) {
 						callback();
 					});
 				} else {
-					error(err, socket, 'leave room');
+					error(err, socket, 'leave room', 0);
 					callback();
 				}
 			});
@@ -332,12 +332,12 @@ io.sockets.on('connection', function (socket) {
 						io.sockets.in(room).emit('online', room, mapping);
 					});
 				} else {
-					error('Room '+room+' is invalid', socket, 'leave room');
+					error('Room '+room+' is invalid', socket, 'leave room', 0);
 					callback();
 				}
 			});
 		} else {
-			error('session.uid undefined', socket, 'leave room');
+			error('session.uid undefined', socket, 'leave room', 1);
 			callback();
 		}
 	});
@@ -363,7 +363,7 @@ io.sockets.on('connection', function (socket) {
 		
 				client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unreads', unreads.join());
 			} else {
-				error(err, socket, 'remove room');
+				error(err, socket, 'remove room', 0);
 			}
 		});	
 	});
@@ -398,7 +398,7 @@ io.sockets.on('connection', function (socket) {
 							unreads.unshift(unreads.splice(index, 1));
 							client2.hmset('user:'+session.uid, 'chatrooms', rooms.join(), 'unreads', unreads.join());
 						} else {
-							error(err, socket, 'get chatlog');
+							error(err, socket, 'get chatlog', 0);
 						}
 					});
 				}
@@ -408,7 +408,7 @@ io.sockets.on('connection', function (socket) {
 					if (room.type == 'group' || room.type == 'private') {
 						// guest users cannot see private chats
 						if (!session || !session.uid) {
-							error('Please log in: Guests cannot access private chat room '+room.id, socket);
+							error('Please log in: Guests cannot access private chat room '+room.id, socket, 0);
 							callback({}, {}, room);
 							return;
 						}
@@ -419,7 +419,7 @@ io.sockets.on('connection', function (socket) {
 						var userIds = room.id.split('::')[0];
 						if (userIds.split(':').indexOf(session.uid) == -1) {
 							// client is neither of the 2 users
-							error('Access denied: attempted to access a private non-group chat room.', socket);
+							error('Access denied: attempted to access a private non-group chat room.', socket, 0);
 							callback({}, {}, room);
 							return;
 						}
@@ -431,7 +431,7 @@ io.sockets.on('connection', function (socket) {
 							if (!err) {
 								getLogs(chatlog, callback);
 							} else {
-								error(err, socket, 'get chatlog');
+								error(err, socket, 'get chatlog', 0);
 								callback({}, [], room);
 							}
 						});
@@ -440,7 +440,7 @@ io.sockets.on('connection', function (socket) {
 							if (!err) {
 								getLogs(chatlog, callback);
 							} else {
-								error(err, socket, 'get chatlog');
+								error(err, socket, 'get chatlog', 0);
 								callback({}, [], room);
 							}
 						});
@@ -490,7 +490,7 @@ io.sockets.on('connection', function (socket) {
 										};
 										logs[timestamp] = entry;
 									} else {
-										error(err, socket, 'get chatlog');
+										error(err, socket, 'get chatlog', 0);
 									}
 									
 									// when all messages have been added, callback
@@ -506,7 +506,7 @@ io.sockets.on('connection', function (socket) {
 					}
 				});
 			} else {
-				error('Room '+roomId+' is invalid.', socket);
+				error('Room '+roomId+' is invalid.', socket, null, 0);
 				callback({}, {}, null);
 				return;
 			}
@@ -757,7 +757,7 @@ io.sockets.on('connection', function (socket) {
 												othersockets[i].emit('command', 'mention', room, user, msg);
 											};
 										} else {
-											error(err, socket, 'message');
+											error(err, socket, 'message', 0);
 										}
 									});
 								}
@@ -765,10 +765,10 @@ io.sockets.on('connection', function (socket) {
 						});
 					});
 				} else {
-					error('session.uid not defined', socket, 'message');
+					error('session.uid not defined', socket, 'message', 1);
 				}
 			} else {
-				error('Room '+roomId+' is invalid.', socket, 'message');
+				error('Room '+roomId+' is invalid.', socket, 'message', 0);
 			}
 		});
 	});
@@ -830,7 +830,7 @@ io.sockets.on('connection', function (socket) {
 								location.pretty = location.name;
 								buildings.push(location);
 							} else {
-								error(err, socket, 'get nearest building');
+								error(err, socket, 'get nearest building', 0);
 							}
 
 							// when all locations have been retrieved, callback
@@ -842,7 +842,7 @@ io.sockets.on('connection', function (socket) {
 					closure();
 				}
 			} else {
-				error(err, socket, 'get nearest building');
+				error(err, socket, 'get nearest building', 0);
 				callback();
 			}
 		});
@@ -883,7 +883,7 @@ io.sockets.on('connection', function (socket) {
 					}
 				});
 			} else {
-				error('Room '+roomId+' is invalid.', socket, 'message');
+				error('Room '+roomId+' is invalid.', socket, 'message', 0);
 				callback();
 			}
 		});
@@ -953,7 +953,7 @@ io.sockets.on('connection', function (socket) {
 					}
 				});
 			} else {
-				error('Room '+roomId+' is invalid.', socket, 'message');
+				error('Room '+roomId+' is invalid.', socket, 'message', 0);
 				callback();
 			}
 		});
@@ -994,7 +994,7 @@ io.sockets.on('connection', function (socket) {
 						callback(rooms.slice(0, limit));
 					});
 				} else {
-					error(err, socket, 'get validrooms');
+					error(err, socket, 'get validrooms', 0);
 					callback();
 				}
 			});
@@ -1055,11 +1055,11 @@ io.sockets.on('connection', function (socket) {
 						}
 					}
 				} else {
-					error(err, socket, 'disconnect');
+					error(err, socket, 'disconnect', 0);
 				}
 			});
 		} else {
-			error('session.uid not defined', socket, 'disconnect');
+			error('session.uid not defined', socket, 'disconnect', 1);
 		}
 	});
 
