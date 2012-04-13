@@ -26,11 +26,11 @@ h1.splash{
 
 @media only screen and (max-width:400px) {
 	#login {
-		float: left;
-		display: block;
-		width: 129px;
-		height: 39px;
-		background: url('../img/fb-connect-med.png');
+		float: left !important;
+		display: block !important;
+		width: 129px !important;
+		height: 39px !important;
+		background: url('../img/fb-connect-med.png') !important;
 	}
 }
 
