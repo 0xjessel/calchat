@@ -357,21 +357,22 @@ function prependNotification(alert) {
 	var windowHeight = $(window).height();
 	var notifHeight = notifbar.height();
 
-	// if notifications are taking up over half the screen
+    // if notifications are taking up over half the screen
 	if (notifHeight/windowHeight > 0.5) {
 		var last = $('.corner-alerts .corner-alert:last');
 		if (last.length) {
 			last.fadeOut('slow', function() {
 				last.remove();
+				alert.css('display', 'none');
 				notifbar.prepend(alert);
+				alert.fadeIn('slow');
+				return;
 			});
-		} else {
-			notifbar.prepend(alert);
 		}
-	} else {
-		notifbar.prepend(alert);
 	}
-
+	alert.css('display', 'none');
+	notifbar.prepend(alert);
+	alert.fadeIn('slow');
 }
 
 // dom manipulation
