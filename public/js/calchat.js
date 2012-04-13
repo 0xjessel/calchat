@@ -350,7 +350,7 @@ function notify(type, alertClass, title, body, callToAction, hasButton, corner) 
 		callToAction.addClass(buttonType);
 	}
 
-	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').text('x')
+	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').html('&times;')
 		, $('<h4>').addClass('alert-heading').text(title)
 		, $('<p>').addClass('alert-msg').text(body)
 		, (callToAction) ? 
