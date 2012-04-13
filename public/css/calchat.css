@@ -36,17 +36,16 @@ a, a:hover, a:visited, a:active, a:link {
 }
 
 .alert {
-	width:75%;
 	margin-left:auto;
 	margin-right:auto;
-	z-index:3;
 }
 
-.corner-alert {
-	width:20%;
+.corner-alerts {
+	width:25%;
 	position:fixed;
 	left:15px;
 	bottom:15px;
+	z-index:3;
 }
 
 .sidebar-nav {

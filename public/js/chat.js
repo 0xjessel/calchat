@@ -2,7 +2,7 @@
 
 // socket.io specific code
 var current = rooms[0];
-var chatDiv, sidebar;
+var chatDiv, notifbar;
 var selfAnnounced = false;
 var unread = {};
 var privateMsgs = [];
@@ -120,7 +120,7 @@ socket.on('private chat', function(roomId, messageEntry, mapping) {
 	privateMsgs[privateMsgs.length] = messageEntry.from;
 	
 	var callToAction = $('<a>').addClass('btn').attr('href', '/chat/'+roomId).text('Go to Private Chat');
-	sidebar.append(
+	prependNotification(
 		notify(0,
 			'notify-'+messageEntry.from,
 			'New Private Chat from '+mapping[messageEntry.from].name+'!',
@@ -207,8 +207,9 @@ socket.on('command', function(command, room, by, msg) {
 	var corner = true;
 	
 	debug('notify', type, alertClass, title, text, callToAction, hasButton, corner);
-	sidebar.append(
-		notify(type, alertClass, title, text, callToAction, hasButton, corner));
+	prependNotification(
+		notify(type, alertClass, title, text, callToAction, hasButton, corner)
+	);
 });
 
 // server alerts client of a message
@@ -352,10 +353,31 @@ function getUsers(room, filter, limit, callback) {
 	socket.emit('get users', current.id, filter, limit, callback);
 }
 
+function prependNotification(alert) {
+	var windowHeight = $(window).height();
+	var notifHeight = notifbar.height();
+
+	// if notifications are taking up over half the screen
+	if (notifHeight/windowHeight > 0.5) {
+		var last = $('.corner-alerts .corner-alert:last');
+		if (last.length) {
+			last.fadeOut('slow', function() {
+				last.remove();
+				notifbar.prepend(alert);
+			});
+		} else {
+			notifbar.prepend(alert);
+		}
+	} else {
+		notifbar.prepend(alert);
+	}
+
+}
+
 // dom manipulation
 $(document).ready(function () {
 	chatDiv = $('#chat');
-	sidebar = $('.span3');
+	notifbar = $('.corner-alerts');
 
 	// setup chats in left nav sidebar
 	var chatNav = $('#chats');

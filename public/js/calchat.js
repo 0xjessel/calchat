@@ -352,7 +352,7 @@ function notify(type, alertClass, title, body, callToAction, hasButton, corner) 
 
 	alert.append($('<a>').addClass('close').attr('data-dismiss', 'alert').attr('href', '#').html('&times;')
 		, $('<h4>').addClass('alert-heading').text(title)
-		, $('<p>').addClass('alert-msg').text(body)
+		, $('<p>').addClass('alert-msg').html(body)
 		, (callToAction) ? 
 		$('<p>').append(callToAction) :
 		null);

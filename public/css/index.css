@@ -54,19 +54,6 @@ h1.splash{
 	}	
 }
 
-@media only screen and (max-width:1070px) {
-	.span6 {
-		width:auto !important;
-	}
-	.fblogin {
-		float:none;
-		height:50px;
-	}
-	.fb-like {
-		margin-bottom:20px;
-	}
-}
-
 @media screen and (min-width:600px) {
 	#login {
 		float: left;
@@ -77,6 +64,19 @@ h1.splash{
 	}
 	#login:hover {
 		background-position: 0 0;
+	}
+}
+
+@media only screen and (max-width:1070px) {
+	.span6 {
+		width:auto !important;
+	}
+	.fblogin {
+		float:none;
+		height:50px;
+	}
+	.fb-like {
+		margin-bottom:20px;
 	}
 }
 

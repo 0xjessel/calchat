@@ -136,3 +136,10 @@ h3.title-text {
 .header-text {
 	margin-left:5px;
 }
+
+@media only screen and (max-width:767px) {
+	.corner-alerts{
+		width:auto;
+		position:static;
+	}
+}

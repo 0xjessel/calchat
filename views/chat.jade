@@ -20,7 +20,6 @@ div.container-fluid
             span.header-text
               | Private Rooms
             img(src='/img/loading.gif').loading
-
       div.well.sidebar-nav
         ul.nav.nav-list.sidebar.unstyled#online
           li.nav-header 
@@ -28,7 +27,6 @@ div.container-fluid
             span.header-text
               | Online
             img(src='/img/loading.gif').loading
-
     div.span9
       div.hero-unit#body-content
         div.chat-header
@@ -58,5 +56,7 @@ div.container-fluid
           div.fake-input
             input(type='text', size='16', disabled='true', title='login with facebook to participate!').span6
             a(href='/auth/facebook', rel='tooltip', title='login with facebook to participate!')#login
+
+div.corner-alerts
 
 audio(id='ping', src='/audio/simple_l.mp3', style='display:none')
