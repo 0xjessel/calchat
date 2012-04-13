@@ -206,7 +206,9 @@ function renderChatMessage(entry, mapping, enableLink) {
 
 
 		var element = $('<p>').addClass('message').append(
-			$('<span>').addClass('pic').append($('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(20).height(20)),
+			$('<span>').addClass('pic').append($('<a>').attr('href', 'http://www.facebook.com/'+fromUid).attr('target', '_blank').append(
+					$('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(20).height(20))
+				),
 			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
 			$('<span>').addClass('from').append(getUserLink(fromUid, mapping, enableLink).addClass('from').append(from), label, ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)
