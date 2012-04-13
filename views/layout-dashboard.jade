@@ -8,7 +8,8 @@ html(lang='en')
 
   include includes/footer
   script(src='/js/libs/bootstrap/alert.js')
-  script(src='/js/libs/bootstrap/modal.js')
+  if firstTimeUser
+    script(src='/js/libs/bootstrap/modal.js')
   script
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
