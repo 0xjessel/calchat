@@ -55,16 +55,35 @@ div.container-fluid
 #firstlogin.modal.hide.fade.in(style='display: none;')
   .modal-header
     a.close(data-dismiss='modal') ×
-    h3 Welcome to CalChat
-    h3 Since this is your first time, please add some classes to begin
+    h2 Welcome to CalChat
   .modal-body
-    h3 Search for classes:
-      dd
-        form.form-search.form-inline.join-chatrooms.modal-join-chatrooms
-          input(type='text', placeholder='Join Chatroom', data-provide='typeahead',autofocus='autofocus').input-medium.search-query.modal-input
-          //$("#firstinput").focus();
     .modal-classes
-      h3 Classes Added:
+      p
+        | Get started by adding some chatrooms.  You can search by:
+      ul
+        li
+          i.icon-book
+          | Classes (e.g. Math 54, POL SCI 1, CS 164)
+        li 
+          i.icon-home
+          | Buildings (e.g. Soda, Dwinelle, Slottman)
+        li
+          i.icon-time
+          | Rooms (e.g. 100 Wurster, 1 Pimentel, 306 Soda)
+      p
+        form.form-search.form-inline.join-chatrooms.modal-join-chatrooms
+          fieldset.control-group
+            input(type='text', placeholder='Join Chatroom', data-provide='typeahead',autofocus='autofocus').input-medium.search-query.modal-input
+      .modal-classes-added
+        h3 Classes Added
+    hr
+    h3 Add Your Phone Number
+    p
+      | Enter your phone number to be notified via SMS when someone @mentions you
+    p
+      form.form-inline.phoneSubmit
+        fieldset.control-group
+          input(type='text', placeholder='e.g. 5553234764').input-medium.phone-number
+          span.help-inline optional
   .modal-footer
-    button#initialsubmit(type='submit').btn.btn-primary Submit
-    a.btn(href='#', data-dismiss='modal') Close
+    button#initialsubmit(type='submit', disabled='disabled').btn.btn-primary.disabled Submit

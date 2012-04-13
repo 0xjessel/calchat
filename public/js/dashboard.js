@@ -70,6 +70,8 @@ $(document).ready(function () {
 		var initialRooms = $('#initialsubmit').data('initialRooms');
 
 		if (!initialRooms) initialRooms = [];
+		$('#initialsubmit').removeClass('disabled');	
+		$('#initialsubmit').removeAttr('disabled');
 		if ($.inArray(id, initialRooms) == -1){
 			var labeltext = item.pretty;
 			if (item.type == 'redirect') {
@@ -91,7 +93,7 @@ $(document).ready(function () {
 		var phoneNumber = $('.phone-number').val();
 		if (isPhoneNumber(phoneNumber) || phoneNumber == '') {
 			socket.emit('add rooms', initialRooms, function(){
-				socket.emit('phone num', uid, phoneNumber, function() {
+				socket.emit('phone num', uid, phoneNumber, function(success) {
 					window.firstTime = false;
 					window.location.href = '/chat/';
 				});
@@ -103,4 +105,16 @@ $(document).ready(function () {
 	    return false;
 	});
 
+	$('.phone-number').keyup(function() {
+		console.log('click');
+		console.log($(this).val());
+		var button = $('#initialsubmit');
+		if ($(this).val().length >= 10) {
+			button.removeAttr('disabled');
+			button.removeClass('disabled');
+		} else {
+			button.attr('disabled', 'disabled');
+			button.addClass('disabled');
+		}
+	})
 });

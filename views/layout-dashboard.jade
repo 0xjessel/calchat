@@ -7,14 +7,14 @@ html(lang='en')
   body!= body
 
   include includes/footer
+  script(src='/js/libs/bootstrap/alert.js')
+  script(src='/js/libs/bootstrap/modal.js')
   script
     var rooms = !{JSON.stringify(rooms)};
     var uid = #{user.id};
     var name = '#{user.nick}';
     var hasPhoneNum = #{hasPhoneNum}
     var firstTime = #{firstTimeUser}
-    window.firstlogin = firstTime;
-  script
     Modernizr.load([{
       test: Modernizr.history,
       nope: '/js/libs/jquery.history.js',
@@ -32,17 +32,11 @@ html(lang='en')
         getGeo();
       }
     }]);
-  script(src='/js/libs/bootstrap/alert.js')
-  script(src='/js/libs/bootstrap/modal.js')
-  script 
     if (window.location.hash) {
       window.location.hash = '';
       window.History.replaceState(null, null, window.location.href.slice(0, -1));
     }
-  script
-    if (true){
-      $(function () { 
-        $("#firstlogin").modal();
-      });
+    if (firstTime){
+      $("#firstlogin").modal();
     }
   script(src='/js/dashboard.js')

@@ -962,11 +962,14 @@ io.sockets.on('connection', function (socket) {
 	// client sets his phone number
 	// uid: client's id
 	// phoneNum: client's entered phone number
+	// returns true if success, false if invalid
 	socket.on('phone num', function(uid, phoneNum, callback) {
+		helper.debug('phone num', uid, phoneNum);
 		if (helper.isPhoneNum(phoneNum)) {
 			// save phone number to db
-			client2.hset('user:'+uid, 'phone', phoneNum, callback);
+			client2.hset('user:'+uid, 'phone', phoneNum, callback(true));
 		}
+		callback(false);
 	});
 
 	// client queries server for valid chatrooms when entering autocompletions in the navbar
