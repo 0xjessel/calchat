@@ -22,6 +22,7 @@ $(document).ready(function () {
 				break;
 			case "3":
 				alert.html('<a class="close" data-dismiss="alert">&times;</a><b>Error: </b>Please login to view your preferences.');
+				container.prepend(alert);
 				break;
 			default:
 				break;
