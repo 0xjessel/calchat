@@ -327,7 +327,7 @@ exports.preferences = function (req, res) {
 		});
 	} else {
 		// must be logged in to use preferences
-		res.redirect('/?error=0');
+		res.redirect('/?error=3');
 	}
 }
 
