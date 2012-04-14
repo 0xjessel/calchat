@@ -260,7 +260,7 @@ function message (entry, mapping) {
 	} else {
 		// incr badge
 		unread[entry.to]++;
-		var id = entry.to.replace(':', '');
+		var id = entry.to.replace(/:/g, '');
 		var badge = $('#'+id+' .badge');
 
 		if (badge.length == 0) {
@@ -421,7 +421,7 @@ $(document).ready(function () {
 		// add the chatroom link element
 		element.append($('<a>')
 			.attr('href', 'javascript:void(0)')
-			.attr('id', id)
+			.attr('id', id.replace(/:/g, ""))
 			.data('room', room)
 			.append(
 				icon, 
@@ -538,7 +538,6 @@ $(document).ready(function () {
 					$('#message').data('search', search);
 					
 					var commandobjects = [];
-					console.log(commands);
 					for (var i = 0; i < commands.length; i++) {
 						var command = commands[i];
 						
