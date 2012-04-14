@@ -20,18 +20,12 @@ var sessionStore = new MemoryStore();
 * Redis
 */
 var redisUrl = 'db.calchat.net';
-var client0 = redis.createClient(null, redisUrl);
-client0.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
-	client0.select(0);
-});
-var client1 = redis.createClient(null, redisUrl);
-client1.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
-	client1.select(1);
-});
-var client2 = redis.createClient(null, redisUrl);
-client2.auth('72sXEo5DUH1CEzKERwQMB6zGgRLunUOMGRlW6W26LMhkKwUtlA8rFU28w5jaBbdp', function() {
-	client2.select(2);
-});
+var client0 = redis.createClient(6379, redisUrl);
+client0.select(0);
+var client1 = redis.createClient(6379, redisUrl);
+client1.select(1);
+var client2 = redis.createClient(6379, redisUrl);
+client2.select(2);
 
 // for the user: special field and command type
 var SPECIAL_GSI			= -1;
