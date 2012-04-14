@@ -36,6 +36,7 @@ a, a:hover, a:visited, a:active, a:link {
 }
 
 .alert {
+	width:75%;
 	margin-left:auto;
 	margin-right:auto;
 }
