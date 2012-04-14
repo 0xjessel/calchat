@@ -8,6 +8,8 @@ var phone = client.getPhoneNumber('+15107468123');
 
 var email = require('./node_modules/mailer');
 
+var sanitize = require('validator').sanitize;
+
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
@@ -78,7 +80,7 @@ function mentionSMS(to, mid) {
 		var footerLink = ' - '+mChatURL+content['roomUrl'];
 		var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
 		var msgSize = 160 - msg.length - footerLink.length;							
-		var txt = content['txt'];
+		var txt = sanitize(content['txt']).entityDecode();
 		if (txt.length > msgSize) {
 			txt = txt.substring(0, msgSize - 2);
 			txt = txt+'..';
