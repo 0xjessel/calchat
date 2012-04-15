@@ -81,7 +81,6 @@ function mentionSMS(to, mid) {
 		content = reply;
 		var longUrl = mChatURL+content['roomUrl'];
 
-		console.log('entering shorturl');
 		// get short url
 		getShortUrl(longUrl, function(shortUrl) {
 			if (shortUrl) {
