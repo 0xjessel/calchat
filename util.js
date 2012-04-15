@@ -10,6 +10,8 @@ var email = require('./node_modules/mailer');
 
 var sanitize = require('validator').sanitize;
 
+var request = require('request');
+
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
 var client0 = redis.createClient(null, redisUrl);
@@ -77,18 +79,28 @@ function sendEmail(subject, to, template, data, callback) {
 function mentionSMS(to, mid) {
 	getNotificationContent(to, mid, 'phone', function(reply) {
 		content = reply;
-		var footerLink = ' - '+mChatURL+content['roomUrl'];
-		var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
-		var msgSize = 160 - msg.length - footerLink.length;							
-		var txt = sanitize(content['txt']).entityDecode();
-		if (txt.length > msgSize) {
-			txt = txt.substring(0, msgSize - 2);
-			txt = txt+'..';
-		}
-		msg = msg+txt+footerLink;
-		// call helper function
-		sendSMS(content['dest'], msg, null, function (sms) {
-			console.log('done');
+		var longUrl = mChatURL+content['roomUrl'];
+
+		console.log('entering shorturl');
+		// get short url
+		getShortUrl(longUrl, function(shortUrl) {
+			if (shortUrl) {
+				var footerLink = ' - '+shortUrl;	
+				var msg = content['from']+' mentioned you in '+content['room']+'!  Message: ';
+				var msgSize = 160 - msg.length - footerLink.length;							
+				var txt = sanitize(content['txt']).entityDecode();
+				if (txt.length > msgSize) {
+					txt = txt.substring(0, msgSize - 2);
+					txt = txt+'..';
+				}
+				msg = msg+txt+footerLink;
+				// call helper function
+				sendSMS(content['dest'], msg, null, function (sms) {
+					console.log('done');
+				});
+			} else {
+				console.log('sms: failed to get short url');
+			}
 		});
 	});
 }
@@ -481,6 +493,21 @@ function postAuthenticate(req) {
 		req.session.uid = req.user.id;
 		req.session.nick = req.user.firstname + ' ' + req.user.lastname.charAt(0);
 	}
+}
+
+function getShortUrl(longUrl, callback) {
+	var options = {
+		uri: 'https://www.googleapis.com/urlshortener/v1/url',
+		method: 'POST',
+		json: {
+			'longUrl': longUrl
+		}
+	};
+	request(options, function(error, response, body) {
+		if (!error && response.statusCode == 200) {
+			callback(body.id);
+		}
+	});
 }
 
 function stripLow(string) {
