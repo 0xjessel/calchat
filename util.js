@@ -14,7 +14,7 @@ var request = require('request');
 
 var redis = require('redis');
 var redisUrl = 'db.calchat.net';
-var client0 = redis.createClient(null, redisUrl);
+var client0 = redis.createClient(6379, redisUrl);
 client0.select(0);
 var client1 = redis.createClient(6379, redisUrl);
 client1.select(1);
