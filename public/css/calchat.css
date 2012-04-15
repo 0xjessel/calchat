@@ -12,6 +12,13 @@ a, a:hover, a:visited, a:active, a:link {
 	text-decoration:none;
 }
 
+@media only screen and (max-width:979px) {
+	.navbar-search .icon-search {
+		top:15px !important;
+		left:26px !important;
+	}
+}
+
 .navbar-search {
 	position:relative;
 }
