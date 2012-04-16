@@ -31,9 +31,6 @@ h1.splash{
 		height: 39px !important;
 		background: url('../img/fb-connect-med.png') !important;
 	}
-	#fbroot {
-		display:none;
-	}
 }
 
 @media only screen and (max-width:600px) {
@@ -54,6 +51,9 @@ h1.splash{
 	.carousel {
 		display:none !important;
 	}	
+	.fb-like {
+		display:none !important;
+	}
 }
 
 @media screen and (min-width:600px) {
@@ -74,7 +74,6 @@ h1.splash{
 		width:auto !important;
 	}
 	.fblogin {
-		float:none;
 		height:50px;
 	}
 	.fb-like {
