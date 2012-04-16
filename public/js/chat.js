@@ -240,6 +240,8 @@ function message (entry, mapping) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
+		
+		$('div.timeago').timeago();
 
 		// update chat window title
 		if (entry.from != uid && mapping && entry.from in mapping) {
@@ -311,14 +313,15 @@ function renderChatlogs (logs, mapping, room) {
 	}
 	var lines = $('#lines');
 	for (timestamp in logs) {
-		// not showing timestamp for now
-
 		var entry = logs[timestamp];
 
 		// render individual chat messages
 		var element = renderChatMessage(entry, mapping, true);
 		lines.append(element);
 	}
+
+	$('div.timeago').timeago();
+
 	chatDiv.scrollTop(chatDiv[0].scrollHeight+50);
 	
 	// update all page information when get chatlog is successful
@@ -399,6 +402,8 @@ function prependNotification(alert) {
 $(document).ready(function () {
 	chatDiv = $('#chat');
 	notifbar = $('.corner-alerts');
+
+	$.timeago.settings.allowFuture = true;
 
 	// setup chats in left nav sidebar
 	var chatNav = $('#chats');

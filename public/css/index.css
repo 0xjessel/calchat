@@ -31,6 +31,9 @@ h1.splash{
 		height: 39px !important;
 		background: url('../img/fb-connect-med.png') !important;
 	}
+	#fbroot {
+		display:none;
+	}
 }
 
 @media only screen and (max-width:600px) {

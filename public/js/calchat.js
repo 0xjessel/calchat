@@ -203,12 +203,12 @@ function renderChatMessage(entry, mapping, enableLink) {
 		}
 
 
-
+		var time = ISODateString(new Date(parseInt(timestamp)));
 		var element = $('<p>').addClass('message').append(
 			$('<span>').addClass('pic').append($('<a>').attr('href', 'http://www.facebook.com/'+fromUid).attr('target', '_blank').append(
 					$('<img>').addClass('avatar-msg').attr('src', "http://graph.facebook.com/"+fromUid+"/picture").width(20).height(20))
 				),
-			$('<div>').addClass('timestamp').append(new Date(parseInt(timestamp)).toLocaleTimeString()),
+			$('<div>').addClass('timestamp').addClass('timeago').attr('title', time).append(time),
 			$('<span>').addClass('from').append(getUserLink(fromUid, mapping, enableLink).addClass('from').append(from), label, ': '),
 			$('<span>').addClass('text').append(msg).attr('id', 'text'+mid)
 		);
@@ -363,6 +363,16 @@ function isPhoneNumber(n) {
 	  return !isNaN(parseFloat(n)) && isFinite(n);
 	}
 	return false;
+}
+
+function ISODateString(d) {
+ function pad(n){return n<10 ? '0'+n : n}
+ return d.getUTCFullYear()+'-'
+      + pad(d.getUTCMonth()+1)+'-'
+      + pad(d.getUTCDate())+'T'
+      + pad(d.getUTCHours())+':'
+      + pad(d.getUTCMinutes())+':'
+      + pad(d.getUTCSeconds())+'Z'
 }
 
 var filter = /^([a-zA-Z0-9_\.\-])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
