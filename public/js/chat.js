@@ -240,7 +240,7 @@ function message (entry, mapping) {
 		// append incoming msg to the current room
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
-		
+
 		$('div.timeago').timeago();
 
 		// update chat window title
@@ -402,8 +402,6 @@ function prependNotification(alert) {
 $(document).ready(function () {
 	chatDiv = $('#chat');
 	notifbar = $('.corner-alerts');
-
-	$.timeago.settings.allowFuture = true;
 
 	// setup chats in left nav sidebar
 	var chatNav = $('#chats');
