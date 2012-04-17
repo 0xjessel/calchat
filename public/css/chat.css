@@ -144,3 +144,8 @@ h3.title-text {
 		z-index:auto;
 	}
 }
+
+#over-limit {
+	margin-left:8px;
+	color:red;
+}

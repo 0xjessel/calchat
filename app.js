@@ -480,12 +480,12 @@ io.sockets.on('connection', function (socket) {
 									
 										//create message object
 										var entry = {
-											'from'		: fromUid,
-											'to'		: room.id,
-											'text'		: text,
-											'mentions'	: mentions,
-											'id'		: mid,
-											'timestamp'	: timestamp,
+											from		: fromUid,
+											to			: room.id,
+											text		: text,
+											mentions	: mentions,
+											id			: mid,
+											timestamp	: timestamp,
 										};
 										logs[timestamp] = entry;
 									} else {
@@ -542,7 +542,7 @@ io.sockets.on('connection', function (socket) {
 				msg = sanitize(msg).entityEncode();
 				
 				// reject long messages
-				if (msg.length > 256) {
+				if (msg.length > 512) {
 					socket.emit('error', 'Message not sent. Message length too long.');
 					return;
 				}

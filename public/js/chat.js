@@ -37,9 +37,9 @@ socket.on('announcement', function (to, msg) {
 	debug('announcement');
 	if (to == current.id) {
 		message({
-			'from'	: 'System',
-			'to'	: current.id,
-			'text'	: msg,
+			from	: 'System',
+			to		: current.id,
+			text	: msg,
 		});
 		
 		scrollToBottom();
@@ -456,6 +456,9 @@ $(document).ready(function () {
 			clear();
 			scrollToBottom();
 		}
+		
+		$('#over-limit').hide();
+		
 		return false;
 	});
 
@@ -635,6 +638,15 @@ $(document).ready(function () {
 				window.location.href = '/dashboard';
 			}
 		});
+	});
+	
+	$('#message').keyup(function() {
+		var chars = $(this).val().length;
+		if (chars > 512) {
+			$('#over-limit').show().text('Message too long (-'+(chars-512)+')');
+		} else {
+			$('#over-limit').hide();
+		}
 	});
 	
 	$('a[rel=tooltip]').tooltip();
