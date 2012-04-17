@@ -591,10 +591,10 @@ $(document).ready(function () {
 			
 			var replacement = item.replacement;
 			
-			var transformedMsg = msg.substring(0, start) + replacement + msg.substring(end);
+			var transformedMsg = msg.substring(0, start) + '@' + replacement + ' ' + msg.substring(end);
 
 			// calculate the new caret position
-			var caretPosition = start + replacement.length;
+			var caretPosition = start + replacement.length + 2; //@ and space
 
 			// set new value for input
 			$('#message')
