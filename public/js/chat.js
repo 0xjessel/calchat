@@ -241,7 +241,7 @@ function message (entry, mapping) {
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
 
-		$('div.timeago').timeago();
+		$('div.timeago').filter(':last').timeago();
 
 		// update chat window title
 		if (entry.from != uid && mapping && entry.from in mapping) {
