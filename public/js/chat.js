@@ -524,10 +524,10 @@ $(document).ready(function () {
 						var html = $('<div>').append($('<img class="avatar" width="30px" height="30px" src='+pic+'>')).append(name);
 						
 						users.push({
-							id:		id,
-							value:	html.html(),
-							replacement:	name,
-							type: 	'@',
+							id:				id,
+							value:			html.html(),
+							replacement:	'@'+name+' ',
+							type: 			'@',
 						});
 					}
 					
@@ -591,7 +591,7 @@ $(document).ready(function () {
 			
 			var replacement = item.replacement;
 			
-			var transformedMsg = msg.substring(0, start) + '@' + replacement + ' ' + msg.substring(end);
+			var transformedMsg = msg.substring(0, start) + replacement + msg.substring(end);
 
 			// calculate the new caret position
 			var caretPosition = start + replacement.length + 2; //@ and space
