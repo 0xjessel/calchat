@@ -60,7 +60,9 @@ socket.on('online', function(room, mapping) {
 			
 			onlineSidebar.append($('<li>').append(
 				getUserLink(id, mapping, true).append(
-					$('<img>').addClass('avatar').attr('width','30px').attr('height','30px').attr('src',pic),
+					$('<a>').attr('href', 'http://facebook.com/'+id).attr('target', '_blank').append(
+							$('<img>').addClass('avatar').attr('width','30px').attr('height','30px').attr('src',pic)
+						),
 					$('<span>').text(mapping[id].name),
 					label)));
 		}
@@ -241,7 +243,7 @@ function message (entry, mapping) {
 		var element = renderChatMessage(entry, mapping, true);
 		$('#lines').append(element);
 
-		$('div.timeago').timeago();
+		$('div.timeago').filter(':last').timeago();
 
 		// update chat window title
 		if (entry.from != uid && mapping && entry.from in mapping) {
