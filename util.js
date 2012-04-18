@@ -462,11 +462,17 @@ function getUsers(ids, callerId, callback) {
         	client2.hgetall('user:'+id, function(err, user) {
         		added++;
         		if (!err && Object.keys(user).length) {
+        			var gsirooms = [];
+        			var oldgsirooms = user.gsirooms.split(',');
+        			for (var i = 0; i < oldgsirooms.length; i++) {
+        				var roomId = oldgsirooms[i];
+        				gsirooms.push(roomId.split('::')[0]);
+        			};
             		// create a user object
             		users[id] = {
             			id 			: id,
             			name		: user.nick,
-            			gsirooms	: user.gsirooms,
+            			gsirooms	: gsirooms.join(),
             			special		: user.special,
             			emailenable : user.emailenable,
             			phoneenable : user.phoneenable,

@@ -237,7 +237,7 @@ function getLabel(fromUid, toRoom, mapping) {
 		special = mapping[fromUid].special;
 		var gsirooms = mapping[fromUid].gsirooms.split(',');
 		for (var i = 0; i < gsirooms.length; i++) {
-			if (gsirooms[i] == toRoom) {
+			if (gsirooms[i] == toRoom.split('::')[0]) {
 				gsi = true;
 				break;
 			}

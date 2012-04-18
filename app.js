@@ -904,7 +904,7 @@ io.sockets.on('connection', function (socket) {
 						var isGSI = false;
 						var gsirooms = user.gsirooms.split(',');
 						for (var i = 0; i <  gsirooms.length; i++){
-							if (gsirooms[i] == roomId){
+							if (gsirooms[i] == roomId.split('::')[0]){
 								isGSI = true;
 								break;
 							}
